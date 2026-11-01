@@ -213,6 +213,11 @@ function Home() {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#08090d] text-white">
+      <div className="portfolio-motion-layer" aria-hidden="true">
+        <span className="portfolio-orb portfolio-orb-one" />
+        <span className="portfolio-orb portfolio-orb-two" />
+        <span className="portfolio-grid-glow" />
+      </div>
       <header className="portfolio-nav fixed inset-x-0 top-0 z-50 border-b border-white/7 bg-[#08090d]/85 backdrop-blur-xl">
         <nav className="mx-auto flex h-19 max-w-7xl items-center justify-between px-6 lg:px-10">
           <a
@@ -460,7 +465,13 @@ function Home() {
       </p>
     </div>
 
-    <div className="about-layout">
+    <motion.div
+      className="about-layout"
+      variants={stagger}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15 }}
+    >
       {profileError && (
         <p role="alert" className="text-sm text-red-400">
           {profileError}
@@ -468,7 +479,7 @@ function Home() {
       )}
 
           {profile ? (
-        <div className="about-story">
+        <motion.div className="about-story" variants={reveal}>
           {profile.short_intro && <p className="about-intro">{profile.short_intro}</p>}
           {profile.biography && <p className={`about-biography ${aboutExpanded ? 'is-expanded' : ''}`}>{profile.biography}</p>}
           {profile.secondary_biography && aboutExpanded && <p className="about-secondary">{profile.secondary_biography}</p>}
@@ -483,7 +494,7 @@ function Home() {
               <ArrowUpRight size={16} aria-hidden="true" />
             </button>
           )}
-        </div>
+        </motion.div>
       ) : (
         !profileError && (
           <p className="text-lg leading-8 text-zinc-500">
@@ -492,21 +503,21 @@ function Home() {
         )
       )}
 
-      <aside className="about-facts" aria-label="Professional profile details">
+      <motion.aside className="about-facts" variants={stagger} aria-label="Professional profile details">
         {profile?.professional_title && (
-          <div className="about-fact-card">
+          <motion.div className="about-fact-card" variants={reveal}>
             <Code2 size={20} aria-hidden="true" />
             <div><span>Professional focus</span><strong>{profile.professional_title}</strong></div>
-          </div>
+          </motion.div>
         )}
         {profile?.location && (
-          <div className="about-fact-card">
+          <motion.div className="about-fact-card" variants={reveal}>
             <MapPin size={20} aria-hidden="true" />
             <div><span>Based in</span><strong>{profile.location}</strong></div>
-          </div>
+          </motion.div>
         )}
         {profile?.interests && profile.interests.length > 0 && (
-          <div className="about-interests-card">
+          <motion.div className="about-interests-card" variants={reveal}>
             <Compass size={20} aria-hidden="true" />
             <div>
               <span>Areas of interest</span>
@@ -514,10 +525,10 @@ function Home() {
                 {profile.interests.map((interest) => <em key={interest}>{interest}</em>)}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      </aside>
-    </div>
+      </motion.aside>
+    </motion.div>
   </motion.div>
 </section>
 
@@ -602,7 +613,7 @@ function Home() {
             </motion.div>
 
             <motion.div
-          className="projects-grid"
+          className={`projects-grid ${projects.length === 1 ? 'projects-grid-single' : ''}`}
           variants={stagger}
           initial="hidden"
           whileInView="visible"
