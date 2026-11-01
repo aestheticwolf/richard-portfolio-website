@@ -1,6 +1,6 @@
 
 import { Link, useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 
 import { FaGithub } from 'react-icons/fa'
+import ThemeToggle from '../components/ThemeToggle'
 
 import {
   getPublishedProjects,
@@ -69,52 +70,121 @@ export default function ProjectDetails() {
   const [error, setError] = useState('')
 
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null)
-
   const [brokenImages, setBrokenImages] = useState<string[]>([])
+  const lightboxRef = useRef<HTMLDivElement>(null)
+  const closeLightboxButtonRef = useRef<HTMLButtonElement>(null)
+  const previouslyFocusedElement = useRef<HTMLElement | null>(null)
 
-const galleryImages = project?.galleryImages.slice(0, 6) ?? []
+  const galleryImages = project?.galleryImages.slice(0, 6) ?? []
+  const isLightboxOpen = activeImageIndex !== null
 
-const markImageAsBroken = (imageUrl: string) => {
-  setBrokenImages((current) =>
-    current.includes(imageUrl)
-      ? current
-      : [...current, imageUrl],
-  )
-}
-
-const closeLightbox = () => setActiveImageIndex(null)
-
-const showPreviousImage = () => {
-  setActiveImageIndex((current) =>
-    current === null
-      ? null
-      : (current - 1 + galleryImages.length) % galleryImages.length,
-  )
-}
-
-const showNextImage = () => {
-  setActiveImageIndex((current) =>
-    current === null
-      ? null
-      : (current + 1) % galleryImages.length,
-  )
-}
-
-useEffect(() => {
-  if (activeImageIndex === null) return
-
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') closeLightbox()
-    if (event.key === 'ArrowLeft') showPreviousImage()
-    if (event.key === 'ArrowRight') showNextImage()
+  const markImageAsBroken = (imageUrl: string) => {
+    setBrokenImages((current) =>
+      current.includes(imageUrl)
+        ? current
+        : [...current, imageUrl],
+    )
   }
 
-  window.addEventListener('keydown', handleKeyDown)
+  const closeLightbox = useCallback(() => setActiveImageIndex(null), [])
 
-  return () => {
-    window.removeEventListener('keydown', handleKeyDown)
-  }
-}, [activeImageIndex])
+  const showPreviousImage = useCallback(() => {
+    setActiveImageIndex((current) =>
+      current === null
+        ? null
+        : (current - 1 + galleryImages.length) % galleryImages.length,
+    )
+  }, [galleryImages.length])
+
+  const showNextImage = useCallback(() => {
+    setActiveImageIndex((current) =>
+      current === null
+        ? null
+        : (current + 1) % galleryImages.length,
+    )
+  }, [galleryImages.length])
+
+  useEffect(() => {
+    if (!isLightboxOpen) return
+
+    previouslyFocusedElement.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      closeLightboxButtonRef.current?.focus()
+    })
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame)
+      if (previouslyFocusedElement.current?.isConnected) {
+        previouslyFocusedElement.current.focus()
+      }
+    }
+  }, [isLightboxOpen])
+
+  useEffect(() => {
+    if (!isLightboxOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeLightbox()
+        return
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        showPreviousImage()
+        return
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        showNextImage()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const lightbox = lightboxRef.current
+      if (!lightbox) return
+
+      const focusableElements = Array.from(
+        lightbox.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute('hidden'))
+
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements.at(-1)
+
+      if (!firstElement || !lastElement) {
+        event.preventDefault()
+        lightbox.focus()
+        return
+      }
+
+      if (!lightbox.contains(document.activeElement)) {
+        event.preventDefault()
+        ;(event.shiftKey ? lastElement : firstElement).focus()
+        return
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault()
+        lastElement.focus()
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault()
+        firstElement.focus()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [closeLightbox, isLightboxOpen, showNextImage, showPreviousImage])
 
   useEffect(() => {
     let active = true
@@ -168,12 +238,15 @@ useEffect(() => {
           <p role="alert" className="text-sm text-red-400">
             {error}
           </p>
+          <div className="flex items-center gap-3">
+          <ThemeToggle />
           <Link
             to="/#projects"
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
           >
             <ArrowLeft size={16} /> Back to projects
           </Link>
+          </div>
         </div>
       </main>
     )
@@ -205,17 +278,20 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#08090d] text-white">
-      <header className="border-b border-white/8">
+      <header className="portfolio-nav border-b border-white/8">
         <nav className="mx-auto flex h-19 max-w-7xl items-center justify-between px-6 lg:px-10">
-          <Link to="/" className="text-lg font-bold tracking-tight">
+          <Link to="/" className="portfolio-nav-logo text-lg font-bold tracking-tight">
             RD<span className="text-violet-400">.</span>
           </Link>
-          <Link
-            to="/#projects"
-            className="inline-flex items-center gap-2 text-sm text-zinc-400 transition hover:text-white"
-          >
-            <ArrowLeft size={16} /> All projects
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link
+              to="/#projects"
+              className="portfolio-nav-link inline-flex items-center gap-2 text-sm text-zinc-400 transition hover:text-white"
+            >
+              <ArrowLeft size={16} /> All projects
+            </Link>
+          </div>
         </nav>
       </header>
 
@@ -339,15 +415,18 @@ useEffect(() => {
 </button>
               ))}
 
-              {activeImageIndex !== null && galleryImages.length > 0 && (
+              {isLightboxOpen && galleryImages.length > 0 && (
   <div
+    ref={lightboxRef}
     className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 sm:p-8"
     role="dialog"
     aria-modal="true"
     aria-label="Project image gallery"
+    tabIndex={-1}
     onClick={closeLightbox}
   >
     <button
+      ref={closeLightboxButtonRef}
       type="button"
       onClick={closeLightbox}
       aria-label="Close full-screen gallery"
