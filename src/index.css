@@ -676,6 +676,11 @@ textarea:focus-visible {
 .about-expand-button svg { transition: transform 180ms ease; }
 .about-expand-button:hover svg { transform: translate(2px, -2px); }
 
+.about-resume-link { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 1.15rem; color: var(--accent); font-size: 0.8125rem; font-weight: 650; transition: color 180ms ease; }
+.about-resume-link:hover { color: var(--accent-strong); }
+.about-resume-link svg { transition: transform 180ms ease; }
+.about-resume-link:hover svg { transform: translate(2px, -2px); }
+
 .about-facts { display: grid; gap: 0.75rem; align-content: start; }
 
 .about-fact-card,
@@ -949,6 +954,25 @@ textarea:focus-visible {
 .footer-bottom p { margin: 0; }
 .footer-bottom a { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-secondary); }
 .footer-bottom a:hover { color: var(--accent); }
+
+.resume-request-page { display: grid; min-height: 100vh; place-items: center; padding: 1.5rem; background: radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--ambient-blue) 12%, transparent), transparent 32rem), var(--page-bg); }
+.resume-request-panel { width: min(100%, 29rem); padding: clamp(1.75rem, 5vw, 2.6rem); border: 1px solid var(--border); border-radius: 1rem; background: color-mix(in srgb, var(--surface-raised) 94%, var(--accent-soft)); box-shadow: 0 22px 52px var(--shadow); }
+.resume-request-back { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 2.1rem; color: var(--text-secondary); font-size: 0.8125rem; transition: color 180ms ease; }
+.resume-request-back:hover { color: var(--accent); }
+.resume-request-panel .section-label { margin-bottom: 0.8rem; }
+.resume-request-panel h1 { margin: 0; color: var(--text-primary); font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; font-size: clamp(2.15rem, 8vw, 3rem); letter-spacing: -0.055em; }
+.resume-request-panel > p:last-of-type { margin: 0.8rem 0 1.8rem; color: var(--text-secondary); line-height: 1.65; }
+.resume-request-panel form { display: grid; gap: 1rem; }
+.resume-request-panel label { display: grid; gap: 0.48rem; color: var(--text-secondary); font-size: 0.8125rem; font-weight: 600; }
+.resume-request-panel input { width: 100%; min-height: 2.9rem; padding: 0 0.85rem; border: 1px solid var(--border); border-radius: 0.55rem; outline: none; color: var(--text-primary); background: var(--surface-muted); transition: border-color 180ms ease, box-shadow 180ms ease; }
+.resume-request-panel input::placeholder { color: var(--text-tertiary); }
+.resume-request-panel input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.resume-request-panel button { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 2.9rem; margin-top: 0.35rem; border: 0; border-radius: 0.55rem; color: var(--button-text); background: var(--button-bg); font-size: 0.875rem; font-weight: 700; cursor: pointer; transition: transform 180ms ease, opacity 180ms ease; }
+.resume-request-panel button:hover:not(:disabled) { transform: translateY(-1px); }
+.resume-request-panel button:disabled { cursor: wait; opacity: 0.7; }
+.resume-request-message { margin: 0.15rem 0 0; font-size: 0.8125rem; line-height: 1.5; }
+.resume-request-message.is-success { color: #51d6ad; }
+.resume-request-message.is-error { color: #f08c99; }
 
 @media (max-width: 767px) {
   .contact-panel { grid-template-columns: 1fr; }

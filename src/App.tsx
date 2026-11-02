@@ -5,7 +5,6 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpRight,
-  Download,
   ExternalLink,
   Mail,
   Menu,
@@ -54,7 +53,8 @@ import {
   getPublishedProfile,
   type PublicProfile,
 } from './lib/profile'
-import { getPublishedResumeDownloadUrl, hasPublishedResume } from './lib/resume'
+import RequestResume from './pages/RequestResume'
+import ResumeAccess from './pages/ResumeAccess'
 
 const navigation = [
   { label: 'Home', href: '#home' },
@@ -260,9 +260,6 @@ function Home() {
   const [aboutExpanded, setAboutExpanded] = useState(false)
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [contactStatusMessage, setContactStatusMessage] = useState('')
-  const [resumeAvailable, setResumeAvailable] = useState(false)
-  const [resumeDownloading, setResumeDownloading] = useState(false)
-  const [resumeDownloadMessage, setResumeDownloadMessage] = useState('')
   const [heroTypingCycle, setHeroTypingCycle] = useState(0)
   const [heroTypingIsExiting, setHeroTypingIsExiting] = useState(false)
   const heroName = profile?.full_name || "Richard D'Souza"
@@ -389,46 +386,6 @@ function Home() {
       active = false
     }
   }, [])
-
-  useEffect(() => {
-    let active = true
-
-    async function checkResumeAvailability() {
-      try {
-        const available = await hasPublishedResume()
-        if (active) setResumeAvailable(available)
-      } catch {
-        if (active) setResumeAvailable(false)
-      }
-    }
-
-    void checkResumeAvailability()
-    return () => { active = false }
-  }, [])
-
-  async function handleResumeDownload() {
-    if (resumeDownloading) return
-    setResumeDownloading(true)
-    setResumeDownloadMessage('Preparing secure download…')
-
-    try {
-      const signedUrl = await getPublishedResumeDownloadUrl()
-      const link = document.createElement('a')
-      link.href = signedUrl
-      link.download = 'Richard-DSouza-Resume.pdf'
-      link.target = '_blank'
-      link.rel = 'noreferrer'
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      setResumeDownloadMessage('Your resume download is ready.')
-    } catch (error) {
-      setResumeAvailable(false)
-      setResumeDownloadMessage(error instanceof Error ? error.message : 'Resume download could not be prepared.')
-    } finally {
-      setResumeDownloading(false)
-    }
-  }
 
   useEffect(() => {
     const sections = navigation
@@ -672,14 +629,7 @@ function Home() {
                   Get in touch
                 </a>
 
-                {resumeAvailable && (
-                  <button type="button" className="hero-secondary-action" disabled={resumeDownloading} onClick={() => void handleResumeDownload()}>
-                    <Download size={17} /> {resumeDownloading ? 'Preparing…' : 'Download resume'}
-                  </button>
-                )}
               </div>
-
-              {resumeDownloadMessage && <p className="hero-resume-status" role="status" aria-live="polite">{resumeDownloadMessage}</p>}
 
               <div className="hero-meta">
                 <a
@@ -845,6 +795,9 @@ function Home() {
               <ArrowUpRight size={16} aria-hidden="true" />
             </button>
           )}
+          <Link to="/request-resume" className="about-resume-link">
+            Request Resume <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
         </motion.div>
       ) : (
         !profileError && (
@@ -1136,6 +1089,7 @@ function Home() {
           </div>
           <nav className="footer-nav" aria-label="Footer navigation">
             {navigation.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
+            <Link to="/request-resume">Request Resume</Link>
           </nav>
           <div className="footer-socials">
             <a href={profile?.github_url || 'https://github.com/aestheticwolf'} target="_blank" rel="noreferrer" aria-label="GitHub"><FaGithub size={18} /></a>
@@ -1166,6 +1120,8 @@ function AnimatedRoutes() {
       >
         <Routes location={location}>
           <Route path="/" element={<Home />} />
+          <Route path="/request-resume" element={<RequestResume />} />
+          <Route path="/resume-access" element={<ResumeAccess />} />
           <Route path="/projects/:slug" element={<ProjectDetails />} />
           <Route
             path="*"
