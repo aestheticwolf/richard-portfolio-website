@@ -257,7 +257,38 @@ function Home() {
   const [aboutExpanded, setAboutExpanded] = useState(false)
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [contactStatusMessage, setContactStatusMessage] = useState('')
+  const [heroTypingCycle, setHeroTypingCycle] = useState(0)
+  const [heroTypingIsExiting, setHeroTypingIsExiting] = useState(false)
   const heroName = profile?.full_name || "Richard D'Souza"
+  const heroNameCharacters = [...heroName]
+  const surnameSIndex = heroName.toLowerCase().indexOf('s', heroName.indexOf(' ') + 1)
+  const heroTypingCycleDuration = 10_000
+  const heroLetterAnimationDuration = 2_600
+  const heroLetterStagger = 55
+  const heroTypingExitDelay = Math.max(
+    0,
+    heroTypingCycleDuration -
+      heroLetterAnimationDuration -
+      (heroNameCharacters.length - 1) * heroLetterStagger,
+  )
+
+  useEffect(() => {
+    if (prefersReducedMotion) return
+
+    const exitTimer = window.setTimeout(() => {
+      setHeroTypingIsExiting(true)
+    }, heroTypingExitDelay)
+    const typingCycleTimer = window.setTimeout(() => {
+      setHeroTypingIsExiting(false)
+      setHeroTypingCycle((currentCycle) => currentCycle + 1)
+    }, heroTypingCycleDuration)
+
+    return () => {
+      window.clearTimeout(exitTimer)
+      window.clearTimeout(typingCycleTimer)
+    }
+  }, [heroTypingCycle, heroTypingCycleDuration, heroTypingExitDelay, prefersReducedMotion])
+
   const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (contactStatus === 'sending') return
@@ -524,9 +555,9 @@ function Home() {
       <main>
         <section
           id="home"
-          className="hero-section relative flex min-h-screen scroll-mt-20 items-center"
+          className="hero-section relative flex scroll-mt-20 items-center"
         >
-          <div className="relative mx-auto grid w-full max-w-7xl items-center gap-14 px-6 pb-20 pt-32 sm:pt-36 lg:grid-cols-[1.08fr_0.92fr] lg:gap-20 lg:px-10">
+          <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-6 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16 lg:px-10">
             <motion.div
               className="hero-copy"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
@@ -544,15 +575,27 @@ function Home() {
 
               <h1 className="hero-title" aria-label={heroName}>
                 <span className="hero-title-typing" aria-hidden="true">
-                  {[...heroName].map((character, index) => (
-                    <span
-                      key={`${character}-${index}`}
-                      className={`hero-title-letter ${index > heroName.indexOf(' ') ? 'hero-title-accent' : ''}`}
-                      style={{ animationDelay: `${(index === heroName.length - 1 ? index - 1 : index) * 55}ms` }}
-                    >
-                      {character === ' ' ? '\u00a0' : character}
-                    </span>
-                  ))}
+                  {heroNameCharacters.map((character, index, characters) => {
+                    const combinesSurnameS =
+                      surnameSIndex > 0 && index === surnameSIndex - 1 && character === "'"
+                    const isCombinedSurnameS =
+                      surnameSIndex > 0 && index === surnameSIndex && characters[index - 1] === "'"
+                    if (isCombinedSurnameS) return null
+
+                    const letter = combinesSurnameS
+                      ? `${character}${characters[index + 1] ?? ''}`
+                      : character
+
+                    return (
+                      <span
+                        key={`${heroTypingCycle}-${character}-${index}`}
+                        className={`hero-title-letter ${index > heroName.indexOf(' ') ? 'hero-title-accent' : ''} ${heroTypingIsExiting ? 'hero-title-letter-exiting' : ''}`}
+                        style={{ animationDelay: `${index * heroLetterStagger}ms` }}
+                      >
+                        {letter === ' ' ? '\u00a0' : letter}
+                      </span>
+                    )
+                  })}
                 </span>
               </h1>
 
@@ -694,7 +737,7 @@ function Home() {
 
 <section
   id="about"
-  className="about-section scroll-mt-24 border-t border-white/6 py-24 sm:py-32"
+  className="about-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
 >
   <motion.div
     className="mx-auto max-w-7xl px-6 lg:px-10"
@@ -782,7 +825,7 @@ function Home() {
 
 <section
   id="skills"
-  className="skills-section scroll-mt-24 border-t border-white/6 py-24 sm:py-32"
+  className="skills-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
 >
   <div className="mx-auto max-w-7xl px-6 lg:px-10">
     <motion.div
@@ -845,7 +888,7 @@ function Home() {
 
         <section
           id="projects"
-          className="projects-section scroll-mt-24 border-t border-white/6 py-24 sm:py-32"
+          className="projects-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
         >
           <div className="mx-auto max-w-7xl px-6 lg:px-10">
             <motion.div
@@ -956,7 +999,7 @@ function Home() {
 
         <section
           id="contact"
-          className="contact-section scroll-mt-24 border-t border-white/6 py-24 sm:py-32"
+          className="contact-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
         >
           <div className="mx-auto max-w-7xl px-6 lg:px-10">
             <motion.div
