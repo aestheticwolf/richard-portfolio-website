@@ -7,10 +7,11 @@ export type PortfolioProject = {
   number: string
   name: string
   category: string
-description: string
-imageUrl: string
-galleryImages: string[]
-stack: string[]
+  summary: string
+  description: string
+  imageUrl: string
+  galleryImages: string[]
+  stack: string[]
   color: string
   github: string
   liveUrl: string
@@ -52,16 +53,16 @@ function mapProject(
     number: String(index + 1).padStart(2, '0'),
     name: project.title,
     category: project.category,
-description:
-  project.description || project.short_description,
-imageUrl: project.image_url ?? '',
-galleryImages: project.gallery_images ?? [],
-stack: project.tech_stack ?? [],
+    summary: project.short_description || project.description,
+    description: project.description || project.short_description,
+    imageUrl: project.image_url ?? '',
+    galleryImages: project.gallery_images ?? [],
+    stack: project.tech_stack ?? [],
     color: projectColors[index % projectColors.length],
     github: project.github_url ?? '',
     liveUrl: project.live_url ?? '',
-   demoVideo: project.demo_video_url ?? '',
-features: project.features ?? [],
+    demoVideo: project.demo_video_url ?? '',
+    features: project.features ?? [],
   }
 }
 

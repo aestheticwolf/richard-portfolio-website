@@ -1,10 +1,11 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
-import { motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
 import {
   ArrowDown,
   ArrowUp,
   ArrowUpRight,
+  Download,
   ExternalLink,
   Mail,
   Menu,
@@ -14,6 +15,7 @@ import {
   Compass,
   KeyRound,
   MapPin,
+  PlayCircle,
   ShieldCheck,
 } from 'lucide-react'
 import { FaGithub, FaLinkedinIn } from 'react-icons/fa'
@@ -41,7 +43,7 @@ import {
   SiTypescript,
   SiVercel,
 } from 'react-icons/si'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import ProjectDetails from './pages/ProjectDetails'
 import ThemeToggle from './components/ThemeToggle'
 import {
@@ -52,6 +54,7 @@ import {
   getPublishedProfile,
   type PublicProfile,
 } from './lib/profile'
+import { getPublishedResumeDownloadUrl, hasPublishedResume } from './lib/resume'
 
 const navigation = [
   { label: 'Home', href: '#home' },
@@ -257,6 +260,9 @@ function Home() {
   const [aboutExpanded, setAboutExpanded] = useState(false)
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [contactStatusMessage, setContactStatusMessage] = useState('')
+  const [resumeAvailable, setResumeAvailable] = useState(false)
+  const [resumeDownloading, setResumeDownloading] = useState(false)
+  const [resumeDownloadMessage, setResumeDownloadMessage] = useState('')
   const [heroTypingCycle, setHeroTypingCycle] = useState(0)
   const [heroTypingIsExiting, setHeroTypingIsExiting] = useState(false)
   const heroName = profile?.full_name || "Richard D'Souza"
@@ -385,6 +391,46 @@ function Home() {
   }, [])
 
   useEffect(() => {
+    let active = true
+
+    async function checkResumeAvailability() {
+      try {
+        const available = await hasPublishedResume()
+        if (active) setResumeAvailable(available)
+      } catch {
+        if (active) setResumeAvailable(false)
+      }
+    }
+
+    void checkResumeAvailability()
+    return () => { active = false }
+  }, [])
+
+  async function handleResumeDownload() {
+    if (resumeDownloading) return
+    setResumeDownloading(true)
+    setResumeDownloadMessage('Preparing secure download…')
+
+    try {
+      const signedUrl = await getPublishedResumeDownloadUrl()
+      const link = document.createElement('a')
+      link.href = signedUrl
+      link.download = 'Richard-DSouza-Resume.pdf'
+      link.target = '_blank'
+      link.rel = 'noreferrer'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setResumeDownloadMessage('Your resume download is ready.')
+    } catch (error) {
+      setResumeAvailable(false)
+      setResumeDownloadMessage(error instanceof Error ? error.message : 'Resume download could not be prepared.')
+    } finally {
+      setResumeDownloading(false)
+    }
+  }
+
+  useEffect(() => {
     const sections = navigation
       .map(({ href }) => document.querySelector(href))
       .filter((section): section is HTMLElement => section instanceof HTMLElement)
@@ -507,6 +553,13 @@ function Home() {
                 className={`portfolio-nav-link text-sm text-zinc-400 transition hover:text-white ${activeSection === item.href.slice(1) ? 'is-active' : ''}`}
               >
                 {item.label}
+                {activeSection === item.href.slice(1) && (
+                  <motion.span
+                    className="portfolio-nav-active-indicator"
+                    layoutId="portfolio-nav-active-indicator"
+                    transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34 }}
+                  />
+                )}
               </a>
             ))}
           </div>
@@ -618,7 +671,15 @@ function Home() {
                 >
                   Get in touch
                 </a>
+
+                {resumeAvailable && (
+                  <button type="button" className="hero-secondary-action" disabled={resumeDownloading} onClick={() => void handleResumeDownload()}>
+                    <Download size={17} /> {resumeDownloading ? 'Preparing…' : 'Download resume'}
+                  </button>
+                )}
               </div>
+
+              {resumeDownloadMessage && <p className="hero-resume-status" role="status" aria-live="polite">{resumeDownloadMessage}</p>}
 
               <div className="hero-meta">
                 <a
@@ -758,7 +819,8 @@ function Home() {
       className="about-layout"
       variants={sectionStagger}
       initial="hidden"
-      animate="visible"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.18 }}
     >
       {profileError && (
         <p role="alert" className="text-sm text-red-400">
@@ -921,10 +983,9 @@ function Home() {
                 <motion.article
                   key={project.id}
                   variants={sectionReveal}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, amount: 0.1 }}
                   className="project-card"
+                  whileHover={prefersReducedMotion ? undefined : { y: -6 }}
+                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <div className="project-card-media">
                     {project.imageUrl && !brokenProjectImages.includes(project.imageUrl) ? (
@@ -947,7 +1008,7 @@ function Home() {
 
                   <div className="project-card-body">
                     <h3>{project.name}</h3>
-                    <p>{project.description}</p>
+                    {project.summary && <p>{project.summary}</p>}
                     <div className="project-stack" aria-label={`${project.name} technology stack`}>
                       {project.stack.map((technology) => <span key={technology}>{technology}</span>)}
                     </div>
@@ -955,15 +1016,20 @@ function Home() {
                       <Link to={`/projects/${project.slug}`} className="project-details-link">
                         View details <ArrowUpRight size={15} />
                       </Link>
-                      <div className="project-external-links">
+                      <div className="project-card-quick-actions">
+                        {project.demoVideo && (
+                          <Link to={`/projects/${project.slug}#demo`} className="project-quick-action">
+                            <PlayCircle size={15} /> Watch demo
+                          </Link>
+                        )}
                         {project.github && (
-                          <a href={project.github} target="_blank" rel="noreferrer" aria-label={`Open ${project.name} repository`}>
-                            <FaGithub size={17} />
+                          <a href={project.github} target="_blank" rel="noreferrer" className="project-quick-action" aria-label={`Open ${project.name} repository`}>
+                            <FaGithub size={15} /> Source
                           </a>
                         )}
                         {project.liveUrl && (
-                          <a href={project.liveUrl} target="_blank" rel="noreferrer" aria-label={`Open ${project.name} live application`}>
-                            <ExternalLink size={17} />
+                          <a href={project.liveUrl} target="_blank" rel="noreferrer" className="project-quick-action" aria-label={`Open ${project.name} live application`}>
+                            <ExternalLink size={15} /> Live
                           </a>
                         )}
                       </div>
@@ -1085,29 +1151,48 @@ function Home() {
   )
 }
 
+function AnimatedRoutes() {
+  const location = useLocation()
+  const prefersReducedMotion = useReducedMotion() ?? false
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+        transition={{ duration: prefersReducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <Routes location={location}>
+          <Route path="/" element={<Home />} />
+          <Route path="/projects/:slug" element={<ProjectDetails />} />
+          <Route
+            path="*"
+            element={
+              <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
+                <div className="text-center">
+                  <h1 className="text-4xl font-semibold">Page not found</h1>
+                  <Link
+                    to="/"
+                    className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
+                  >
+                    Return home
+                  </Link>
+                </div>
+              </main>
+            }
+          />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/projects/:slug" element={<ProjectDetails />} />
-        <Route
-          path="*"
-          element={
-            <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
-              <div className="text-center">
-                <h1 className="text-4xl font-semibold">Page not found</h1>
-                <Link
-                  to="/"
-                  className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
-                >
-                  Return home
-                </Link>
-              </div>
-            </main>
-          }
-        />
-      </Routes>
+      <AnimatedRoutes />
     </BrowserRouter>
   )
 }

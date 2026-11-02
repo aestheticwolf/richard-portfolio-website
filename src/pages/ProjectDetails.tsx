@@ -1,7 +1,7 @@
 
 import { Link, useParams } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -64,8 +64,10 @@ function getVideoEmbedUrl(url: string): string | null {
 
 export default function ProjectDetails() {
   const { slug } = useParams<{ slug: string }>()
+  const prefersReducedMotion = useReducedMotion() ?? false
 
   const [project, setProject] = useState<PortfolioProject | null>(null)
+  const [publishedProjects, setPublishedProjects] = useState<PortfolioProject[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -77,6 +79,9 @@ export default function ProjectDetails() {
 
   const galleryImages = project?.galleryImages.slice(0, 6) ?? []
   const isLightboxOpen = activeImageIndex !== null
+  const relatedProjects = project
+    ? publishedProjects.filter((item) => item.id !== project.id).slice(0, 3)
+    : []
 
   const markImageAsBroken = (imageUrl: string) => {
     setBrokenImages((current) =>
@@ -200,6 +205,7 @@ export default function ProjectDetails() {
 
         if (active) {
           setProject(foundProject)
+          setPublishedProjects(publishedProjects)
         }
       } catch (err) {
         if (active) {
@@ -277,7 +283,7 @@ export default function ProjectDetails() {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#08090d] text-white">
+    <div className="project-detail-page min-h-screen overflow-hidden bg-[#08090d] text-white">
       <header className="portfolio-nav border-b border-white/8">
         <nav className="mx-auto flex h-19 max-w-7xl items-center justify-between px-6 lg:px-10">
           <Link to="/" className="portfolio-nav-logo text-lg font-bold tracking-tight">
@@ -295,11 +301,11 @@ export default function ProjectDetails() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-12 sm:py-20 lg:px-10">
+      <main className="project-detail-content mx-auto max-w-7xl px-6 py-12 sm:py-20 lg:px-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.5 }}
         >
           <p className="text-sm uppercase tracking-[0.25em] text-violet-300">
             Project {project.number} / {project.category}
@@ -309,17 +315,19 @@ export default function ProjectDetails() {
             {project.name}
           </h1>
 
-          <p className="mt-6 max-w-3xl text-lg leading-8 text-zinc-400">
-            {project.description}
-          </p>
+          {project.summary && (
+            <p className="mt-6 max-w-3xl text-lg leading-8 text-zinc-400">
+              {project.summary}
+            </p>
+          )}
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="project-detail-actions mt-8 flex flex-wrap gap-3">
   {project.github && (
     <a
       href={project.github}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-violet-200"
+      className="project-detail-action project-detail-action-primary"
     >
       <FaGithub size={17} /> Source code <ArrowUpRight size={15} />
     </a>
@@ -330,9 +338,17 @@ export default function ProjectDetails() {
                 href={project.liveUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm transition hover:border-violet-400/50"
+                className="project-detail-action"
               >
                 <ExternalLink size={16} /> Live application
+              </a>
+            )}
+            {project.demoVideo && (
+              <a
+                href="#demo"
+                className="project-detail-action"
+              >
+                <PlayCircle size={16} /> Watch demo
               </a>
             )}
           </div>
@@ -340,21 +356,21 @@ export default function ProjectDetails() {
 
 
         <motion.section
-          initial={{ opacity: 0, y: 20 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className={`mt-14 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br ${project.color} p-5 sm:p-10`}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.1 }}
+          className={`project-detail-hero-media mt-12 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br ${project.color} p-4 sm:mt-14 sm:p-7`}
         >
           {project.imageUrl && !brokenImages.includes(project.imageUrl) ? (
   <img
     src={project.imageUrl}
     alt={`${project.name} project preview`}
-    className="max-h-150 min-h-52 w-full rounded-2xl border border-white/10 bg-[#08090d]/65 object-contain sm:min-h-72"
+    className="project-detail-main-image w-full rounded-2xl border border-white/10 bg-[#08090d]/65 object-contain"
     loading="lazy"
     onError={() => markImageAsBroken(project.imageUrl)}
   />
 ) : (
-  <div className="flex min-h-52 flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-[#08090d]/65 p-6 text-center sm:min-h-72">
+  <div className="project-detail-media-empty flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-[#08090d]/65 p-6 text-center">
     <Code2 size={42} className="text-violet-300" />
     <h2 className="mt-5 text-2xl font-semibold">
       {project.name}
@@ -368,7 +384,7 @@ export default function ProjectDetails() {
 
 
         {project.galleryImages.length > 0 && (
-          <section className="mt-16">
+          <section className="project-gallery mt-16">
             <p className="text-sm uppercase tracking-[0.25em] text-violet-300">
               PROJECT GALLERY
             </p>
@@ -381,17 +397,25 @@ export default function ProjectDetails() {
               Explore different screens and views of this project.
             </p>
 
-            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <motion.div
+              className="project-gallery-grid mt-8"
+              initial={prefersReducedMotion ? false : 'hidden'}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.15 }}
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.08 } } }}
+            >
               {project.galleryImages.slice(0, 6).map((image, index) => (
-               <button
+               <motion.button
   key={`${image}-${index}`}
   type="button"
   onClick={() => setActiveImageIndex(index)}
   aria-label={`Open screenshot ${index + 1} in full screen`}
-  className="group block w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 text-left"
+  className="project-gallery-card group block w-full overflow-hidden text-left"
+  variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+  transition={{ duration: prefersReducedMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
 >
                  {brokenImages.includes(image) ? (
-  <div className="flex h-72 w-full flex-col items-center justify-center bg-white/5 px-4 text-center">
+  <div className="project-gallery-fallback flex w-full flex-col items-center justify-center bg-white/5 px-4 text-center">
     <Code2 size={30} className="text-violet-300" />
     <p className="mt-3 text-sm text-zinc-300">
       Image unavailable
@@ -406,13 +430,13 @@ export default function ProjectDetails() {
     alt={`${project.name} screenshot ${index + 1}`}
     loading="lazy"
     onError={() => markImageAsBroken(image)}
-    className="h-72 w-full bg-[#08090d] object-contain transition duration-300 group-hover:scale-[1.02]"
+    className="project-gallery-image w-full bg-[#08090d] object-contain transition duration-300 group-hover:scale-[1.03]"
   />
 )}
                   <figcaption className="px-4 py-3 text-sm text-zinc-400">
                     Screenshot {index + 1}
                   </figcaption>
-</button>
+</motion.button>
               ))}
 
               {isLightboxOpen && galleryImages.length > 0 && (
@@ -487,13 +511,13 @@ export default function ProjectDetails() {
     </p>
   </div>
 )}
-            </div>
+            </motion.div>
           </section>
         )}
 
 
-        <div className="mt-16 grid gap-12 lg:grid-cols-[1.2fr_0.8fr]">
-          <section>
+        <div className="project-detail-layout mt-16">
+          <section className="project-detail-overview">
             <p className="text-sm uppercase tracking-[0.25em] text-violet-300">
               Overview
             </p>
@@ -504,26 +528,30 @@ export default function ProjectDetails() {
               {project.description}
             </p>
 
-            <h2 className="mt-10 text-2xl font-semibold">
-              Key features
-            </h2>
-            <ul className="mt-5 space-y-4">
-              {project.features.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-3 text-zinc-300"
-                >
-                  <CheckCircle2
-                    size={19}
-                    className="mt-1 shrink-0 text-violet-300"
-                  />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
+            {project.features.length > 0 && (
+              <>
+                <h2 className="mt-10 text-2xl font-semibold">
+                  Key features
+                </h2>
+                <ul className="mt-5 space-y-4">
+                  {project.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-zinc-300"
+                    >
+                      <CheckCircle2
+                        size={19}
+                        className="mt-1 shrink-0 text-violet-300"
+                      />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </section>
 
-          <aside className="h-fit rounded-2xl border border-white/10 bg-white/2.5 p-6 sm:p-8">
+          <aside className="project-detail-sidebar h-fit rounded-2xl border border-white/10 bg-white/2.5 p-6 sm:p-8">
             <p className="text-sm uppercase tracking-[0.25em] text-violet-300">
               Project information
             </p>
@@ -543,12 +571,11 @@ export default function ProjectDetails() {
               ))}
             </div>
 
-            <div className="mt-8 border-t border-white/10 pt-6">
+            {project.demoVideo && (
+              <div id="demo" className="mt-8 scroll-mt-24 border-t border-white/10 pt-6">
               <h3 className="font-medium">Demo video</h3>
 
-
-{project.demoVideo ? (
-  <div className="mt-4">
+                <div className="mt-4">
     {getVideoEmbedUrl(project.demoVideo) ? (
       <iframe
         src={getVideoEmbedUrl(project.demoVideo)!}
@@ -579,18 +606,9 @@ export default function ProjectDetails() {
         <ArrowUpRight size={15} />
       </a>
     )}
-  </div>
-) : (
-  <div className="mt-4 rounded-xl border border-dashed border-white/15 p-5">
-    <PlayCircle size={25} className="text-violet-300" />
-    <p className="mt-3 text-sm text-zinc-300">Demo coming soon</p>
-    <p className="mt-2 text-xs leading-5 text-zinc-500">
-      Your project walkthrough will appear here when a video is added.
-    </p>
-  </div>
-)}
-
+                </div>
             </div>
+            )}
 
             <div className="mt-8 border-t border-white/10 pt-6">
               <h3 className="font-medium">Explore more</h3>
@@ -603,6 +621,36 @@ export default function ProjectDetails() {
             </div>
           </aside>
         </div>
+
+        {relatedProjects.length > 0 && (
+          <section className="project-related mt-16 border-t border-white/10 pt-12 sm:mt-20">
+            <div className="project-related-heading">
+              <div>
+                <p className="text-sm uppercase tracking-[0.25em] text-violet-300">Explore more</p>
+                <h2 className="mt-4 text-3xl font-semibold">More selected work</h2>
+              </div>
+              <Link to="/#projects" className="project-details-link">All projects <ArrowUpRight size={15} /></Link>
+            </div>
+            <div className="project-related-grid mt-8">
+              {relatedProjects.map((relatedProject) => (
+                <Link key={relatedProject.id} to={`/projects/${relatedProject.slug}`} className="project-related-card">
+                  <div className="project-related-media">
+                    {relatedProject.imageUrl ? (
+                      <img src={relatedProject.imageUrl} alt="" loading="lazy" />
+                    ) : (
+                      <Code2 size={25} aria-hidden="true" />
+                    )}
+                  </div>
+                  <div>
+                    {relatedProject.category && <p>{relatedProject.category}</p>}
+                    <h3>{relatedProject.name}</h3>
+                    {relatedProject.summary && <span>{relatedProject.summary}</span>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <footer className="border-t border-white/8 px-6 py-8 text-center text-sm text-zinc-500">
