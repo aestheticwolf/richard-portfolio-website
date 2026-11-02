@@ -1,6 +1,13 @@
 
 import { supabase } from './supabase'
 
+const defaultSkills = [
+  { name: 'Frontend Development', technologies: ['React', 'TypeScript', 'HTML', 'CSS'] },
+  { name: 'Backend Development', technologies: ['Node.js', 'Express', 'REST APIs'] },
+  { name: 'Cloud & Deployment', technologies: ['Firebase', 'Supabase', 'Vercel'] },
+  { name: 'Security Fundamentals', technologies: ['Authentication', 'Authorization', 'Firewalls'] },
+]
+
 export type PublicProfile = {
   id: string
   full_name: string
@@ -13,6 +20,7 @@ export type PublicProfile = {
   github_url: string | null
   linkedin_url: string | null
   interests: string[]
+  skills: { name: string; technologies: string[] }[]
   updated_at: string
 }
 
@@ -32,6 +40,7 @@ export async function getPublishedProfile(): Promise<PublicProfile | null> {
         github_url,
         linkedin_url,
         interests,
+        skills,
         updated_at
       `,
     )
@@ -39,6 +48,42 @@ export async function getPublishedProfile(): Promise<PublicProfile | null> {
     .maybeSingle()
 
   if (error) {
+    const missingSkillsColumn =
+      error.code === '42703' ||
+      (error.message.toLowerCase().includes('portfolio_profile.skills') &&
+        error.message.toLowerCase().includes('does not exist'))
+
+    if (missingSkillsColumn) {
+      const legacyResult = await supabase
+        .from('portfolio_profile')
+        .select(
+          `
+            id,
+            full_name,
+            professional_title,
+            short_intro,
+            biography,
+            secondary_biography,
+            location,
+            profile_image_url,
+            github_url,
+            linkedin_url,
+            interests,
+            updated_at
+          `,
+        )
+        .eq('status', 'published')
+        .maybeSingle()
+
+      if (legacyResult.error) {
+        throw new Error(`Unable to load portfolio profile: ${legacyResult.error.message}`)
+      }
+
+      return legacyResult.data
+        ? { ...legacyResult.data, skills: defaultSkills } as PublicProfile
+        : null
+    }
+
     throw new Error(`Unable to load portfolio profile: ${error.message}`)
   }
 

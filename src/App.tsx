@@ -1,8 +1,9 @@
 
 import { useEffect, useState } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
 import {
   ArrowDown,
+  ArrowUp,
   ArrowUpRight,
   ExternalLink,
   Mail,
@@ -11,10 +12,35 @@ import {
   Code2,
   Cloud,
   Compass,
+  KeyRound,
   MapPin,
   ShieldCheck,
 } from 'lucide-react'
 import { FaGithub, FaLinkedinIn } from 'react-icons/fa'
+import type { IconType } from 'react-icons'
+import {
+  SiCplusplus,
+  SiSharp,
+  SiCss,
+  SiDocker,
+  SiExpress,
+  SiFirebase,
+  SiGit,
+  SiGithub,
+  SiGo,
+  SiHtml5,
+  SiOpenjdk,
+  SiJavascript,
+  SiMongodb,
+  SiNodedotjs,
+  SiPostgresql,
+  SiPython,
+  SiReact,
+  SiRust,
+  SiSupabase,
+  SiTypescript,
+  SiVercel,
+} from 'react-icons/si'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import ProjectDetails from './pages/ProjectDetails'
 import ThemeToggle from './components/ThemeToggle'
@@ -38,25 +64,119 @@ const navigation = [
 const skills = [
   {
     name: 'Frontend Development',
-    detail: 'React · TypeScript · HTML · CSS',
     icon: Code2,
+    technologies: [
+      { name: 'React', icon: SiReact, tone: 'react' },
+      { name: 'TypeScript', icon: SiTypescript, tone: 'typescript' },
+      { name: 'HTML', icon: SiHtml5, tone: 'html' },
+      { name: 'CSS', icon: SiCss, tone: 'css' },
+    ],
   },
   {
     name: 'Backend Development',
-    detail: 'Node.js · Express · REST APIs',
     icon: Code2,
+    technologies: [
+      { name: 'Node.js', icon: SiNodedotjs, tone: 'node' },
+      { name: 'Express', icon: SiExpress, tone: 'express' },
+      { name: 'REST APIs', icon: Code2, tone: 'api' },
+    ],
   },
   {
     name: 'Cloud & Deployment',
-    detail: 'Firebase · Supabase · Vercel',
     icon: Cloud,
+    technologies: [
+      { name: 'Firebase', icon: SiFirebase, tone: 'firebase' },
+      { name: 'Supabase', icon: SiSupabase, tone: 'supabase' },
+      { name: 'Vercel', icon: SiVercel, tone: 'vercel' },
+    ],
   },
   {
     name: 'Security Fundamentals',
-    detail: 'Authentication · Authorization · Firewalls',
     icon: ShieldCheck,
+    technologies: [
+      { name: 'Authentication', icon: KeyRound, tone: 'security' },
+      { name: 'Authorization', icon: ShieldCheck, tone: 'security' },
+      { name: 'Firewalls', icon: ShieldCheck, tone: 'security' },
+    ],
   },
 ]
+
+const technologyIconMap: Record<string, IconType> = {
+  React: SiReact,
+  TypeScript: SiTypescript,
+  JavaScript: SiJavascript,
+  HTML: SiHtml5,
+  CSS: SiCss,
+  'Node.js': SiNodedotjs,
+  Express: SiExpress,
+  Python: SiPython,
+  Java: SiOpenjdk,
+  'C++': SiCplusplus,
+  'C#': SiSharp,
+  Go: SiGo,
+  Rust: SiRust,
+  Firebase: SiFirebase,
+  Supabase: SiSupabase,
+  Vercel: SiVercel,
+  PostgreSQL: SiPostgresql,
+  MongoDB: SiMongodb,
+  Docker: SiDocker,
+  Git: SiGit,
+  GitHub: SiGithub,
+}
+
+const normalizeTechnologyName = (name: string) =>
+  name.toLowerCase().replace(/[\s._-]/g, '')
+
+const technologyIconAliases: Record<string, string> = {
+  reactjs: 'react',
+  reactnative: 'react',
+  ts: 'typescript',
+  js: 'javascript',
+  html5: 'html',
+  css3: 'css',
+  node: 'nodejs',
+  expressjs: 'express',
+  py: 'python',
+  golang: 'go',
+  cpp: 'c++',
+  csharp: 'c#',
+  postgres: 'postgresql',
+  mongo: 'mongodb',
+}
+
+const technologyIconsByNormalizedName = Object.fromEntries(
+  Object.entries(technologyIconMap).map(([name, Icon]) => [normalizeTechnologyName(name), Icon]),
+)
+
+function getTechnologyIcon(name: string): IconType | undefined {
+  const normalizedName = normalizeTechnologyName(name)
+  const canonicalName = technologyIconAliases[normalizedName] ?? normalizedName
+  return technologyIconsByNormalizedName[canonicalName]
+}
+
+const technologyLucideIconMap: Record<string, typeof Code2> = {
+  Authentication: KeyRound,
+  Authorization: ShieldCheck,
+  Firewalls: ShieldCheck,
+  'REST APIs': Code2,
+}
+
+const technologyToneMap: Record<string, string> = {
+  React: 'react',
+  TypeScript: 'typescript',
+  HTML: 'html',
+  CSS: 'css',
+  'Node.js': 'node',
+  Express: 'express',
+  'REST APIs': 'api',
+  Firebase: 'firebase',
+  Supabase: 'supabase',
+  Vercel: 'vercel',
+  Authentication: 'security',
+  Authorization: 'security',
+  Firewalls: 'security',
+}
 
 
 
@@ -64,14 +184,18 @@ const skills = [
 const reveal = {
   hidden: {
     opacity: 0,
-    y: 18,
+    y: 30,
+    scale: 0.985,
+    filter: 'blur(5px)',
   },
   visible: {
     opacity: 1,
     y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
     transition: {
-      duration: 0.45,
-      ease: "easeOut" as const,
+      duration: 0.72,
+      ease: [0.22, 1, 0.36, 1] as const,
     },
   },
 };
@@ -80,10 +204,40 @@ const stagger = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.15,
+      staggerChildren: 0.14,
     },
   },
 };
+
+const reducedReveal = {
+  hidden: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
+  visible: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', transition: { duration: 0 } },
+}
+
+const reducedStagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0 } },
+}
+
+function ScrollProgress() {
+  const prefersReducedMotion = useReducedMotion() ?? false
+  const { scrollYProgress } = useScroll()
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 140,
+    damping: 30,
+    restDelta: 0.001,
+  })
+
+  if (prefersReducedMotion) return null
+
+  return (
+    <motion.div
+      className="scroll-progress"
+      style={{ scaleX }}
+      aria-hidden="true"
+    />
+  )
+}
 
 
 
@@ -91,8 +245,11 @@ const stagger = {
 
 function Home() {
   const prefersReducedMotion = useReducedMotion() ?? false
+  const sectionReveal = prefersReducedMotion ? reducedReveal : reveal
+  const sectionStagger = prefersReducedMotion ? reducedStagger : stagger
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
+  const [showBackToTop, setShowBackToTop] = useState(() => window.scrollY > 480)
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState('')
@@ -100,6 +257,26 @@ function Home() {
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [profileError, setProfileError] = useState('')
   const [aboutExpanded, setAboutExpanded] = useState(false)
+  const heroName = profile?.full_name || "Richard D'Souza"
+  const displayedSkills = profile?.skills?.length
+    ? profile.skills
+        .filter((skill) => skill && typeof skill.name === 'string')
+        .map((skill) => ({
+          name: skill.name,
+          icon: /cloud|deploy/i.test(skill.name)
+            ? Cloud
+            : /security/i.test(skill.name)
+              ? ShieldCheck
+              : Code2,
+          technologies: (Array.isArray(skill.technologies) ? skill.technologies : [])
+            .filter((technology): technology is string => typeof technology === 'string' && technology.trim().length > 0)
+            .map((name) => ({
+              name,
+              icon: getTechnologyIcon(name) ?? technologyLucideIconMap[name] ?? Code2,
+              tone: technologyToneMap[name] ?? 'default',
+            })),
+        }))
+    : skills
 
   const markProjectImageAsBroken = (imageUrl: string) => {
     setBrokenProjectImages((current) =>
@@ -181,6 +358,15 @@ function Home() {
     }
   }, [])
 
+  useEffect(() => {
+    const updateBackToTopVisibility = () => {
+      setShowBackToTop(window.scrollY > 480)
+    }
+
+    window.addEventListener('scroll', updateBackToTopVisibility, { passive: true })
+    return () => window.removeEventListener('scroll', updateBackToTopVisibility)
+  }, [])
+
 
     useEffect(() => {
     let active = true
@@ -218,6 +404,23 @@ function Home() {
         <span className="portfolio-orb portfolio-orb-two" />
         <span className="portfolio-grid-glow" />
       </div>
+      <ScrollProgress />
+      {showBackToTop && (
+        <motion.button
+          type="button"
+          className="back-to-top-button"
+          aria-label="Back to top"
+          title="Back to top"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.04 }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.24, ease: 'easeOut' }}
+          onClick={() => window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })}
+        >
+          <ArrowUp size={18} aria-hidden="true" />
+        </motion.button>
+      )}
       <header className="portfolio-nav fixed inset-x-0 top-0 z-50 border-b border-white/7 bg-[#08090d]/85 backdrop-blur-xl">
         <nav className="mx-auto flex h-19 max-w-7xl items-center justify-between px-6 lg:px-10">
           <a
@@ -291,25 +494,28 @@ function Home() {
               className="hero-copy"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.72, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="hero-status">
                 <span className="hero-status-dot" />
-                {profile?.professional_title || 'Software Developer'} Portfolio
+                Building thoughtful digital experiences
               </div>
 
               <p className="hero-kicker">
                 Hello, I'm
               </p>
 
-              <h1 className="hero-title">
-                {(profile?.full_name || "Richard D'Souza").split(' ')[0]}
-                <span>
-                  {(profile?.full_name || "Richard D'Souza")
-                    .split(' ')
-                    .slice(1)
-                    .join(' ')}
-                  .
+              <h1 className="hero-title" aria-label={heroName}>
+                <span className="hero-title-typing" aria-hidden="true">
+                  {[...heroName].map((character, index) => (
+                    <span
+                      key={`${character}-${index}`}
+                      className={`hero-title-letter ${index > heroName.indexOf(' ') ? 'hero-title-accent' : ''}`}
+                      style={{ animationDelay: `${index * 55}ms` }}
+                    >
+                      {character === ' ' ? '\u00a0' : character}
+                    </span>
+                  ))}
                 </span>
               </h1>
 
@@ -363,7 +569,7 @@ function Home() {
               className="hero-visual"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: prefersReducedMotion ? 0 : 0.08, ease: 'easeOut' }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.82, delay: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
             >
               {profile?.profile_image_url && (
                 <figure className="hero-portrait">
@@ -434,15 +640,18 @@ function Home() {
                 </div>
               </motion.div>
             </motion.div>
-          </div>
 
-          <a
-            href="#about"
-            aria-label="Scroll to About"
-            className="hero-scroll-cue"
-          >
-            <ArrowDown size={18} />
-          </a>
+            <a
+              href="#about"
+              aria-label="Scroll to About"
+              className="hero-scroll-cue"
+            >
+              <span className="hero-scroll-arrows" aria-hidden="true">
+                <ArrowDown size={17} />
+                <ArrowDown size={17} />
+              </span>
+            </a>
+          </div>
         </section>
 
 
@@ -452,7 +661,7 @@ function Home() {
 >
   <motion.div
     className="mx-auto max-w-7xl px-6 lg:px-10"
-    variants={reveal}
+    variants={sectionReveal}
     initial="hidden"
     whileInView="visible"
     viewport={{ once: true, amount: 0.2 }}
@@ -467,10 +676,9 @@ function Home() {
 
     <motion.div
       className="about-layout"
-      variants={stagger}
+      variants={sectionStagger}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
+      animate="visible"
     >
       {profileError && (
         <p role="alert" className="text-sm text-red-400">
@@ -479,8 +687,9 @@ function Home() {
       )}
 
           {profile ? (
-        <motion.div className="about-story" variants={reveal}>
-          {profile.short_intro && <p className="about-intro">{profile.short_intro}</p>}
+        <motion.div className="about-story" variants={sectionReveal}>
+          <p className="about-story-label">In brief</p>
+          {profile.short_intro && <p className={`about-intro ${aboutExpanded ? 'is-expanded' : ''}`}>{profile.short_intro}</p>}
           {profile.biography && <p className={`about-biography ${aboutExpanded ? 'is-expanded' : ''}`}>{profile.biography}</p>}
           {profile.secondary_biography && aboutExpanded && <p className="about-secondary">{profile.secondary_biography}</p>}
           {(profile.biography || profile.secondary_biography) && (
@@ -503,21 +712,21 @@ function Home() {
         )
       )}
 
-      <motion.aside className="about-facts" variants={stagger} aria-label="Professional profile details">
+      <motion.aside className="about-facts" variants={sectionStagger} aria-label="Professional profile details">
         {profile?.professional_title && (
-          <motion.div className="about-fact-card" variants={reveal}>
+          <motion.div className="about-fact-card" variants={sectionReveal}>
             <Code2 size={20} aria-hidden="true" />
             <div><span>Professional focus</span><strong>{profile.professional_title}</strong></div>
           </motion.div>
         )}
         {profile?.location && (
-          <motion.div className="about-fact-card" variants={reveal}>
+          <motion.div className="about-fact-card" variants={sectionReveal}>
             <MapPin size={20} aria-hidden="true" />
             <div><span>Based in</span><strong>{profile.location}</strong></div>
           </motion.div>
         )}
         {profile?.interests && profile.interests.length > 0 && (
-          <motion.div className="about-interests-card" variants={reveal}>
+          <motion.div className="about-interests-card" variants={sectionReveal}>
             <Compass size={20} aria-hidden="true" />
             <div>
               <span>Areas of interest</span>
@@ -541,7 +750,7 @@ function Home() {
   <div className="mx-auto max-w-7xl px-6 lg:px-10">
     <motion.div
       className="section-heading skills-heading"
-      variants={reveal}
+      variants={sectionReveal}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.25 }}
@@ -556,29 +765,38 @@ function Home() {
 
     <motion.div
       className="skills-grid"
-      variants={stagger}
+      variants={sectionStagger}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
     >
-      {skills.map((skill) => {
+      {displayedSkills.map((skill, skillIndex) => {
         const Icon = skill.icon
 
         return (
           <motion.div
             key={skill.name}
-            variants={reveal}
+            variants={sectionReveal}
             className="skill-card"
           >
             <div className="skill-card-header">
               <div className="skill-icon"><Icon size={21} aria-hidden="true" /></div>
-              <span className="skill-card-index">0{skills.indexOf(skill) + 1}</span>
+              <span className="skill-card-index">{String(skillIndex + 1).padStart(2, '0')}</span>
             </div>
 
             <h3>{skill.name}</h3>
 
             <div className="skill-tags">
-              {skill.detail.split(' · ').map((technology) => <span key={technology}>{technology}</span>)}
+              {skill.technologies.map((technology) => {
+                const TechnologyIcon = technology.icon
+
+                return (
+                  <span className={`technology-tag technology-${technology.tone}`} key={technology.name}>
+                    <TechnologyIcon size={14} aria-hidden="true" />
+                    {technology.name}
+                  </span>
+                )
+              })}
             </div>
           </motion.div>
         )
@@ -595,7 +813,7 @@ function Home() {
           <div className="mx-auto max-w-7xl px-6 lg:px-10">
             <motion.div
               className="projects-heading-row"
-              variants={reveal}
+              variants={sectionReveal}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
@@ -614,7 +832,7 @@ function Home() {
 
             <motion.div
           className={`projects-grid ${projects.length === 1 ? 'projects-grid-single' : ''}`}
-          variants={stagger}
+          variants={sectionStagger}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.1 }}
@@ -622,7 +840,7 @@ function Home() {
               {!projectsLoading && !projectsError && projects.map((project) => (
                 <motion.article
                   key={project.id}
-                  variants={reveal}
+                  variants={sectionReveal}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.1 }}
@@ -706,7 +924,7 @@ function Home() {
           <div className="mx-auto max-w-7xl px-6 lg:px-10">
             <motion.div
               className="contact-panel"
-              variants={reveal}
+              variants={sectionReveal}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
