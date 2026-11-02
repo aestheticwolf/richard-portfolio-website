@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
 import {
   ArrowDown,
@@ -228,12 +228,10 @@ function ScrollProgress() {
     restDelta: 0.001,
   })
 
-  if (prefersReducedMotion) return null
-
   return (
     <motion.div
       className="scroll-progress"
-      style={{ scaleX }}
+      style={{ scaleX: prefersReducedMotion ? scrollYProgress : scaleX }}
       aria-hidden="true"
     />
   )
@@ -257,7 +255,46 @@ function Home() {
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [profileError, setProfileError] = useState('')
   const [aboutExpanded, setAboutExpanded] = useState(false)
+  const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [contactStatusMessage, setContactStatusMessage] = useState('')
   const heroName = profile?.full_name || "Richard D'Souza"
+  const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (contactStatus === 'sending') return
+
+    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
+    if (!accessKey) {
+      setContactStatus('error')
+      setContactStatusMessage('The message form is not configured yet. Please email me directly using the link below.')
+      return
+    }
+
+    const form = event.currentTarget
+    const formData = new FormData(form)
+    formData.set('access_key', accessKey)
+    formData.set('subject', `Portfolio message from ${String(formData.get('name') || 'a visitor')}`)
+    formData.set('from_name', "Richard D'Souza Portfolio")
+    setContactStatus('sending')
+    setContactStatusMessage('Sending your message…')
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData,
+        headers: { Accept: 'application/json' },
+      })
+      const result: { success?: boolean } = await response.json()
+
+      if (!response.ok || !result.success) throw new Error('Submission failed')
+
+      form.reset()
+      setContactStatus('sent')
+      setContactStatusMessage('Thanks for reaching out. Your message has been sent.')
+    } catch {
+      setContactStatus('error')
+      setContactStatusMessage('Your message could not be sent right now. Please try again or email me directly below.')
+    }
+  }
   const displayedSkills = profile?.skills?.length
     ? profile.skills
         .filter((skill) => skill && typeof skill.name === 'string')
@@ -596,23 +633,23 @@ function Home() {
                 </div>
 
                 <div className="hero-code-panel">
-                  <p className="text-zinc-500">
+                  <p className="hero-code-comment">
                     // A little about me
                   </p>
 
                   <p>
-                    <span className="text-violet-300">const</span>{' '}
+                    <span className="hero-code-keyword">const</span>{' '}
                     developer = {'{'}
                   </p>
 
-                  <p className="pl-4">name: <span className="text-emerald-300">'{profile?.full_name || "Richard D'Souza"}'</span>,</p>
+                  <p className="pl-4">name: <span className="hero-code-string">'{profile?.full_name || "Richard D'Souza"}'</span>,</p>
                   <p className="pl-4">
-                    focus: <span className="text-emerald-300">'{profile?.professional_title || 'Software'}'</span>,
+                    focus: <span className="hero-code-string">'{profile?.professional_title || 'Software'}'</span>,
                   </p>
 
                   <p className="pl-4">interests: [</p>
                   {(profile?.interests ?? []).map((interest, index) => (
-                    <p className="pl-8 text-blue-300" key={`${interest}-${index}`}>
+                    <p className="pl-8 hero-code-interest" key={`${interest}-${index}`}>
                       '{interest}'{index < (profile?.interests.length ?? 0) - 1 ? ',' : ''}
                     </p>
                   ))}
@@ -620,7 +657,7 @@ function Home() {
 
                   <p className="pl-4">
                     learning:{' '}
-                    <span className="text-emerald-300">true</span>
+                    <span className="hero-code-value">true</span>
                   </p>
 
                   <p>{'}'}</p>
@@ -935,12 +972,36 @@ function Home() {
                 <p>
                   I&apos;m open to meaningful conversations with recruiters, teams, and collaborators who value thoughtful software.
                 </p>
-                <a href="mailto:YOUR_EMAIL@example.com" className="contact-primary-action">
-                  <Mail size={17} />
-                  Get in touch
-                  <ArrowUpRight size={17} />
-                </a>
-                <p className="contact-placeholder-note">Replace the placeholder email before publishing.</p>
+                <form className="contact-form" onSubmit={handleContactSubmit}>
+                  <div className="contact-form-fields">
+                    <label className="contact-field">
+                      <span>Your name</span>
+                      <input name="name" type="text" autoComplete="name" maxLength={120} required />
+                    </label>
+                    <label className="contact-field">
+                      <span>Email address</span>
+                      <input name="email" type="email" autoComplete="email" maxLength={254} required />
+                    </label>
+                    <label className="contact-field">
+                      <span>Message</span>
+                      <textarea name="message" rows={4} maxLength={5000} required />
+                    </label>
+                  </div>
+                  <input className="contact-honeypot" name="botcheck" type="checkbox" tabIndex={-1} aria-hidden="true" />
+                  <button className="contact-primary-action" type="submit" disabled={contactStatus === 'sending'}>
+                    <Mail size={17} />
+                    {contactStatus === 'sending' ? 'Sending…' : 'Send message'}
+                    <ArrowUpRight size={17} />
+                  </button>
+                  {contactStatusMessage && (
+                    <p className={`contact-form-status ${contactStatus === 'error' ? 'is-error' : ''}`} role={contactStatus === 'error' ? 'alert' : 'status'} aria-live="polite">
+                      {contactStatusMessage}
+                    </p>
+                  )}
+                  <p className="contact-email-fallback">
+                    Prefer email? <a href="mailto:rich.dsz1997@gmail.com">rich.dsz1997@gmail.com</a>
+                  </p>
+                </form>
               </div>
 
               <aside className="contact-aside" aria-label="Other ways to connect">
