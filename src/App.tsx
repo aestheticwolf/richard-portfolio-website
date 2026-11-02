@@ -548,7 +548,7 @@ function Home() {
                     <span
                       key={`${character}-${index}`}
                       className={`hero-title-letter ${index > heroName.indexOf(' ') ? 'hero-title-accent' : ''}`}
-                      style={{ animationDelay: `${index * 55}ms` }}
+                      style={{ animationDelay: `${(index === heroName.length - 1 ? index - 1 : index) * 55}ms` }}
                     >
                       {character === ' ' ? '\u00a0' : character}
                     </span>
