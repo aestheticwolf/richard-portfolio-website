@@ -11,13 +11,22 @@ import {
   X,
   Code2,
   Cloud,
-  Compass,
   KeyRound,
   MapPin,
   PlayCircle,
   ShieldCheck,
+  GraduationCap,
+  Sparkles,
+  Terminal,
+  ChevronDown,
+  Check,
+  Copy,
+  Send,
+  FileCode,
+  Layers,
+  Compass,
 } from 'lucide-react'
-import { FaGithub, FaLinkedinIn } from 'react-icons/fa'
+import { FaGithub, FaLinkedinIn, FaAws } from 'react-icons/fa'
 import type { IconType } from 'react-icons'
 import {
   SiCplusplus,
@@ -39,12 +48,28 @@ import {
   SiReact,
   SiRust,
   SiSupabase,
+  SiTailwindcss,
   SiTypescript,
   SiVercel,
+  SiNextdotjs,
+  SiVuedotjs,
+  SiSass,
+  SiRedux,
+  SiVite,
+  SiBootstrap,
+  SiNestjs,
+  SiDjango,
+  SiFastapi,
+  SiSpringboot,
+  SiDotnet,
+  SiGraphql,
+  SiMysql,
+  SiRedis,
 } from 'react-icons/si'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import ProjectDetails from './pages/ProjectDetails'
 import ThemeToggle from './components/ThemeToggle'
+import BackgroundAnimation from './components/BackgroundAnimation'
 import {
   getPublishedProjects,
   type PortfolioProject,
@@ -108,22 +133,38 @@ const technologyIconMap: Record<string, IconType> = {
   React: SiReact,
   TypeScript: SiTypescript,
   JavaScript: SiJavascript,
+  'Next.js': SiNextdotjs,
+  'Tailwind CSS': SiTailwindcss,
+  'Vue.js': SiVuedotjs,
   HTML: SiHtml5,
   CSS: SiCss,
+  Sass: SiSass,
+  Redux: SiRedux,
+  Vite: SiVite,
+  Bootstrap: SiBootstrap,
   'Node.js': SiNodedotjs,
   Express: SiExpress,
+  NestJS: SiNestjs,
   Python: SiPython,
+  Django: SiDjango,
+  FastAPI: SiFastapi,
   Java: SiOpenjdk,
+  'Spring Boot': SiSpringboot,
   'C++': SiCplusplus,
   'C#': SiSharp,
+  '.NET': SiDotnet,
   Go: SiGo,
   Rust: SiRust,
-  Firebase: SiFirebase,
-  Supabase: SiSupabase,
-  Vercel: SiVercel,
+  GraphQL: SiGraphql,
   PostgreSQL: SiPostgresql,
   MongoDB: SiMongodb,
+  MySQL: SiMysql,
+  Redis: SiRedis,
+  Supabase: SiSupabase,
+  Firebase: SiFirebase,
   Docker: SiDocker,
+  AWS: FaAws,
+  Vercel: SiVercel,
   Git: SiGit,
   GitHub: SiGithub,
 }
@@ -136,14 +177,22 @@ const technologyIconAliases: Record<string, string> = {
   reactnative: 'react',
   ts: 'typescript',
   js: 'javascript',
+  nextjs: 'nextjs',
+  next: 'nextjs',
+  tailwind: 'tailwindcss',
+  tailwindcss: 'tailwindcss',
+  vue: 'vuejs',
+  vuejs: 'vuejs',
   html5: 'html',
   css3: 'css',
   node: 'nodejs',
+  nodejs: 'nodejs',
   expressjs: 'express',
   py: 'python',
   golang: 'go',
   cpp: 'c++',
   csharp: 'c#',
+  dotnet: '.net',
   postgres: 'postgresql',
   mongo: 'mongodb',
 }
@@ -168,14 +217,42 @@ const technologyLucideIconMap: Record<string, typeof Code2> = {
 const technologyToneMap: Record<string, string> = {
   React: 'react',
   TypeScript: 'typescript',
+  JavaScript: 'javascript',
+  'Next.js': 'nextjs',
+  'Tailwind CSS': 'tailwind',
+  'Vue.js': 'vue',
   HTML: 'html',
   CSS: 'css',
+  Sass: 'sass',
+  Redux: 'redux',
+  Vite: 'vite',
+  Bootstrap: 'bootstrap',
   'Node.js': 'node',
   Express: 'express',
+  NestJS: 'nestjs',
+  Python: 'python',
+  Django: 'django',
+  FastAPI: 'fastapi',
+  Java: 'java',
+  'Spring Boot': 'springboot',
+  'C++': 'cpp',
+  'C#': 'csharp',
+  '.NET': 'dotnet',
+  Go: 'go',
+  Rust: 'rust',
+  GraphQL: 'graphql',
   'REST APIs': 'api',
+  PostgreSQL: 'postgresql',
+  MongoDB: 'mongodb',
+  MySQL: 'mysql',
+  Redis: 'redis',
   Firebase: 'firebase',
   Supabase: 'supabase',
+  Docker: 'docker',
+  AWS: 'aws',
   Vercel: 'vercel',
+  Git: 'git',
+  GitHub: 'github',
   Authentication: 'security',
   Authorization: 'security',
   Firewalls: 'security',
@@ -230,13 +307,65 @@ function ScrollProgress() {
     damping: 30,
     restDelta: 0.001,
   })
+  const scaleY = useSpring(scrollYProgress, {
+    stiffness: 140,
+    damping: 30,
+    restDelta: 0.001,
+  })
 
   return (
-    <motion.div
-      className="scroll-progress"
-      style={{ scaleX: prefersReducedMotion ? scrollYProgress : scaleX }}
-      aria-hidden="true"
-    />
+    <>
+      <motion.div
+        className="scroll-progress"
+        style={{ scaleX: prefersReducedMotion ? scrollYProgress : scaleX }}
+        aria-hidden="true"
+      />
+      <motion.div
+        className="side-scroll-progress"
+        style={{ scaleY: prefersReducedMotion ? scrollYProgress : scaleY }}
+        aria-hidden="true"
+      />
+    </>
+  )
+}
+
+function GlobalBackToTop() {
+  const prefersReducedMotion = useReducedMotion() ?? false
+  const [showBackToTop, setShowBackToTop] = useState(false)
+
+  useEffect(() => {
+    const updateBackToTop = () => {
+      setShowBackToTop(window.scrollY > 420)
+    }
+
+    window.addEventListener('scroll', updateBackToTop, { passive: true })
+    updateBackToTop()
+    return () => window.removeEventListener('scroll', updateBackToTop)
+  }, [])
+
+  return (
+    <AnimatePresence>
+      {showBackToTop && (
+        <motion.button
+          type="button"
+          className="back-to-top-button group"
+          aria-label="Back to top"
+          title="Back to top"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.88 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, y: 12, scale: 0.88 }}
+          whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.08 }}
+          whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
+          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+          onClick={() => window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })}
+        >
+          <span className="back-to-top-halo" aria-hidden="true" />
+          <span className="back-to-top-body">
+            <ArrowUp size={18} className="back-to-top-icon" aria-hidden="true" />
+          </span>
+        </motion.button>
+      )}
+    </AnimatePresence>
   )
 }
 
@@ -250,15 +379,39 @@ function Home() {
   const sectionStagger = prefersReducedMotion ? reducedStagger : stagger
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
-  const [showBackToTop, setShowBackToTop] = useState(() => window.scrollY > 480)
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState('')
   const [brokenProjectImages, setBrokenProjectImages] = useState<string[]>([])
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [profileError, setProfileError] = useState('')
-  const [aboutExpanded, setAboutExpanded] = useState(false)
+  const [aboutExpanded, setAboutExpanded] = useState(true)
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [emailCopied, setEmailCopied] = useState(false)
+  const [heroConsoleTab, setHeroConsoleTab] = useState<'developer' | 'stack' | 'terminal'>('developer')
+  const [codeCopied, setCodeCopied] = useState(false)
+  const handleCopyCode = () => {
+    let copyText = ''
+    if (heroConsoleTab === 'developer') {
+      copyText = `// A little about me\nconst developer = {\n  name: "${profile?.full_name || "Richard D'Souza"}",\n  focus: "${profile?.professional_title || 'Software Developer'}",\n  interests: [\n    ${(profile?.interests?.length ? profile.interests : ['Web Development', 'Cloud & Security', 'AI Applications', 'System Design']).map(i => `'${i}'`).join(',\n    ')}\n  ],\n  learning: true,\n  available: true\n}`
+    } else if (heroConsoleTab === 'stack') {
+      copyText = JSON.stringify({
+        frontend: ['React', 'TypeScript', 'Tailwind CSS', 'HTML5 & CSS3'],
+        backend: ['Node.js', 'Express', 'PostgreSQL', 'MongoDB', 'Supabase'],
+        devops_ai: ['Docker', 'Git', 'REST APIs', 'AI API Integration']
+      }, null, 2)
+    } else {
+      copyText = `$ richard --status\n✔ Role        : ${profile?.professional_title || 'Software Developer'}\n✔ Education   : MSc in Information Technology\n✔ Location    : ${profile?.location || 'Goa, India'} (UTC +5:30)\n✔ Focus       : Full-Stack Web, Cloud & AI Systems\n✔ Availability: Open to Full-Time & Contract Roles`
+    }
+    navigator.clipboard.writeText(copyText)
+    setCodeCopied(true)
+    window.setTimeout(() => setCodeCopied(false), 2000)
+  }
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText('rich.dsz1997@gmail.com')
+    setEmailCopied(true)
+    window.setTimeout(() => setEmailCopied(false), 2200)
+  }
   const [contactStatusMessage, setContactStatusMessage] = useState('')
   const [heroTypingCycle, setHeroTypingCycle] = useState(0)
   const [heroTypingIsExiting, setHeroTypingIsExiting] = useState(false)
@@ -429,14 +582,7 @@ function Home() {
     }
   }, [])
 
-  useEffect(() => {
-    const updateBackToTopVisibility = () => {
-      setShowBackToTop(window.scrollY > 480)
-    }
 
-    window.addEventListener('scroll', updateBackToTopVisibility, { passive: true })
-    return () => window.removeEventListener('scroll', updateBackToTopVisibility)
-  }, [])
 
 
     useEffect(() => {
@@ -470,35 +616,16 @@ function Home() {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#08090d] text-white">
-      <div className="portfolio-motion-layer" aria-hidden="true">
-        <span className="portfolio-orb portfolio-orb-one" />
-        <span className="portfolio-orb portfolio-orb-two" />
-        <span className="portfolio-grid-glow" />
-      </div>
-      <ScrollProgress />
-      {showBackToTop && (
-        <motion.button
-          type="button"
-          className="back-to-top-button"
-          aria-label="Back to top"
-          title="Back to top"
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.92 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.04 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.24, ease: 'easeOut' }}
-          onClick={() => window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })}
-        >
-          <ArrowUp size={18} aria-hidden="true" />
-        </motion.button>
-      )}
+      <BackgroundAnimation />
       <header className="portfolio-nav fixed inset-x-0 top-0 z-50 border-b border-white/7 bg-[#08090d]/85 backdrop-blur-xl">
         <nav className="mx-auto flex h-19 max-w-7xl items-center justify-between px-6 lg:px-10">
           <a
             href="#home"
-            className="portfolio-nav-logo text-lg font-bold tracking-tight"
+            className="portfolio-nav-logo inline-flex items-center"
+            aria-label="Richard D'Souza Home"
           >
-            RD<span className="text-violet-400">.</span>
+            <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto object-contain" />
+            <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto object-contain" />
           </a>
 
           <div className="hidden items-center gap-8 md:flex">
@@ -575,8 +702,11 @@ function Home() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.72, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="hero-status">
-                <span className="hero-status-dot" />
-                Building thoughtful digital experiences
+                <span className="hero-status-beacon" aria-hidden="true">
+                  <span className="hero-status-ping" />
+                  <span className="hero-status-dot" />
+                </span>
+                <span>Building thoughtful digital experiences</span>
               </div>
 
               <p className="hero-kicker">
@@ -628,7 +758,6 @@ function Home() {
                 >
                   Get in touch
                 </a>
-
               </div>
 
               <div className="hero-meta">
@@ -677,69 +806,320 @@ function Home() {
                 whileHover={prefersReducedMotion ? undefined : { y: -3 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
               >
+                {/* Window Titlebar */}
                 <div className="hero-profile-heading">
-                  <span className="hero-profile-label">
-                    Developer profile
-                  </span>
-                  <span className="hero-profile-markers" aria-hidden="true">
-                    <i /> <i /> <i />
-                  </span>
+                  <div className="hero-profile-markers" aria-hidden="true">
+                    <span className="marker-dot marker-red" />
+                    <span className="marker-dot marker-yellow" />
+                    <span className="marker-dot marker-green" />
+                  </div>
+
+                  {/* Sleek Segmented Console Tabs with Centered Alignment */}
+                  <div className="hero-console-tabs-wrap">
+                    <div className="hero-console-tabs" role="tablist" aria-label="Console tabs">
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={heroConsoleTab === 'developer'}
+                        className={`hero-console-tab ${heroConsoleTab === 'developer' ? 'is-active' : ''}`}
+                        onClick={() => setHeroConsoleTab('developer')}
+                      >
+                        <FileCode size={12} className="hero-tab-icon text-violet-400 shrink-0" />
+                        <span className="hero-tab-label">
+                          <span className="hero-tab-name">developer</span>
+                          <span className="hero-tab-ext">.ts</span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={heroConsoleTab === 'stack'}
+                        className={`hero-console-tab ${heroConsoleTab === 'stack' ? 'is-active' : ''}`}
+                        onClick={() => setHeroConsoleTab('stack')}
+                      >
+                        <Layers size={12} className="hero-tab-icon text-cyan-400 shrink-0" />
+                        <span className="hero-tab-label">
+                          <span className="hero-tab-name">stack</span>
+                          <span className="hero-tab-ext">.json</span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={heroConsoleTab === 'terminal'}
+                        className={`hero-console-tab ${heroConsoleTab === 'terminal' ? 'is-active' : ''}`}
+                        onClick={() => setHeroConsoleTab('terminal')}
+                      >
+                        <Terminal size={12} className="hero-tab-icon text-emerald-400 shrink-0" />
+                        <span className="hero-tab-label">
+                          <span className="hero-tab-name">terminal</span>
+                          <span className="hero-tab-ext">.sh</span>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1-Click Copy Code Button */}
+                  <button
+                    type="button"
+                    onClick={handleCopyCode}
+                    className="hero-code-copy-btn"
+                    title="Copy code to clipboard"
+                    aria-label="Copy code to clipboard"
+                  >
+                    {codeCopied ? (
+                      <>
+                        <Check size={11} className="text-emerald-400 shrink-0" />
+                        <span className="hero-copy-btn-label">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={11} className="shrink-0" />
+                        <span className="hero-copy-btn-label">Copy</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
-                <div className="hero-code-panel">
-                  <p className="hero-code-comment">
-                    // A little about me
-                  </p>
+                {/* Sub-Header Breadcrumb */}
+                <div className="hero-editor-breadcrumb" aria-hidden="true">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-zinc-500 font-mono text-[10px]">src</span>
+                    <span className="text-zinc-600 text-[10px]">/</span>
+                    <span className="text-zinc-500 font-mono text-[10px]">config</span>
+                    <span className="text-zinc-600 text-[10px]">/</span>
+                    <span className="text-violet-300 font-mono text-[10px] font-semibold">
+                      {heroConsoleTab === 'developer' ? 'developer.ts' : heroConsoleTab === 'stack' ? 'stack.json' : 'terminal.sh'}
+                    </span>
+                  </div>
+                  </div>
 
-                  <p>
-                    <span className="hero-code-keyword">const</span>{' '}
-                    developer = {'{'}
-                  </p>
+                {/* Tab 1: developer.ts Code View */}
+                {heroConsoleTab === 'developer' && (
+                  <div className="hero-code-panel" key="developer">
+                    <div className="hero-code-body">
+                      {/* Gutter with line numbers */}
+                      <div className="hero-code-lines" aria-hidden="true">
+                        <span>1</span>
+                        <span>2</span>
+                        <span className="is-active-line">3</span>
+                        <span>4</span>
+                        <span>5</span>
+                        <span>6</span>
+                        <span>7</span>
+                        <span>8</span>
+                        <span>9</span>
+                        <span>10</span>
+                        <span>11</span>
+                        <span>12</span>
+                      </div>
 
-                  <p className="pl-4">name: <span className="hero-code-string">'{profile?.full_name || "Richard D'Souza"}'</span>,</p>
-                  <p className="pl-4">
-                    focus: <span className="hero-code-string">'{profile?.professional_title || 'Software'}'</span>,
-                  </p>
+                      {/* Code Content */}
+                      <div className="hero-code-content">
+                        <p className="hero-code-comment">// A little about me</p>
+                        <p className="hero-code-line">
+                          <span className="hero-code-keyword">const</span>{' '}
+                          <span className="hero-code-ident">developer</span>{' '}
+                          <span className="text-zinc-400">=</span>{' '}
+                          <span className="hero-code-bracket-gold">{'{'}</span>
+                        </p>
+                        <div className="hero-code-block-inner">
+                          <p className="hero-code-line hero-active-line-bg">
+                            <span className="hero-code-key">name</span>
+                            <span className="hero-code-colon">:</span>{' '}
+                            <span className="hero-code-string">'{profile?.full_name || "Richard D'Souza"}'</span>
+                            <span className="text-zinc-500">,</span>
+                          </p>
+                          <p className="hero-code-line">
+                            <span className="hero-code-key">focus</span>
+                            <span className="hero-code-colon">:</span>{' '}
+                            <span className="hero-code-string">'{profile?.professional_title || 'Software Developer'}'</span>
+                            <span className="text-zinc-500">,</span>
+                          </p>
+                          <p className="hero-code-line">
+                            <span className="hero-code-key">interests</span>
+                            <span className="hero-code-colon">:</span>{' '}
+                            <span className="hero-code-bracket-cyan">[</span>
+                          </p>
+                          <div className="hero-code-nested-inner">
+                            {(profile?.interests?.length ? profile.interests : ['Web Development', 'Cloud & Security', 'AI Applications', 'System Design']).map((interest, index, arr) => (
+                              <p className="hero-code-line hero-code-interest" key={`${interest}-${index}`}>
+                                '{interest}'{index < arr.length - 1 ? <span className="text-zinc-500">,</span> : ''}
+                              </p>
+                            ))}
+                          </div>
+                          <p className="hero-code-line">
+                            <span className="hero-code-bracket-cyan">]</span>
+                            <span className="text-zinc-500">,</span>
+                          </p>
+                          <p className="hero-code-line">
+                            <span className="hero-code-key">learning</span>
+                            <span className="hero-code-colon">:</span>{' '}
+                            <span className="hero-code-value">true</span>
+                            <span className="text-zinc-500">,</span>
+                          </p>
+                          <p className="hero-code-line">
+                            <span className="hero-code-key">available</span>
+                            <span className="hero-code-colon">:</span>{' '}
+                            <span className="hero-code-value">true</span>
+                          </p>
+                        </div>
+                        <p className="hero-code-line">
+                          <span className="hero-code-bracket-gold">{'}'}</span>
+                        </p>
+                      </div>
+                    </div>
 
-                  <p className="pl-4">interests: [</p>
-                  {(profile?.interests ?? []).map((interest, index) => (
-                    <p className="pl-8 hero-code-interest" key={`${interest}-${index}`}>
-                      '{interest}'{index < (profile?.interests.length ?? 0) - 1 ? ',' : ''}
-                    </p>
-                  ))}
-                  <p className="pl-4">],</p>
+                    {/* Mini IDE Status Bar */}
+                    <div className="hero-editor-statusbar" aria-hidden="true">
+                      <div className="flex items-center gap-2">
+                        <span className="hero-status-pill">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>TS</span>
+                        </span>
+                        <span className="text-zinc-400 hero-status-utf8">UTF-8</span>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-zinc-400">Ln 3, Col 9</span>
+                        <span className="text-zinc-600">•</span>
+                        <span className="text-emerald-400 font-medium">0 errors</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                  <p className="pl-4">
-                    learning:{' '}
-                    <span className="hero-code-value">true</span>
-                  </p>
+                {/* Tab 2: stack.json Tech Overview */}
+                {heroConsoleTab === 'stack' && (
+                  <div className="hero-stack-panel" key="stack">
+                    <div className="hero-stack-matrix">
+                      <div className="hero-stack-group">
+                        <div className="hero-stack-group-title">
+                          <span className="hero-stack-dot bg-cyan-400" />
+                          <span>Frontend &amp; UI</span>
+                        </div>
+                        <div className="hero-stack-chips">
+                          <span className="hero-stack-chip"><SiReact className="text-[#61dafb]" /> React</span>
+                          <span className="hero-stack-chip"><SiTypescript className="text-[#3178c6]" /> TypeScript</span>
+                          <span className="hero-stack-chip"><SiTailwindcss className="text-[#38bdf8]" /> Tailwind CSS</span>
+                          <span className="hero-stack-chip"><SiJavascript className="text-[#f7df1e]" /> JavaScript</span>
+                        </div>
+                      </div>
 
-                  <p>{'}'}</p>
-                </div>
+                      <div className="hero-stack-group">
+                        <div className="hero-stack-group-title">
+                          <span className="hero-stack-dot bg-emerald-400" />
+                          <span>Backend &amp; Data</span>
+                        </div>
+                        <div className="hero-stack-chips">
+                          <span className="hero-stack-chip"><SiNodedotjs className="text-[#5fa04e]" /> Node.js</span>
+                          <span className="hero-stack-chip"><SiExpress className="text-zinc-300" /> Express</span>
+                          <span className="hero-stack-chip"><SiPostgresql className="text-[#4169e1]" /> PostgreSQL</span>
+                          <span className="hero-stack-chip"><SiMongodb className="text-[#47a248]" /> MongoDB</span>
+                          <span className="hero-stack-chip"><SiSupabase className="text-[#3ecf8e]" /> Supabase</span>
+                        </div>
+                      </div>
 
+                      <div className="hero-stack-group">
+                        <div className="hero-stack-group-title">
+                          <span className="hero-stack-dot bg-violet-400" />
+                          <span>DevOps &amp; Cloud</span>
+                        </div>
+                        <div className="hero-stack-chips">
+                          <span className="hero-stack-chip"><SiDocker className="text-[#2496ed]" /> Docker</span>
+                          <span className="hero-stack-chip"><SiGit className="text-[#f05032]" /> Git</span>
+                          <span className="hero-stack-chip"><Sparkles className="text-violet-400" /> AI APIs</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="hero-editor-statusbar" aria-hidden="true">
+                      <div className="flex items-center gap-2">
+                        <span className="hero-status-pill text-cyan-400">JSON</span>
+                        <span className="text-zinc-400 hero-status-utf8">UTF-8</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-cyan-400 font-medium">12 Technologies</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 3: terminal.sh Live Output */}
+                {heroConsoleTab === 'terminal' && (
+                  <div className="hero-terminal-panel" key="terminal">
+                    <div className="hero-terminal-console">
+                      <div className="hero-terminal-prompt">
+                        <span className="hero-terminal-user">richard@macbook</span>
+                        <span className="hero-terminal-sep">:</span>
+                        <span className="hero-terminal-path">~</span>
+                        <span className="hero-terminal-dollar">$</span>
+                        <span className="hero-terminal-cmd">richard --status</span>
+                      </div>
+
+                      <div className="hero-terminal-output">
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">role</span>: <span className="text-violet-300 font-medium">{profile?.professional_title || 'Software Developer'}</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">education</span>: <span className="text-zinc-200">MSc in Information Technology</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">location</span>: <span className="text-zinc-200">{profile?.location || 'Goa, India'} (UTC +5:30)</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">focus</span>: <span className="text-cyan-300">Full-Stack Web, Cloud &amp; AI Systems</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">availability</span>: <span className="text-emerald-300 font-semibold">Open to Roles &amp; Projects</span></p>
+                      </div>
+
+                      <div className="hero-terminal-prompt hero-terminal-active-line">
+                        <span className="hero-terminal-user">richard@macbook</span>
+                        <span className="hero-terminal-sep">:</span>
+                        <span className="hero-terminal-path">~</span>
+                        <span className="hero-terminal-dollar">$</span>
+                        <span className="hero-terminal-cursor">█</span>
+                      </div>
+                    </div>
+
+                    <div className="hero-editor-statusbar" aria-hidden="true">
+                      <div className="flex items-center gap-2">
+                        <span className="hero-status-pill text-emerald-400">ZSH</span>
+                        <span className="text-zinc-400">tty1</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-400 font-medium">Exit code: 0</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Card Footer */}
                 <div className="hero-profile-footer">
                   <div>
-                    <p className="text-sm font-medium">
-                      Always building
-                    </p>
-                    <p className="mt-1 text-xs text-zinc-500">
-                      Learning. Creating. Improving.
+                    <div className="flex items-center gap-2">
+                      <span className="hero-live-beacon" aria-hidden="true">
+                        <span className="hero-live-ping" />
+                        <span className="hero-live-dot" />
+                      </span>
+                      <p className="text-sm font-semibold tracking-wide">
+                        Always building
+                      </p>
+                    </div>
+                    <p className="mt-0.5 text-xs text-zinc-400 flex items-center gap-2 hero-profile-footer-sub">
+                      <span>Learning. Creating. Improving.</span>
+                      <span className="inline-block w-1 h-1 rounded-full bg-zinc-500 hero-profile-footer-dot" />
+                      <span className="inline-flex items-center gap-1 font-mono text-[11px] text-violet-400">
+                        git:(main)
+                      </span>
                     </p>
                   </div>
 
-                  <Code2 className="text-violet-300" size={22} />
+                  {heroConsoleTab === 'developer' && <Code2 className="text-violet-400 transition-colors" size={20} />}
+                  {heroConsoleTab === 'stack' && <Layers className="text-cyan-400 transition-colors" size={20} />}
+                  {heroConsoleTab === 'terminal' && <Terminal className="text-emerald-400 transition-colors" size={20} />}
                 </div>
               </motion.div>
             </motion.div>
 
             <a
               href="#about"
-              aria-label="Scroll to About"
+              aria-label="Scroll down to About section"
               className="hero-scroll-cue"
             >
               <span className="hero-scroll-arrows" aria-hidden="true">
-                <ArrowDown size={17} />
-                <ArrowDown size={17} />
+                <ArrowDown size={15} />
               </span>
             </a>
           </div>
@@ -748,14 +1128,14 @@ function Home() {
 
 <section
   id="about"
-  className="about-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
+  className="about-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
 >
   <motion.div
     className="mx-auto max-w-7xl px-6 lg:px-10"
     variants={sectionReveal}
     initial="hidden"
     whileInView="visible"
-    viewport={{ once: true, amount: 0.2 }}
+    viewport={{ once: true, amount: 0.15 }}
   >
     <div className="section-heading about-heading">
       <p className="section-label">01 / ABOUT</p>
@@ -770,7 +1150,7 @@ function Home() {
       variants={sectionStagger}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.18 }}
+      viewport={{ once: true, amount: 0.15 }}
     >
       {profileError && (
         <p role="alert" className="text-sm text-red-400">
@@ -778,26 +1158,220 @@ function Home() {
         </p>
       )}
 
-          {profile ? (
+      {profile ? (
         <motion.div className="about-story" variants={sectionReveal}>
-          <p className="about-story-label">In brief</p>
-          {profile.short_intro && <p className={`about-intro ${aboutExpanded ? 'is-expanded' : ''}`}>{profile.short_intro}</p>}
-          {profile.biography && <p className={`about-biography ${aboutExpanded ? 'is-expanded' : ''}`}>{profile.biography}</p>}
-          {profile.secondary_biography && aboutExpanded && <p className="about-secondary">{profile.secondary_biography}</p>}
-          {(profile.biography || profile.secondary_biography) && (
-            <button
-              type="button"
-              className="about-expand-button"
-              onClick={() => setAboutExpanded((expanded) => !expanded)}
-              aria-expanded={aboutExpanded}
-            >
-              {aboutExpanded ? 'Show less' : 'Read full profile'}
-              <ArrowUpRight size={16} aria-hidden="true" />
-            </button>
+          {/* Card Top Header & Status */}
+          <div className="about-story-header">
+            <div className="about-story-badge">
+              <Terminal size={14} className="text-violet-400" />
+              <span>Engineer Journey</span>
+            </div>
+            <div className="about-live-status">
+              <span className="about-status-pulse" />
+              <span>Available for opportunities</span>
+            </div>
+          </div>
+
+          {/* Lead Quote */}
+          {profile.short_intro && (
+            <div className="about-lead-box">
+              <p className="about-lead-text">{profile.short_intro}</p>
+            </div>
           )}
-          <Link to="/request-resume" className="about-resume-link">
-            Request Resume <ArrowUpRight size={16} aria-hidden="true" />
-          </Link>
+
+          {/* Quick Highlight Pills from Profile & Interests */}
+          <div className="about-story-highlights">
+            <div className="about-highlight-pill">
+              <GraduationCap size={15} className="text-violet-400 shrink-0" />
+              <span>{profile.interests?.[0] || 'MSc in IT'}</span>
+            </div>
+            <div className="about-highlight-pill">
+              <Code2 size={15} className="text-cyan-400 shrink-0" />
+              <span>{profile.interests?.[1] || 'Full-Stack & Cloud'}</span>
+            </div>
+            {profile.interests?.[2] ? (
+              <div className="about-highlight-pill">
+                <Sparkles size={15} className="text-amber-400 shrink-0" />
+                <span>{profile.interests[2]}</span>
+              </div>
+            ) : (
+              <div className="about-highlight-pill">
+                <Sparkles size={15} className="text-amber-400 shrink-0" />
+                <span>AI Integration</span>
+              </div>
+            )}
+          </div>
+
+          {/* Expandable Detailed Narrative */}
+          <AnimatePresence initial={false}>
+            {aboutExpanded && (
+              <motion.div
+                key="about-expanded-narrative"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                className="about-expanded-body overflow-hidden"
+              >
+                <div className="about-timeline">
+                  {profile.biography && (
+                    <div className="about-timeline-stream">
+                      {(() => {
+                        const paragraphs = profile.biography
+                          .split(/\r?\n/)
+                          .map((p) => p.trim())
+                          .filter((p) => p.length > 0)
+
+                        const usedTags = new Set<string>()
+
+                        return paragraphs.map((rawParagraph, index) => {
+                          let title = ''
+                          let content = rawParagraph
+
+                          // Support custom titles from admin: "[Title]: Content" or "Title: Content" or "### Title"
+                          const bracketMatch = rawParagraph.match(/^\[(.*?)\]\s*:?\s*(.*)$/s)
+                          const colonMatch = !bracketMatch && rawParagraph.match(/^([A-Z][A-Za-z0-9\s&/-]{2,30}):\s+(.+)$/s)
+                          const hashMatch = !bracketMatch && !colonMatch && rawParagraph.match(/^#{1,3}\s+(.*?)\n+(.*)$/s)
+
+                          if (bracketMatch) {
+                            title = bracketMatch[1].trim()
+                            content = bracketMatch[2].trim()
+                          } else if (colonMatch) {
+                            title = colonMatch[1].trim()
+                            content = colonMatch[2].trim()
+                          } else if (hashMatch) {
+                            title = hashMatch[1].trim()
+                            content = hashMatch[2].trim()
+                          }
+
+                          const lower = content.toLowerCase()
+                          let tag = title
+                          let StepIcon = Terminal
+                          let colorClass = 'text-violet-400'
+
+                          if (!tag) {
+                            // Priority 1: Hands-on Projects & Engineering (checked BEFORE education so "academic projects" is properly recognized as Projects!)
+                            if (/projects|react|typescript|node|full-stack|mongodb|postgresql|crm|skillpath|sentinel|built|building applications/i.test(lower)) {
+                              tag = 'Hands-on Projects & Stack'
+                              StepIcon = Code2
+                              colorClass = 'text-emerald-400'
+                            }
+                            // Priority 2: Philosophy, Mindset & Continuous Improvement
+                            else if (/learning by building|solving problems|continuously improving|philosophy|mindset|curiosity|approach/i.test(lower)) {
+                              tag = 'Philosophy & Approach'
+                              StepIcon = Sparkles
+                              colorClass = 'text-amber-400'
+                            }
+                            // Priority 3: Education & Academic Foundations (requires genuine institution/degree keywords)
+                            else if (/msc|b\.?sc|btech|mtech|college|university|degree|parvatibai|chowgule|graduat/i.test(lower)) {
+                              tag = 'Education & Foundations'
+                              StepIcon = GraduationCap
+                              colorClass = 'text-violet-400'
+                            }
+                            // Priority 4: Technical Domains & Craft
+                            else if (/interests|frontend|backend|database|cloud|ai\b|intelligence|interface|system design|security/i.test(lower)) {
+                              tag = 'Technical Domain & Craft'
+                              StepIcon = Layers
+                              colorClass = 'text-cyan-400'
+                            }
+                            // Fallback
+                            else {
+                              tag = `Milestone 0${index + 1}`
+                              StepIcon = Terminal
+                              colorClass = 'text-violet-400'
+                            }
+
+                            // Prevent duplicate consecutive tags across cards
+                            if (usedTags.has(tag)) {
+                              tag = `${tag} (${index + 1})`
+                            }
+                          } else {
+                            if (/edu|degree|college|school/i.test(tag)) {
+                              StepIcon = GraduationCap
+                              colorClass = 'text-violet-400'
+                            } else if (/project|code|stack|build|dev/i.test(tag)) {
+                              StepIcon = Code2
+                              colorClass = 'text-emerald-400'
+                            } else if (/domain|tech|skill|cloud/i.test(tag)) {
+                              StepIcon = Layers
+                              colorClass = 'text-cyan-400'
+                            } else if (/phil|goal|grow|vision|mind/i.test(tag)) {
+                              StepIcon = Sparkles
+                              colorClass = 'text-amber-400'
+                            }
+                          }
+
+                          usedTags.add(tag)
+
+                          return (
+                            <div key={index} className="about-timeline-item">
+                              <span className="about-timeline-dot" aria-hidden="true" />
+                              <div className="about-timeline-card">
+                                <div className="about-timeline-card-header">
+                                  <span className={`about-timeline-tag ${colorClass}`}>
+                                    <StepIcon size={13} className="shrink-0" />
+                                    <span>{tag}</span>
+                                  </span>
+                                </div>
+                                <p className="about-timeline-text">{content}</p>
+                              </div>
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                  )}
+
+                  {profile.secondary_biography && (
+                    <div className="about-focus-card">
+                      <div className="about-focus-header">
+                        <div className="flex items-center gap-2">
+                          <Compass size={16} className="text-violet-400 shrink-0" />
+                          <span className="about-focus-title">Focus & Future Vision</span>
+                        </div>
+                        <span className="about-focus-badge">Aspirations</span>
+                      </div>
+                      <div className="about-focus-body">
+                        {profile.secondary_biography
+                          .split(/\r?\n/)
+                          .map((p) => p.trim())
+                          .filter((p) => p.length > 0)
+                          .map((para, pIdx) => (
+                            <p key={pIdx} className="about-focus-text">
+                              {para}
+                            </p>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Action Row */}
+          <div className="about-actions-row">
+            {(profile.biography || profile.secondary_biography) && (
+              <button
+                type="button"
+                className="about-toggle-button"
+                onClick={() => setAboutExpanded((expanded) => !expanded)}
+                aria-expanded={aboutExpanded}
+              >
+                <span>{aboutExpanded ? 'Show less' : 'Read full journey'}</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-300 ${aboutExpanded ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+            )}
+
+            <Link to="/request-resume" className="about-cta-resume">
+              <span>Request Resume</span>
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
         </motion.div>
       ) : (
         !profileError && (
@@ -807,30 +1381,79 @@ function Home() {
         )
       )}
 
+      {/* Right Column Bento Cards */}
       <motion.aside className="about-facts" variants={sectionStagger} aria-label="Professional profile details">
-        {profile?.professional_title && (
-          <motion.div className="about-fact-card" variants={sectionReveal}>
-            <Code2 size={20} aria-hidden="true" />
-            <div><span>Professional focus</span><strong>{profile.professional_title}</strong></div>
-          </motion.div>
-        )}
+        {/* Role & Expertise */}
+        <motion.div className="about-fact-card group" variants={sectionReveal}>
+          <div className="about-card-icon-wrap">
+            <Code2 size={22} aria-hidden="true" />
+          </div>
+          <div className="about-card-content">
+            <span className="about-card-badge">Current Role</span>
+            <strong>{profile?.professional_title || 'Software Developer'}</strong>
+            <p className="about-card-sub">Modern Web, Cloud & Scalable Systems</p>
+          </div>
+        </motion.div>
+
+        {/* Academic Background */}
+        <motion.div className="about-fact-card group" variants={sectionReveal}>
+          <div className="about-card-icon-wrap">
+            <GraduationCap size={22} aria-hidden="true" />
+          </div>
+          <div className="about-card-content">
+            <span className="about-card-badge">Education & Foundations</span>
+            <strong>MSc in Information Technology</strong>
+            <p className="about-card-sub">Parvatibai Chowgule College, Goa</p>
+          </div>
+        </motion.div>
+
+        {/* Location & Timezone */}
         {profile?.location && (
-          <motion.div className="about-fact-card" variants={sectionReveal}>
-            <MapPin size={20} aria-hidden="true" />
-            <div><span>Based in</span><strong>{profile.location}</strong></div>
-          </motion.div>
-        )}
-        {profile?.interests && profile.interests.length > 0 && (
-          <motion.div className="about-interests-card" variants={sectionReveal}>
-            <Compass size={20} aria-hidden="true" />
-            <div>
-              <span>Areas of interest</span>
-              <div className="about-interest-tags">
-                {profile.interests.map((interest) => <em key={interest}>{interest}</em>)}
-              </div>
+          <motion.div className="about-fact-card group" variants={sectionReveal}>
+            <div className="about-card-icon-wrap">
+              <MapPin size={22} aria-hidden="true" />
+            </div>
+            <div className="about-card-content">
+              <span className="about-card-badge">Location</span>
+              <strong>{profile.location}</strong>
+              <p className="about-card-sub">IST (UTC +5:30) • Open to Remote & Hybrid</p>
             </div>
           </motion.div>
         )}
+
+        {/* Areas of Interest with Interactive Chips */}
+        {profile?.interests && profile.interests.length > 0 && (
+          <motion.div className="about-interests-card group" variants={sectionReveal}>
+            <div className="about-interests-header">
+              <div className="about-card-icon-wrap">
+                <Sparkles size={22} aria-hidden="true" />
+              </div>
+              <div className="about-card-content">
+                <span className="about-card-badge">Domains & Passion</span>
+                <strong>Areas of Interest</strong>
+              </div>
+            </div>
+            <div className="about-interest-tags">
+              {profile.interests.map((interest) => (
+                <span key={interest} className="about-interest-chip">
+                  {interest}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Quick Connect Callout */}
+        <motion.div className="about-quick-cta" variants={sectionReveal}>
+          <div className="about-quick-cta-glow" />
+          <div>
+            <p className="about-quick-cta-title">Interested in collaborating?</p>
+            <p className="about-quick-cta-desc">Let's discuss projects, opportunities, or engineering ideas.</p>
+          </div>
+          <a href="#contact" className="about-quick-cta-btn">
+            Get in touch <ArrowUpRight size={15} />
+          </a>
+        </motion.div>
       </motion.aside>
     </motion.div>
   </motion.div>
@@ -872,11 +1495,19 @@ function Home() {
           <motion.div
             key={skill.name}
             variants={sectionReveal}
-            className="skill-card"
+            className="skill-card group"
+            whileHover={prefersReducedMotion ? undefined : { y: -4 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
           >
+            <div className="skill-card-glow" />
             <div className="skill-card-header">
-              <div className="skill-icon"><Icon size={21} aria-hidden="true" /></div>
-              <span className="skill-card-index">{String(skillIndex + 1).padStart(2, '0')}</span>
+              <div className="skill-icon">
+                <Icon size={20} aria-hidden="true" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="skill-card-count">{skill.technologies.length} tools</span>
+                <span className="skill-card-index">{String(skillIndex + 1).padStart(2, '0')}</span>
+              </div>
             </div>
 
             <h3>{skill.name}</h3>
@@ -884,11 +1515,12 @@ function Home() {
             <div className="skill-tags">
               {skill.technologies.map((technology) => {
                 const TechnologyIcon = technology.icon
+                const tone = technologyToneMap[technology.name] ?? normalizeTechnologyName(technology.name)
 
                 return (
-                  <span className={`technology-tag technology-${technology.tone}`} key={technology.name}>
+                  <span className={`technology-tag technology-${tone}`} key={technology.name}>
                     <TechnologyIcon size={14} aria-hidden="true" />
-                    {technology.name}
+                    <span>{technology.name}</span>
                   </span>
                 )
               })}
@@ -1018,87 +1650,283 @@ function Home() {
 
         <section
           id="contact"
-          className="contact-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
+          className="contact-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
         >
           <div className="mx-auto max-w-7xl px-6 lg:px-10">
             <motion.div
-              className="contact-panel"
+              className="section-heading contact-heading"
               variants={sectionReveal}
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
+              viewport={{ once: true, amount: 0.15 }}
             >
-              <div className="contact-copy">
-                <p className="section-label">04 / CONTACT</p>
-                <h2>Let&apos;s build something with intention.</h2>
-                <p>
-                  I&apos;m open to meaningful conversations with recruiters, teams, and collaborators who value thoughtful software.
-                </p>
+              <p className="section-label">04 / CONTACT</p>
+              <h2>Let&apos;s build something with intention.</h2>
+              <p className="section-summary">
+                I&apos;m open to meaningful conversations with recruiters, engineering teams, and collaborators who value thoughtful software.
+              </p>
+            </motion.div>
+
+            <motion.div
+              className="contact-grid"
+              variants={sectionStagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.15 }}
+            >
+              {/* Left Column: Interactive Contact Form Card */}
+              <motion.div className="contact-form-card" variants={sectionReveal}>
+                <div className="contact-form-header">
+                  <div className="contact-badge">
+                    <Send size={14} className="text-violet-400" />
+                    <span>Send a Message</span>
+                  </div>
+                  <span className="contact-response-badge">Direct to Inbox</span>
+                </div>
+
                 <form className="contact-form" onSubmit={handleContactSubmit}>
                   <div className="contact-form-fields">
-                    <label className="contact-field">
-                      <span>Your name</span>
-                      <input name="name" type="text" autoComplete="name" maxLength={120} required />
-                    </label>
-                    <label className="contact-field">
-                      <span>Email address</span>
-                      <input name="email" type="email" autoComplete="email" maxLength={254} required />
-                    </label>
+                    <div className="contact-field-group">
+                      <label className="contact-field">
+                        <span>Your Name</span>
+                        <input
+                          name="name"
+                          type="text"
+                          autoComplete="name"
+                          placeholder="e.g. Alex Morgan"
+                          maxLength={120}
+                          required
+                        />
+                      </label>
+
+                      <label className="contact-field">
+                        <span>Email Address</span>
+                        <input
+                          name="email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="alex@company.com"
+                          maxLength={254}
+                          required
+                        />
+                      </label>
+                    </div>
+
                     <label className="contact-field">
                       <span>Message</span>
-                      <textarea name="message" rows={4} maxLength={5000} required />
+                      <textarea
+                        name="message"
+                        rows={5}
+                        placeholder="Tell me about your project, team, or opportunity..."
+                        maxLength={5000}
+                        required
+                      />
                     </label>
                   </div>
-                  <input className="contact-honeypot" name="botcheck" type="checkbox" tabIndex={-1} aria-hidden="true" />
-                  <button className="contact-primary-action" type="submit" disabled={contactStatus === 'sending'}>
-                    <Mail size={17} />
-                    {contactStatus === 'sending' ? 'Sending…' : 'Send message'}
-                    <ArrowUpRight size={17} />
-                  </button>
-                  {contactStatusMessage && (
-                    <p className={`contact-form-status ${contactStatus === 'error' ? 'is-error' : ''}`} role={contactStatus === 'error' ? 'alert' : 'status'} aria-live="polite">
-                      {contactStatusMessage}
-                    </p>
-                  )}
-                  <p className="contact-email-fallback">
-                    Prefer email? <a href="mailto:rich.dsz1997@gmail.com">rich.dsz1997@gmail.com</a>
-                  </p>
-                </form>
-              </div>
 
-              <aside className="contact-aside" aria-label="Other ways to connect">
-                <p>Elsewhere</p>
-                <a href={profile?.github_url || 'https://github.com/aestheticwolf'} target="_blank" rel="noreferrer">
-                  <FaGithub size={19} /> GitHub <ArrowUpRight size={15} />
-                </a>
-                <a href={profile?.linkedin_url || 'https://www.linkedin.com/'} target="_blank" rel="noreferrer">
-                  <FaLinkedinIn size={18} /> LinkedIn <ArrowUpRight size={15} />
-                </a>
-                {profile?.location && <span>Based in {profile.location}</span>}
-              </aside>
+                  <input className="contact-honeypot" name="botcheck" type="checkbox" tabIndex={-1} aria-hidden="true" />
+
+                  <div className="contact-form-footer">
+                    <button
+                      className="contact-submit-btn"
+                      type="submit"
+                      disabled={contactStatus === 'sending'}
+                    >
+                      <Send size={16} className={contactStatus === 'sending' ? 'animate-pulse' : ''} />
+                      <span>{contactStatus === 'sending' ? 'Sending Message…' : 'Send Message'}</span>
+                      <ArrowUpRight size={15} />
+                    </button>
+
+                    <div className="contact-direct-link">
+                      <span>Or email:</span>
+                      <a href="mailto:rich.dsz1997@gmail.com">rich.dsz1997@gmail.com</a>
+                    </div>
+                  </div>
+
+                  {contactStatusMessage && (
+                    <motion.p
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`contact-form-status ${contactStatus === 'error' ? 'is-error' : 'is-success'}`}
+                      role={contactStatus === 'error' ? 'alert' : 'status'}
+                      aria-live="polite"
+                    >
+                      {contactStatusMessage}
+                    </motion.p>
+                  )}
+                </form>
+              </motion.div>
+
+              {/* Right Column: Bento Contact & Info Cards */}
+              <motion.aside className="contact-aside" variants={sectionStagger} aria-label="Other ways to connect">
+                {/* Direct Email Card with 1-Click Copy */}
+                <motion.div className="contact-info-card group" variants={sectionReveal}>
+                  <div className="contact-card-icon-wrap">
+                    <Mail size={22} aria-hidden="true" />
+                  </div>
+                  <div className="contact-card-content">
+                    <span className="contact-card-badge">Direct Contact</span>
+                    <div className="contact-email-row">
+                      <strong className="truncate">rich.dsz1997@gmail.com</strong>
+                      <button
+                        type="button"
+                        onClick={handleCopyEmail}
+                        className="contact-copy-btn"
+                        title="Copy email address"
+                        aria-label="Copy email address"
+                      >
+                        {emailCopied ? (
+                          <>
+                            <Check size={13} className="text-emerald-400" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={13} />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <p className="contact-card-sub">⚡ Fast Response • Typically within 24 hours</p>
+                  </div>
+                </motion.div>
+
+                {/* Location & Timezone Card */}
+                <motion.div className="contact-info-card group" variants={sectionReveal}>
+                  <div className="contact-card-icon-wrap">
+                    <MapPin size={22} aria-hidden="true" />
+                  </div>
+                  <div className="contact-card-content">
+                    <span className="contact-card-badge">Location & Timezone</span>
+                    <strong>{profile?.location || 'Goa, India'}</strong>
+                    <p className="contact-card-sub">IST (UTC +5:30) • Open to Global Remote & Hybrid</p>
+                  </div>
+                </motion.div>
+
+                {/* Social Profiles Bento Grid */}
+                <div className="contact-social-grid">
+                  <motion.a
+                    href={profile?.github_url || 'https://github.com/aestheticwolf'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="contact-social-card group"
+                    variants={sectionReveal}
+                  >
+                    <div className="contact-social-icon">
+                      <FaGithub size={20} />
+                    </div>
+                    <div className="contact-social-text">
+                      <strong>GitHub</strong>
+                      <span>Code & Projects</span>
+                    </div>
+                    <ArrowUpRight size={16} className="contact-social-arrow" />
+                  </motion.a>
+
+                  <motion.a
+                    href={profile?.linkedin_url || 'https://www.linkedin.com/'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="contact-social-card group"
+                    variants={sectionReveal}
+                  >
+                    <div className="contact-social-icon">
+                      <FaLinkedinIn size={19} />
+                    </div>
+                    <div className="contact-social-text">
+                      <strong>LinkedIn</strong>
+                      <span>Professional Network</span>
+                    </div>
+                    <ArrowUpRight size={16} className="contact-social-arrow" />
+                  </motion.a>
+                </div>
+
+                {/* Collaboration Note */}
+                <motion.div className="contact-collab-card" variants={sectionReveal}>
+                  <div className="contact-collab-glow" />
+                  <div className="contact-collab-content">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} className="text-violet-400" />
+                      <span className="contact-collab-label">Ready to collaborate?</span>
+                    </div>
+                    <p className="contact-collab-desc">
+                      Available for full-time software engineering roles, high-impact contract projects, and architecture discussions.
+                    </p>
+                  </div>
+                </motion.div>
+              </motion.aside>
             </motion.div>
           </div>
         </section>
       </main>
 
-      <footer className="portfolio-footer border-t border-white/6 px-6 py-10 lg:px-10">
+      <footer className="portfolio-footer">
+        <div className="footer-glow-bar" aria-hidden="true" />
         <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.2fr_1fr_auto] md:items-start">
           <div className="footer-brand">
-            <a href="#home">{profile?.full_name || "Richard D'Souza"}<span>.</span></a>
-            <p>Software Developer</p>
+            <a href="#home" className="footer-brand-title">
+              <span>{profile?.full_name || "Richard D'Souza"}</span>
+              <span className="footer-brand-dot" aria-hidden="true" />
+            </a>
+            <p className="footer-brand-tagline">
+              {profile?.professional_title || 'Software Developer'} • Building thoughtful digital experiences with clean code & modern architecture.
+            </p>
+            <div className="footer-status-badge">
+              <span className="footer-status-dot" aria-hidden="true" />
+              <span>Available for engineering opportunities</span>
+            </div>
           </div>
           <nav className="footer-nav" aria-label="Footer navigation">
-            {navigation.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
-            <Link to="/request-resume">Request Resume</Link>
+            {navigation.map((item) => (
+              <a key={item.label} href={item.href} className="footer-nav-link">
+                {item.label}
+              </a>
+            ))}
+            <Link to="/request-resume" className="footer-nav-link footer-nav-resume">
+              <span>Request Resume</span>
+              <ArrowUpRight size={13} aria-hidden="true" />
+            </Link>
           </nav>
           <div className="footer-socials">
-            <a href={profile?.github_url || 'https://github.com/aestheticwolf'} target="_blank" rel="noreferrer" aria-label="GitHub"><FaGithub size={18} /></a>
-            <a href={profile?.linkedin_url || 'https://www.linkedin.com/'} target="_blank" rel="noreferrer" aria-label="LinkedIn"><FaLinkedinIn size={17} /></a>
+            <a
+              href={profile?.github_url || 'https://github.com/aestheticwolf'}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub Profile"
+              className="footer-social-btn"
+              title="GitHub"
+            >
+              <FaGithub size={17} aria-hidden="true" />
+              <span className="footer-social-label">GitHub</span>
+            </a>
+            <a
+              href={profile?.linkedin_url || 'https://www.linkedin.com/'}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="LinkedIn Profile"
+              className="footer-social-btn"
+              title="LinkedIn"
+            >
+              <FaLinkedinIn size={16} aria-hidden="true" />
+              <span className="footer-social-label">LinkedIn</span>
+            </a>
           </div>
         </div>
-        <div className="footer-bottom mx-auto mt-8 max-w-7xl">
-          <p>© {new Date().getFullYear()} Richard D&apos;Souza. All rights reserved.</p>
-          <a href="#home">Back to top <ArrowUpRight size={14} /></a>
+        <div className="footer-bottom mx-auto mt-10 max-w-7xl">
+          <p className="footer-copyright">
+            © {new Date().getFullYear()} {profile?.full_name || "Richard D'Souza"}. Handcrafted with modern web tech.
+          </p>
+          <a
+            href="#home"
+            className="footer-back-to-top"
+            onClick={(e) => {
+              e.preventDefault()
+              window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
+            }}
+          >
+            <span>Back to top</span>
+            <ArrowUp size={13} className="footer-back-icon" aria-hidden="true" />
+          </a>
         </div>
       </footer>
     </div>
@@ -1109,39 +1937,47 @@ function AnimatedRoutes() {
   const location = useLocation()
   const prefersReducedMotion = useReducedMotion() ?? false
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [location.pathname])
+
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={location.pathname}
-        initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
-        transition={{ duration: prefersReducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <Routes location={location}>
-          <Route path="/" element={<Home />} />
-          <Route path="/request-resume" element={<RequestResume />} />
-          <Route path="/resume-access" element={<ResumeAccess />} />
-          <Route path="/projects/:slug" element={<ProjectDetails />} />
-          <Route
-            path="*"
-            element={
-              <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
-                <div className="text-center">
-                  <h1 className="text-4xl font-semibold">Page not found</h1>
-                  <Link
-                    to="/"
-                    className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
-                  >
-                    Return home
-                  </Link>
-                </div>
-              </main>
-            }
-          />
-        </Routes>
-      </motion.div>
-    </AnimatePresence>
+    <>
+      <ScrollProgress />
+      <GlobalBackToTop />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={location.pathname}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/request-resume" element={<RequestResume />} />
+            <Route path="/resume-access" element={<ResumeAccess />} />
+            <Route path="/projects/:slug" element={<ProjectDetails />} />
+            <Route
+              path="*"
+              element={
+                <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
+                  <div className="text-center">
+                    <h1 className="text-4xl font-semibold">Page not found</h1>
+                    <Link
+                      to="/"
+                      className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
+                    >
+                      Return home
+                    </Link>
+                  </div>
+                </main>
+              }
+            />
+          </Routes>
+        </motion.div>
+      </AnimatePresence>
+    </>
   )
 }
 
