@@ -1,3 +1,4 @@
+import PortfolioPreloader from './components/PortfolioPreloader'
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
@@ -1982,9 +1983,18 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
+  const [preloaderActive, setPreloaderActive] = useState(true)
+
   return (
-    <BrowserRouter>
-      <AnimatedRoutes />
-    </BrowserRouter>
+    <>
+      <AnimatePresence mode="wait">
+        {preloaderActive && (
+          <PortfolioPreloader onComplete={() => setPreloaderActive(false)} />
+        )}
+      </AnimatePresence>
+      <BrowserRouter>
+        <AnimatedRoutes />
+      </BrowserRouter>
+    </>
   )
 }
