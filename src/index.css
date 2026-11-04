@@ -1214,16 +1214,40 @@ textarea:focus-visible {
 
   /* About Section on Mobile */
   .about-story {
-    padding: 1.5rem 1.1rem;
-    border-radius: 1.1rem;
+    padding: 1.1rem 0.85rem;
+    border-radius: 0.95rem;
+  }
+  .about-story-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-bottom: 0.65rem;
+  }
+  .about-story-badge {
+    font-size: 0.72rem;
+    padding: 0.22rem 0.5rem;
+  }
+  .about-live-status {
+    font-size: 0.6875rem;
+    padding: 0.2rem 0.5rem;
   }
   .about-lead-box {
-    margin: 1.25rem 0 1rem;
-    padding: 1rem 1.15rem;
+    margin: 0.75rem 0 0.65rem;
+    padding: 0.7rem 0.8rem;
+    border-left-width: 2.5px;
+    border-radius: 0.6rem;
   }
   .about-lead-text {
-    font-size: 1.02rem;
-    line-height: 1.65;
+    font-size: 0.875rem;
+    line-height: 1.55;
+  }
+  .about-story-highlights {
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+  }
+  .about-highlight-pill {
+    padding: 0.22rem 0.48rem;
+    font-size: 0.7rem;
+    gap: 0.3rem;
   }
   .about-timeline-stream {
     padding-left: 0.9rem;
@@ -4615,5 +4639,187 @@ main,
   }
   100% {
     background-position: 50% 320%;
+  }
+}
+
+/* ==========================================================================
+   COMPREHENSIVE PHONE-SIZE RESPONSIVE AUDIT & REFINEMENTS (< 768px & < 640px)
+   Prevents oversized cards, heavy typography, and element clipping
+   ========================================================================== */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 767px) {
+  /* Sleek, space-efficient Navigation */
+  .portfolio-nav > nav {
+    height: 3.85rem !important;
+    padding-inline: 1rem !important;
+  }
+  .nav-logo-dark,
+  .nav-logo-light {
+    height: 1.7rem !important;
+  }
+  .portfolio-nav .theme-toggle {
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+  }
+
+  /* Compact Hero on Mobile */
+  .hero-kicker {
+    margin-top: 1.25rem !important;
+    font-size: 0.75rem !important;
+  }
+  .hero-title {
+    font-size: clamp(1.75rem, 7.5vw, 2.5rem) !important;
+    letter-spacing: -0.04em !important;
+    line-height: 1.15 !important;
+  }
+  .hero-intro {
+    font-size: 0.875rem !important;
+    line-height: 1.6 !important;
+    margin-top: 0.85rem !important;
+  }
+  .hero-actions {
+    gap: 0.55rem !important;
+    margin-top: 1.25rem !important;
+  }
+  .hero-cta,
+  .hero-secondary {
+    padding: 0.6rem 1.1rem !important;
+    font-size: 0.8125rem !important;
+  }
+
+  /* Section Headings on Mobile */
+  .section-label {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.14em !important;
+  }
+  .section-heading h2 {
+    font-size: clamp(1.4rem, 5.5vw, 1.85rem) !important;
+    letter-spacing: -0.04em !important;
+    margin-top: 0.5rem !important;
+  }
+  .section-summary {
+    font-size: 0.8125rem !important;
+    line-height: 1.55 !important;
+    margin-top: 0.65rem !important;
+  }
+
+  /* Floating Back to Top Button: Compact & Non-Obtrusive */
+  .back-to-top-button {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    right: 0.85rem !important;
+    bottom: 0.85rem !important;
+    z-index: 60 !important;
+  }
+  .back-to-top-button .back-to-top-icon {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Resume Request & Resume Access Pages on Mobile */
+  .resume-request-page,
+  .resume-access-page {
+    padding: 1rem 0.85rem 2rem !important;
+  }
+  .resume-top-nav {
+    margin-bottom: 1.15rem !important;
+    padding: 0.4rem 0 !important;
+  }
+  .resume-back-btn {
+    font-size: 0.75rem !important;
+    padding: 0.32rem 0.7rem !important;
+  }
+  .resume-request-panel {
+    width: 100% !important;
+    padding: 1.25rem 0.95rem !important;
+    border-radius: 0.95rem !important;
+  }
+  .resume-badge {
+    font-size: 0.6875rem !important;
+    padding: 0.2rem 0.5rem !important;
+    margin-bottom: 0.65rem !important;
+  }
+  .resume-title {
+    font-size: 1.45rem !important;
+    letter-spacing: -0.025em !important;
+    margin-bottom: 0.35rem !important;
+  }
+  .resume-subtitle {
+    font-size: 0.8125rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 0.95rem !important;
+  }
+  .resume-feature-chips {
+    gap: 0.3rem !important;
+    margin-bottom: 1.15rem !important;
+  }
+  .resume-chip {
+    font-size: 0.6875rem !important;
+    padding: 0.2rem 0.45rem !important;
+  }
+  .resume-field {
+    margin-bottom: 0.85rem !important;
+  }
+  .resume-label {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  .resume-input {
+    height: 2.6rem !important;
+    font-size: 0.85rem !important;
+    padding-left: 2.2rem !important;
+  }
+  .resume-submit-btn {
+    height: 2.75rem !important;
+    font-size: 0.85rem !important;
+    margin-top: 0.5rem !important;
+  }
+  .resume-success-icon-wrap,
+  .resume-error-icon-wrap {
+    width: 2.85rem !important;
+    height: 2.85rem !important;
+  }
+  .resume-success-title,
+  .resume-error-title {
+    font-size: 1.3rem !important;
+  }
+  .resume-success-desc,
+  .resume-error-desc {
+    font-size: 0.8125rem !important;
+    line-height: 1.55 !important;
+  }
+  .resume-success-actions button,
+  .resume-success-actions a,
+  .resume-error-actions a {
+    height: 2.6rem !important;
+    font-size: 0.8125rem !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .portfolio-nav > nav {
+    height: 3.45rem !important;
+    padding-inline: 0.85rem !important;
+  }
+  .about-story {
+    padding: 0.95rem 0.75rem !important;
+  }
+  .about-lead-box {
+    padding: 0.65rem 0.75rem !important;
+  }
+  .about-lead-text {
+    font-size: 0.84rem !important;
+  }
+  .about-timeline-card {
+    padding: 0.7rem 0.75rem !important;
+  }
+  .about-focus-card {
+    padding: 0.8rem 0.85rem !important;
   }
 }
