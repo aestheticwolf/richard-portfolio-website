@@ -1856,23 +1856,47 @@ textarea:focus-visible {
   flex-direction: column;
   align-items: flex-start;
 }
+/* ==========================================================================
+   SKILLS SECTION (HIGH-CONTRAST, MODERN SANS HEADINGS & VIBRANT TECH PILLS)
+   ========================================================================== */
 .skills-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
-  margin-top: 3rem;
+  margin-top: clamp(2rem, 3.5vw, 2.75rem);
+}
+
+@media (min-width: 1024px) {
+  .skills-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(1rem, 1.4vw, 1.35rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
 }
 
 .skill-card {
   position: relative;
   overflow: hidden;
-  padding: clamp(1.4rem, 2.5vw, 1.85rem);
-  border: 1px solid var(--border);
-  border-radius: 1.25rem;
-  background: var(--surface-raised);
-  box-shadow: 0 10px 28px var(--shadow);
-  transition: all 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(1.4rem, 2.2vw, 1.85rem);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 1.35rem;
+  background: linear-gradient(150deg, rgba(24, 27, 42, 0.94) 0%, rgba(13, 15, 24, 0.98) 100%);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: all 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .skill-card::before {
   position: absolute;
   top: 0;
@@ -1881,151 +1905,243 @@ textarea:focus-visible {
   height: 2px;
   background: linear-gradient(90deg, transparent 5%, var(--accent) 50%, transparent 95%);
   content: '';
-  opacity: 0;
-  transition: opacity 250ms ease;
+  opacity: 0.35;
+  transition: opacity 280ms ease, height 280ms ease;
 }
+
 .skill-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  box-shadow: 0 18px 40px var(--shadow);
+  border-color: color-mix(in srgb, var(--accent) 55%, rgba(255, 255, 255, 0.2));
+  box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.75), 0 0 30px -4px color-mix(in srgb, var(--accent) 30%, transparent);
 }
+
 .skill-card:hover::before {
-  opacity: 0.9;
+  opacity: 1;
+  height: 2.5px;
+}
+
+/* Ambient Corner Aura inside each card */
+.skill-card-aura {
+  position: absolute;
+  right: -3.5rem;
+  bottom: -3.5rem;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 32%, transparent), transparent 70%);
+  filter: blur(35px);
+  opacity: 0.15;
+  pointer-events: none;
+  transition: opacity 350ms ease, transform 350ms ease;
+}
+
+.skill-card:hover .skill-card-aura {
+  opacity: 0.5;
+  transform: scale(1.35);
 }
 
 .skill-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1.15rem;
 }
+
 .skill-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  border-radius: 0.75rem;
+  width: 2.85rem;
+  height: 2.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, rgba(255, 255, 255, 0.12));
+  border-radius: 0.85rem;
   color: var(--accent);
-  background: var(--accent-soft);
-  transition: transform 220ms ease, background 220ms ease;
+  background: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.04));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), background 220ms ease, color 220ms ease, box-shadow 220ms ease;
 }
+
 .skill-card:hover .skill-icon {
-  transform: scale(1.05);
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  transform: scale(1.08);
+  color: #ffffff;
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 48%, transparent);
 }
+
 .skill-card-count {
-  font-size: 0.6875rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
-  background: var(--surface-muted);
-  padding: 0.2rem 0.55rem;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.07);
+  padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
+
 .skill-card-index {
-  color: var(--text-tertiary);
+  color: rgba(255, 255, 255, 0.45);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
-.skill-card h3 {
-  margin: 1.35rem 0 0;
-  color: var(--text-primary);
-  font-size: 1.35rem;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
+
+/* Modern, high-contrast, perfectly-sized headings on both desktop & mobile */
+.skill-card h3,
+.skill-card-title {
+  margin: 0 0 1.25rem 0;
+  color: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
+  font-size: clamp(1.15rem, 1.35vw, 1.32rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.025em !important;
+  transition: color 200ms ease;
 }
+
+@media (max-width: 1023px) {
+  .skill-card h3,
+  .skill-card-title {
+    font-size: clamp(1.22rem, 3.8vw, 1.35rem) !important;
+  }
+}
+
 .skill-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1.15rem;
+  gap: 0.55rem;
+  margin-top: auto;
 }
+
+/* High-contrast, punchy technology pills */
 .technology-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 0.55rem;
-  color: var(--text-secondary);
-  background: var(--surface-muted);
-  font-size: 0.8125rem;
-  font-weight: 550;
-  line-height: 1.35;
-  transition: all 180ms ease;
-}
-.technology-tag svg {
-  flex: 0 0 auto;
-  transition: transform 180ms ease;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
-}
-.technology-tag:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: var(--surface-raised);
-  color: var(--text-primary);
-  transform: translateY(-1.5px);
-  box-shadow: 0 3px 10px var(--shadow);
-}
-.technology-tag:hover svg {
-  transform: scale(1.1);
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.65rem;
+  color: rgba(255, 255, 255, 0.98);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.825rem;
+  font-weight: 600;
+  line-height: 1.3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: default;
 }
 
-/* Authentic Technology Brand Colors */
-.technology-react svg { color: #61dafb; }
-.technology-typescript svg { color: #3178c6; }
-.technology-javascript svg { color: #f7df1e; }
-.technology-nextjs svg { color: #f4f3ef; }
-:root[data-theme='light'] .technology-nextjs svg { color: #111111; }
+.technology-tag svg {
+  flex: 0 0 auto;
+  transition: transform 220ms ease, filter 220ms ease;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.2));
+}
+
+.technology-tag:hover {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  transform: translateY(-2.5px) scale(1.05);
+  box-shadow: 0 8px 22px -3px rgba(0, 0, 0, 0.6), 0 0 16px -2px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.technology-tag:hover svg {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* Authentic Technology Brand Colors (High Saturation & Luminous Glow) */
+.technology-react svg { color: #00d8ff; filter: drop-shadow(0 0 6px rgba(0, 216, 255, 0.5)); }
+.technology-typescript svg { color: #3178c6; filter: drop-shadow(0 0 6px rgba(49, 120, 198, 0.5)); }
+.technology-javascript svg { color: #f7df1e; filter: drop-shadow(0 0 6px rgba(247, 223, 30, 0.5)); }
+.technology-nextjs svg { color: #ffffff; filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4)); }
 .technology-tailwind svg,
-.technology-tailwindcss svg { color: #38bdf8; }
+.technology-tailwindcss svg { color: #38bdf8; filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.5)); }
 .technology-vue svg,
-.technology-vuejs svg { color: #42b883; }
-.technology-html svg { color: #e34f26; }
-.technology-css svg { color: #1572b6; }
-.technology-sass svg { color: #cc6699; }
-.technology-redux svg { color: #764abc; }
-.technology-vite svg { color: #646cff; }
-.technology-bootstrap svg { color: #7952b3; }
+.technology-vuejs svg { color: #42b883; filter: drop-shadow(0 0 6px rgba(66, 184, 131, 0.5)); }
+.technology-html svg { color: #e34f26; filter: drop-shadow(0 0 6px rgba(227, 79, 38, 0.5)); }
+.technology-css svg { color: #1572b6; filter: drop-shadow(0 0 6px rgba(21, 114, 182, 0.5)); }
+.technology-sass svg { color: #cc6699; filter: drop-shadow(0 0 6px rgba(204, 102, 153, 0.5)); }
+.technology-redux svg { color: #764abc; filter: drop-shadow(0 0 6px rgba(118, 74, 188, 0.5)); }
+.technology-vite svg { color: #646cff; filter: drop-shadow(0 0 6px rgba(100, 108, 255, 0.5)); }
+.technology-bootstrap svg { color: #7952b3; filter: drop-shadow(0 0 6px rgba(121, 82, 179, 0.5)); }
 .technology-node svg,
-.technology-nodejs svg { color: #5fa04e; }
-.technology-express svg { color: #e5e7eb; }
-:root[data-theme='light'] .technology-express svg { color: #1f2937; }
-.technology-nestjs svg { color: #ea2845; }
-.technology-python svg { color: #3776ab; }
-.technology-django svg { color: #2ba977; }
-.technology-fastapi svg { color: #009688; }
-.technology-java svg { color: #ea2d2e; }
-.technology-springboot svg { color: #6db33f; }
-.technology-cpp svg { color: #00599c; }
-.technology-csharp svg { color: #239120; }
-.technology-dotnet svg { color: #512bd4; }
-.technology-go svg { color: #00add8; }
-.technology-rust svg { color: #dea584; }
-.technology-graphql svg { color: #e10098; }
-.technology-api svg { color: var(--accent); }
-.technology-postgresql svg { color: #4169e1; }
-.technology-mongodb svg { color: #47a248; }
-.technology-mysql svg { color: #4479a1; }
-.technology-redis svg { color: #dc382d; }
-.technology-supabase svg { color: #3ecf8e; }
-.technology-firebase svg { color: #ffca28; }
-.technology-docker svg { color: #2496ed; }
-.technology-aws svg { color: #ff9900; }
-.technology-vercel svg { color: #f4f3ef; }
-:root[data-theme='light'] .technology-vercel svg { color: #111111; }
-.technology-git svg { color: #f05032; }
-.technology-github svg { color: #f4f3ef; }
-:root[data-theme='light'] .technology-github svg { color: #181717; }
-.technology-security svg { color: var(--accent); }
+.technology-nodejs svg { color: #5fa04e; filter: drop-shadow(0 0 6px rgba(95, 160, 78, 0.5)); }
+.technology-express svg { color: #ffffff; filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4)); }
+.technology-nestjs svg { color: #ea2845; filter: drop-shadow(0 0 6px rgba(234, 40, 69, 0.5)); }
+.technology-python svg { color: #3776ab; filter: drop-shadow(0 0 6px rgba(55, 118, 171, 0.5)); }
+.technology-django svg { color: #2ba977; filter: drop-shadow(0 0 6px rgba(43, 169, 119, 0.5)); }
+.technology-fastapi svg { color: #009688; filter: drop-shadow(0 0 6px rgba(0, 150, 136, 0.5)); }
+.technology-java svg { color: #ea2d2e; filter: drop-shadow(0 0 6px rgba(234, 45, 46, 0.5)); }
+.technology-springboot svg { color: #6db33f; filter: drop-shadow(0 0 6px rgba(109, 179, 63, 0.5)); }
+.technology-cpp svg { color: #00599c; filter: drop-shadow(0 0 6px rgba(0, 89, 156, 0.5)); }
+.technology-csharp svg { color: #239120; filter: drop-shadow(0 0 6px rgba(35, 145, 32, 0.5)); }
+.technology-dotnet svg { color: #512bd4; filter: drop-shadow(0 0 6px rgba(81, 43, 212, 0.5)); }
+.technology-go svg { color: #00add8; filter: drop-shadow(0 0 6px rgba(0, 173, 216, 0.5)); }
+.technology-rust svg { color: #dea584; filter: drop-shadow(0 0 6px rgba(222, 165, 132, 0.5)); }
+.technology-graphql svg { color: #e10098; filter: drop-shadow(0 0 6px rgba(225, 0, 152, 0.5)); }
+.technology-api svg { color: #a78bfa; filter: drop-shadow(0 0 6px rgba(167, 139, 250, 0.5)); }
+.technology-postgresql svg { color: #4169e1; filter: drop-shadow(0 0 6px rgba(65, 105, 225, 0.5)); }
+.technology-mongodb svg { color: #47a248; filter: drop-shadow(0 0 6px rgba(71, 162, 72, 0.5)); }
+.technology-mysql svg { color: #4479a1; filter: drop-shadow(0 0 6px rgba(68, 121, 161, 0.5)); }
+.technology-redis svg { color: #dc382d; filter: drop-shadow(0 0 6px rgba(220, 56, 45, 0.5)); }
+.technology-supabase svg { color: #3ecf8e; filter: drop-shadow(0 0 6px rgba(62, 207, 142, 0.55)); }
+.technology-firebase svg { color: #ffca28; filter: drop-shadow(0 0 6px rgba(255, 202, 40, 0.55)); }
+.technology-docker svg { color: #2496ed; filter: drop-shadow(0 0 6px rgba(36, 150, 237, 0.5)); }
+.technology-aws svg { color: #ff9900; filter: drop-shadow(0 0 6px rgba(255, 153, 0, 0.5)); }
+.technology-vercel svg { color: #ffffff; filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.45)); }
+.technology-git svg { color: #f05032; filter: drop-shadow(0 0 6px rgba(240, 80, 50, 0.5)); }
+.technology-github svg { color: #f4f3ef; filter: drop-shadow(0 0 6px rgba(244, 243, 239, 0.4)); }
+.technology-security svg { color: #10b981; filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.5)); }
+.technology-auth svg { color: #f59e0b; filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5)); }
+.technology-authz svg { color: #10b981; filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.5)); }
+.technology-firewall svg { color: #818cf8; filter: drop-shadow(0 0 6px rgba(129, 140, 248, 0.5)); }
+
+/* Light Theme Overrides */
+[data-theme='light'] .skill-card {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.96) 0%, rgba(243, 244, 249, 0.98) 100%);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.08);
+}
+[data-theme='light'] .skill-card-header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+[data-theme='light'] .skill-card h3,
+[data-theme='light'] .skill-card-title {
+  color: #111827 !important;
+}
+[data-theme='light'] .skill-card-count {
+  color: #4b5563;
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme='light'] .skill-card-index {
+  color: #9ca3af;
+}
+[data-theme='light'] .technology-tag {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+}
+[data-theme='light'] .technology-tag:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: var(--accent);
+  color: #111827;
+}
+[data-theme='light'] .technology-express svg,
+[data-theme='light'] .technology-vercel svg,
+[data-theme='light'] .technology-nextjs svg,
+[data-theme='light'] .technology-github svg {
+  color: #111827;
+}
 
 @media (max-width: 767px) {
   .about-layout { grid-template-columns: 1fr; margin-top: 2.5rem; }
-  .skills-grid { grid-template-columns: 1fr; margin-top: 2.5rem; }
 }
-
 /* Selected work gives live project data a consistent visual frame. */
 .projects-heading-row { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
 .projects-count { padding: 0.45rem 0.65rem; border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text-tertiary); background: var(--surface); font-size: 0.75rem; font-weight: 650; white-space: nowrap; }

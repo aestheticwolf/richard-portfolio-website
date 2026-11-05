@@ -122,9 +122,9 @@ const skills = [
     name: 'Security Fundamentals',
     icon: ShieldCheck,
     technologies: [
-      { name: 'Authentication', icon: KeyRound, tone: 'security' },
-      { name: 'Authorization', icon: ShieldCheck, tone: 'security' },
-      { name: 'Firewalls', icon: ShieldCheck, tone: 'security' },
+      { name: 'Authentication', icon: KeyRound, tone: 'auth' },
+      { name: 'Authorization', icon: ShieldCheck, tone: 'authz' },
+      { name: 'Firewalls', icon: ShieldCheck, tone: 'firewall' },
     ],
   },
 ]
@@ -253,9 +253,9 @@ const technologyToneMap: Record<string, string> = {
   Vercel: 'vercel',
   Git: 'git',
   GitHub: 'github',
-  Authentication: 'security',
-  Authorization: 'security',
-  Firewalls: 'security',
+  Authentication: 'auth',
+  Authorization: 'authz',
+  Firewalls: 'firewall',
 }
 
 
@@ -444,17 +444,27 @@ function Home() {
     if (contactStatus === 'sending') return
 
     const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
+    const form = event.currentTarget
+    const formData = new FormData(form)
+
+    const name = String(formData.get('name') || '').trim()
+    const email = String(formData.get('email') || '').trim()
+    const message = String(formData.get('message') || '').trim()
+
     if (!accessKey) {
-      setContactStatus('error')
-      setContactStatusMessage('The message form is not configured yet. Please email me directly using the link below.')
+      // Fallback: If Web3Forms key is not yet configured, launch user's email client directly so the message is never lost
+      const subject = encodeURIComponent(`Portfolio message from ${name || 'Website Visitor'}`)
+      const body = encodeURIComponent(`From: ${name || 'Anonymous'}\nEmail: ${email || 'Not provided'}\n\nMessage:\n${message}`)
+      window.location.href = `mailto:rich.dsz1997@gmail.com?subject=${subject}&body=${body}`
+      setContactStatus('sent')
+      setContactStatusMessage('Opening your email app to send directly to rich.dsz1997@gmail.com…')
       return
     }
 
-    const form = event.currentTarget
-    const formData = new FormData(form)
     formData.set('access_key', accessKey)
-    formData.set('subject', `Portfolio message from ${String(formData.get('name') || 'a visitor')}`)
+    formData.set('subject', `Portfolio message from ${name || 'a visitor'}`)
     formData.set('from_name', "Richard D'Souza Portfolio")
+    formData.set('replyto', email)
     setContactStatus('sending')
     setContactStatusMessage('Sending your message…')
 
@@ -464,16 +474,16 @@ function Home() {
         body: formData,
         headers: { Accept: 'application/json' },
       })
-      const result: { success?: boolean } = await response.json()
+      const result: { success?: boolean; message?: string } = await response.json()
 
-      if (!response.ok || !result.success) throw new Error('Submission failed')
+      if (!response.ok || !result.success) throw new Error(result.message || 'Submission failed')
 
       form.reset()
       setContactStatus('sent')
-      setContactStatusMessage('Thanks for reaching out. Your message has been sent.')
+      setContactStatusMessage('Thanks for reaching out! Your message has been sent directly to my inbox.')
     } catch {
       setContactStatus('error')
-      setContactStatusMessage('Your message could not be sent right now. Please try again or email me directly below.')
+      setContactStatusMessage('Your message could not be sent right now. Please try again or email me directly at rich.dsz1997@gmail.com.')
     }
   }
   const displayedSkills = profile?.skills?.length
@@ -613,18 +623,18 @@ function Home() {
       <BackgroundAnimation />
       {/* Ambient Peripheral Flank Nebulae (Fills wide desktop side voids with subtle soft lavender & cosmic indigo glow) */}
       <div className="fixed inset-y-0 left-0 w-96 max-w-[26vw] pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
-        <div className="absolute top-1/4 -left-24 w-96 h-[600px] rounded-full bg-gradient-to-r from-indigo-600/10 via-purple-600/6 to-transparent blur-[110px]" />
-        <div className="absolute top-2/3 -left-20 w-80 h-[500px] rounded-full bg-gradient-to-r from-[#cbc5ff]/8 via-violet-500/5 to-transparent blur-[100px]" />
+        <div className="absolute top-1/4 -left-24 w-96 h-150 rounded-full bg-linear-to-r from-indigo-600/10 via-purple-600/6 to-transparent blur-[110px]" />
+        <div className="absolute top-2/3 -left-20 w-80 h-125 rounded-full bg-linear-to-r from-[#cbc5ff]/8 via-violet-500/5 to-transparent blur-[100px]" />
       </div>
       <div className="fixed inset-y-0 right-0 w-96 max-w-[26vw] pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
-        <div className="absolute top-1/3 -right-24 w-96 h-[600px] rounded-full bg-gradient-to-l from-[#cbc5ff]/10 via-purple-500/6 to-transparent blur-[110px]" />
-        <div className="absolute top-3/4 -right-20 w-80 h-[500px] rounded-full bg-gradient-to-l from-cyan-500/8 via-indigo-600/5 to-transparent blur-[100px]" />
+        <div className="absolute top-1/3 -right-24 w-96 h-150 rounded-full bg-linear-to-l from-[#cbc5ff]/10 via-purple-500/6 to-transparent blur-[110px]" />
+        <div className="absolute top-3/4 -right-20 w-80 h-125 rounded-full bg-linear-to-l from-cyan-500/8 via-indigo-600/5 to-transparent blur-[100px]" />
       </div>
 
       
       
       <header className="portfolio-nav fixed inset-x-0 top-0 z-50 border-b border-white/7 bg-[#08090d]/85 backdrop-blur-xl">
-        <nav className="mx-auto flex h-19 max-w-7xl 2xl:max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-10 2xl:px-12">
+        <nav className="mx-auto flex h-19 max-w-7xl 2xl:max-w-360 items-center justify-between px-4 sm:px-6 lg:px-10 2xl:px-12">
           <a
             href="#home"
             className="portfolio-nav-logo inline-flex items-center"
@@ -700,7 +710,7 @@ function Home() {
           id="home"
           className="hero-section relative flex scroll-mt-20 items-center"
         >
-          <div className="relative mx-auto grid w-full max-w-7xl 2xl:max-w-[1440px] items-center gap-10 px-4 sm:px-6 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16 lg:px-10 2xl:px-12">
+          <div className="relative mx-auto grid w-full max-w-7xl 2xl:max-w-360 items-center gap-10 px-4 sm:px-6 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16 lg:px-10 2xl:px-12">
             <motion.div
               className="hero-copy"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
@@ -1137,7 +1147,7 @@ function Home() {
   className="about-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
 >
   <motion.div
-    className="mx-auto max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12"
+    className="mx-auto max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12"
     variants={sectionReveal}
     initial="hidden"
     whileInView="visible"
@@ -1471,7 +1481,7 @@ function Home() {
   id="skills"
   className="skills-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
 >
-  <div className="mx-auto max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
+  <div className="mx-auto max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
     <motion.div
       className="section-heading skills-heading"
       variants={sectionReveal}
@@ -1502,10 +1512,12 @@ function Home() {
             key={skill.name}
             variants={sectionReveal}
             className="skill-card group"
-            whileHover={prefersReducedMotion ? undefined : { y: -4 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            whileHover={prefersReducedMotion ? undefined : { y: -6, scale: 1.01 }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
           >
             <div className="skill-card-glow" />
+            <div className="skill-card-aura" />
             <div className="skill-card-header">
               <div className="skill-icon">
                 <Icon size={20} aria-hidden="true" />
@@ -1516,7 +1528,7 @@ function Home() {
               </div>
             </div>
 
-            <h3>{skill.name}</h3>
+            <h3 className="skill-card-title">{skill.name}</h3>
 
             <div className="skill-tags">
               {skill.technologies.map((technology) => {
@@ -1524,10 +1536,15 @@ function Home() {
                 const tone = technologyToneMap[technology.name] ?? normalizeTechnologyName(technology.name)
 
                 return (
-                  <span className={`technology-tag technology-${tone}`} key={technology.name}>
-                    <TechnologyIcon size={14} aria-hidden="true" />
+                  <motion.span
+                    className={`technology-tag technology-${tone}`}
+                    key={technology.name}
+                    whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.04 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <TechnologyIcon size={14} className="shrink-0" aria-hidden="true" />
                     <span>{technology.name}</span>
-                  </span>
+                  </motion.span>
                 )
               })}
             </div>
@@ -1543,7 +1560,7 @@ function Home() {
           id="projects"
           className="projects-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
         >
-          <div className="mx-auto max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
+          <div className="mx-auto max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
             <motion.div
               className="projects-heading-row"
               variants={sectionReveal}
@@ -1658,7 +1675,7 @@ function Home() {
           id="contact"
           className="contact-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
         >
-          <div className="mx-auto max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
+          <div className="mx-auto max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
             <motion.div
               className="section-heading contact-heading"
               variants={sectionReveal}
@@ -1804,7 +1821,7 @@ function Home() {
 
       <footer className="portfolio-footer">
         <div className="footer-glow-bar" aria-hidden="true" />
-        <div className="mx-auto flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
+        <div className="mx-auto flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
           <div className="footer-brand max-w-md">
             <a href="#home" className="footer-brand-title">
               <span>{profile?.full_name || "Richard D'Souza"}</span>
@@ -1858,7 +1875,7 @@ function Home() {
             </div>
           </div>
         </div>
-        <div className="footer-bottom mx-auto mt-10 max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
+        <div className="footer-bottom mx-auto mt-10 max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
           <p className="footer-copyright">
             © {new Date().getFullYear()} {profile?.full_name || "Richard D'Souza"}. Handcrafted with modern web tech.
           </p>
