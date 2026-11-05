@@ -7,7 +7,6 @@ import {
   ArrowUp,
   ArrowUpRight,
   ExternalLink,
-  Mail,
   Menu,
   X,
   Code2,
@@ -388,7 +387,6 @@ function Home() {
   const [profileError, setProfileError] = useState('')
   const [aboutExpanded, setAboutExpanded] = useState(true)
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
-  const [emailCopied, setEmailCopied] = useState(false)
   const [heroConsoleTab, setHeroConsoleTab] = useState<'developer' | 'stack' | 'terminal'>('developer')
   const [codeCopied, setCodeCopied] = useState(false)
   const handleCopyCode = () => {
@@ -407,11 +405,6 @@ function Home() {
     navigator.clipboard.writeText(copyText)
     setCodeCopied(true)
     window.setTimeout(() => setCodeCopied(false), 2000)
-  }
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText('rich.dsz1997@gmail.com')
-    setEmailCopied(true)
-    window.setTimeout(() => setEmailCopied(false), 2200)
   }
   const [contactStatusMessage, setContactStatusMessage] = useState('')
   const [heroTypingCycle, setHeroTypingCycle] = useState(0)
@@ -616,10 +609,22 @@ function Home() {
 
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#08090d] text-white">
+    <div className="min-h-screen overflow-x-clip bg-[#08090d] text-white">
       <BackgroundAnimation />
+      {/* Ambient Peripheral Flank Nebulae (Fills wide desktop side voids with subtle soft lavender & cosmic indigo glow) */}
+      <div className="fixed inset-y-0 left-0 w-96 max-w-[26vw] pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
+        <div className="absolute top-1/4 -left-24 w-96 h-[600px] rounded-full bg-gradient-to-r from-indigo-600/10 via-purple-600/6 to-transparent blur-[110px]" />
+        <div className="absolute top-2/3 -left-20 w-80 h-[500px] rounded-full bg-gradient-to-r from-[#cbc5ff]/8 via-violet-500/5 to-transparent blur-[100px]" />
+      </div>
+      <div className="fixed inset-y-0 right-0 w-96 max-w-[26vw] pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
+        <div className="absolute top-1/3 -right-24 w-96 h-[600px] rounded-full bg-gradient-to-l from-[#cbc5ff]/10 via-purple-500/6 to-transparent blur-[110px]" />
+        <div className="absolute top-3/4 -right-20 w-80 h-[500px] rounded-full bg-gradient-to-l from-cyan-500/8 via-indigo-600/5 to-transparent blur-[100px]" />
+      </div>
+
+      
+      
       <header className="portfolio-nav fixed inset-x-0 top-0 z-50 border-b border-white/7 bg-[#08090d]/85 backdrop-blur-xl">
-        <nav className="mx-auto flex h-19 max-w-7xl items-center justify-between px-6 lg:px-10">
+        <nav className="mx-auto flex h-19 max-w-7xl 2xl:max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-10 2xl:px-12">
           <a
             href="#home"
             className="portfolio-nav-logo inline-flex items-center"
@@ -695,7 +700,7 @@ function Home() {
           id="home"
           className="hero-section relative flex scroll-mt-20 items-center"
         >
-          <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-6 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16 lg:px-10">
+          <div className="relative mx-auto grid w-full max-w-7xl 2xl:max-w-[1440px] items-center gap-10 px-4 sm:px-6 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16 lg:px-10 2xl:px-12">
             <motion.div
               className="hero-copy"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
@@ -707,7 +712,7 @@ function Home() {
                   <span className="hero-status-ping" />
                   <span className="hero-status-dot" />
                 </span>
-                <span>Building thoughtful digital experiences</span>
+                <span>Engineering scalable web applications & modern software</span>
               </div>
 
               <p className="hero-kicker">
@@ -1132,7 +1137,7 @@ function Home() {
   className="about-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
 >
   <motion.div
-    className="mx-auto max-w-7xl px-6 lg:px-10"
+    className="mx-auto max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12"
     variants={sectionReveal}
     initial="hidden"
     whileInView="visible"
@@ -1466,7 +1471,7 @@ function Home() {
   id="skills"
   className="skills-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
 >
-  <div className="mx-auto max-w-7xl px-6 lg:px-10">
+  <div className="mx-auto max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
     <motion.div
       className="section-heading skills-heading"
       variants={sectionReveal}
@@ -1538,7 +1543,7 @@ function Home() {
           id="projects"
           className="projects-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
         >
-          <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="mx-auto max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
             <motion.div
               className="projects-heading-row"
               variants={sectionReveal}
@@ -1653,7 +1658,7 @@ function Home() {
           id="contact"
           className="contact-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
         >
-          <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="mx-auto max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
             <motion.div
               className="section-heading contact-heading"
               variants={sectionReveal}
@@ -1675,7 +1680,7 @@ function Home() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.15 }}
             >
-              {/* Left Column: Interactive Contact Form Card */}
+              {/* Interactive Contact Form Card */}
               <motion.div className="contact-form-card" variants={sectionReveal}>
                 <div className="contact-form-header">
                   <div className="contact-badge">
@@ -1758,104 +1763,40 @@ function Home() {
                 </form>
               </motion.div>
 
-              {/* Right Column: Bento Contact & Info Cards */}
-              <motion.aside className="contact-aside" variants={sectionStagger} aria-label="Other ways to connect">
-                {/* Direct Email Card with 1-Click Copy */}
-                <motion.div className="contact-info-card group" variants={sectionReveal}>
-                  <div className="contact-card-icon-wrap">
-                    <Mail size={22} aria-hidden="true" />
+              {/* Social Profiles Bento Grid */}
+              <motion.div className="contact-social-grid mt-6" variants={sectionReveal}>
+                <a
+                  href={profile?.github_url || 'https://github.com/aestheticwolf'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="contact-social-card group"
+                >
+                  <div className="contact-social-icon">
+                    <FaGithub size={20} />
                   </div>
-                  <div className="contact-card-content">
-                    <span className="contact-card-badge">Direct Contact</span>
-                    <div className="contact-email-row">
-                      <strong className="truncate">rich.dsz1997@gmail.com</strong>
-                      <button
-                        type="button"
-                        onClick={handleCopyEmail}
-                        className="contact-copy-btn"
-                        title="Copy email address"
-                        aria-label="Copy email address"
-                      >
-                        {emailCopied ? (
-                          <>
-                            <Check size={13} className="text-emerald-400" />
-                            <span>Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={13} />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    <p className="contact-card-sub">⚡ Fast Response • Typically within 24 hours</p>
+                  <div className="contact-social-text">
+                    <strong>GitHub</strong>
+                    <span>Code & Projects</span>
                   </div>
-                </motion.div>
+                  <ArrowUpRight size={16} className="contact-social-arrow" />
+                </a>
 
-                {/* Location & Timezone Card */}
-                <motion.div className="contact-info-card group" variants={sectionReveal}>
-                  <div className="contact-card-icon-wrap">
-                    <MapPin size={22} aria-hidden="true" />
+                <a
+                  href={profile?.linkedin_url || 'https://www.linkedin.com/'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="contact-social-card group"
+                >
+                  <div className="contact-social-icon">
+                    <FaLinkedinIn size={19} />
                   </div>
-                  <div className="contact-card-content">
-                    <span className="contact-card-badge">Location & Timezone</span>
-                    <strong>{profile?.location || 'Goa, India'}</strong>
-                    <p className="contact-card-sub">IST (UTC +5:30) • Open to Global Remote & Hybrid</p>
+                  <div className="contact-social-text">
+                    <strong>LinkedIn</strong>
+                    <span>Professional Network</span>
                   </div>
-                </motion.div>
-
-                {/* Social Profiles Bento Grid */}
-                <div className="contact-social-grid">
-                  <motion.a
-                    href={profile?.github_url || 'https://github.com/aestheticwolf'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="contact-social-card group"
-                    variants={sectionReveal}
-                  >
-                    <div className="contact-social-icon">
-                      <FaGithub size={20} />
-                    </div>
-                    <div className="contact-social-text">
-                      <strong>GitHub</strong>
-                      <span>Code & Projects</span>
-                    </div>
-                    <ArrowUpRight size={16} className="contact-social-arrow" />
-                  </motion.a>
-
-                  <motion.a
-                    href={profile?.linkedin_url || 'https://www.linkedin.com/'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="contact-social-card group"
-                    variants={sectionReveal}
-                  >
-                    <div className="contact-social-icon">
-                      <FaLinkedinIn size={19} />
-                    </div>
-                    <div className="contact-social-text">
-                      <strong>LinkedIn</strong>
-                      <span>Professional Network</span>
-                    </div>
-                    <ArrowUpRight size={16} className="contact-social-arrow" />
-                  </motion.a>
-                </div>
-
-                {/* Collaboration Note */}
-                <motion.div className="contact-collab-card" variants={sectionReveal}>
-                  <div className="contact-collab-glow" />
-                  <div className="contact-collab-content">
-                    <div className="flex items-center gap-2">
-                      <Sparkles size={16} className="text-violet-400" />
-                      <span className="contact-collab-label">Ready to collaborate?</span>
-                    </div>
-                    <p className="contact-collab-desc">
-                      Available for full-time software engineering roles, high-impact contract projects, and architecture discussions.
-                    </p>
-                  </div>
-                </motion.div>
-              </motion.aside>
+                  <ArrowUpRight size={16} className="contact-social-arrow" />
+                </a>
+              </motion.div>
             </motion.div>
           </div>
         </section>
@@ -1863,57 +1804,61 @@ function Home() {
 
       <footer className="portfolio-footer">
         <div className="footer-glow-bar" aria-hidden="true" />
-        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.2fr_1fr_auto] md:items-start">
-          <div className="footer-brand">
+        <div className="mx-auto flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
+          <div className="footer-brand max-w-md">
             <a href="#home" className="footer-brand-title">
               <span>{profile?.full_name || "Richard D'Souza"}</span>
               <span className="footer-brand-dot" aria-hidden="true" />
             </a>
             <p className="footer-brand-tagline">
-              {profile?.professional_title || 'Software Developer'} • Building thoughtful digital experiences with clean code & modern architecture.
+              {profile?.professional_title || 'Software Developer'} • Engineering scalable web applications with clean code & modern architecture.
             </p>
             <div className="footer-status-badge">
               <span className="footer-status-dot" aria-hidden="true" />
               <span>Available for engineering opportunities</span>
             </div>
           </div>
-          <nav className="footer-nav" aria-label="Footer navigation">
-            {navigation.map((item) => (
-              <a key={item.label} href={item.href} className="footer-nav-link">
-                {item.label}
+
+          <div className="footer-right-cluster">
+            <nav className="footer-nav" aria-label="Footer navigation">
+              {navigation.map((item) => (
+                <a key={item.label} href={item.href} className="footer-nav-link">
+                  {item.label}
+                </a>
+              ))}
+            </nav>
+
+            <div className="footer-actions">
+              <Link to="/request-resume" className="footer-resume-btn">
+                <span>Request Resume</span>
+                <ArrowUpRight size={13} aria-hidden="true" />
+              </Link>
+              <a
+                href={profile?.github_url || 'https://github.com/aestheticwolf'}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="GitHub Profile"
+                className="footer-social-btn"
+                title="GitHub"
+              >
+                <FaGithub size={16} aria-hidden="true" />
+                <span className="footer-social-label">GitHub</span>
               </a>
-            ))}
-            <Link to="/request-resume" className="footer-nav-link footer-nav-resume">
-              <span>Request Resume</span>
-              <ArrowUpRight size={13} aria-hidden="true" />
-            </Link>
-          </nav>
-          <div className="footer-socials">
-            <a
-              href={profile?.github_url || 'https://github.com/aestheticwolf'}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="GitHub Profile"
-              className="footer-social-btn"
-              title="GitHub"
-            >
-              <FaGithub size={17} aria-hidden="true" />
-              <span className="footer-social-label">GitHub</span>
-            </a>
-            <a
-              href={profile?.linkedin_url || 'https://www.linkedin.com/'}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="LinkedIn Profile"
-              className="footer-social-btn"
-              title="LinkedIn"
-            >
-              <FaLinkedinIn size={16} aria-hidden="true" />
-              <span className="footer-social-label">LinkedIn</span>
-            </a>
+              <a
+                href={profile?.linkedin_url || 'https://www.linkedin.com/'}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="LinkedIn Profile"
+                className="footer-social-btn"
+                title="LinkedIn"
+              >
+                <FaLinkedinIn size={15} aria-hidden="true" />
+                <span className="footer-social-label">LinkedIn</span>
+              </a>
+            </div>
           </div>
         </div>
-        <div className="footer-bottom mx-auto mt-10 max-w-7xl">
+        <div className="footer-bottom mx-auto mt-10 max-w-7xl 2xl:max-w-[1440px] px-4 sm:px-6 lg:px-10 2xl:px-12">
           <p className="footer-copyright">
             © {new Date().getFullYear()} {profile?.full_name || "Richard D'Souza"}. Handcrafted with modern web tech.
           </p>
@@ -1949,10 +1894,10 @@ function AnimatedRoutes() {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location.pathname}
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+          initial={prefersReducedMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: 'easeOut' }}
         >
           <Routes location={location}>
             <Route path="/" element={<Home />} />
