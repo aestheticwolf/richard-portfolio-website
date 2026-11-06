@@ -1,5 +1,5 @@
 
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import {
@@ -68,7 +68,17 @@ function getVideoEmbedUrl(url: string): string | null {
 
 export default function ProjectDetails() {
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
   const prefersReducedMotion = useReducedMotion() ?? false
+
+  function handleBackToProjects(e?: React.MouseEvent) {
+    if (e) e.preventDefault()
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/#projects')
+    }
+  }
 
   const [project, setProject] = useState<PortfolioProject | null>(null)
   const [publishedProjects, setPublishedProjects] = useState<PortfolioProject[]>([])
@@ -252,6 +262,7 @@ export default function ProjectDetails() {
           <ThemeToggle />
           <Link
             to="/#projects"
+            onClick={handleBackToProjects}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
           >
             <ArrowLeft size={16} /> Back to projects
@@ -277,6 +288,7 @@ export default function ProjectDetails() {
           </p>
           <Link
             to="/#projects"
+            onClick={handleBackToProjects}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
           >
             <ArrowLeft size={16} /> Back to projects
@@ -291,15 +303,25 @@ export default function ProjectDetails() {
       <BackgroundAnimation />
       <header className="portfolio-nav border-b border-white/8">
         <nav className="mx-auto flex h-19 max-w-7xl items-center justify-between px-6 lg:px-10">
-          <Link to="/" className="portfolio-nav-logo inline-flex items-center" aria-label="Richard D'Souza Home">
+          <Link
+            to="/"
+            onClick={() => {
+              sessionStorage.removeItem('portfolio_restore_pending')
+              sessionStorage.setItem('portfolio_home_scroll', '0')
+            }}
+            state={{ resetScroll: true }}
+            className="portfolio-nav-logo inline-flex items-center"
+            aria-label="Richard D'Souza Home"
+          >
             <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto object-contain" />
             <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto object-contain" />
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <ThemeToggle />
             <Link
               to="/#projects"
-              className="portfolio-nav-link inline-flex items-center gap-2 text-sm text-zinc-400 transition hover:text-white"
+              onClick={handleBackToProjects}
+              className="portfolio-nav-link inline-flex items-center gap-2 text-sm text-zinc-400 transition hover:text-white shrink-0"
             >
               <ArrowLeft size={16} /> All projects
             </Link>
@@ -307,7 +329,7 @@ export default function ProjectDetails() {
         </nav>
       </header>
 
-      <main className="project-detail-content mx-auto max-w-6xl px-6 py-10 sm:py-16 lg:px-8">
+      <main className="project-detail-content mx-auto max-w-4xl px-4 sm:px-6 py-6 sm:py-10">
         {/* Project Header */}
         <motion.div
           className="project-detail-header"
@@ -336,7 +358,7 @@ export default function ProjectDetails() {
             </p>
           )}
 
-          <div className="project-detail-actions mt-7 flex flex-wrap gap-3">
+          <div className="project-detail-actions mt-5 flex flex-wrap gap-2.5">
             {project.github && (
               <a
                 href={project.github}
@@ -374,7 +396,7 @@ export default function ProjectDetails() {
           initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.12 }}
-          className="project-detail-hero-frame mt-10 overflow-hidden"
+          className="project-detail-hero-frame mt-6 sm:mt-8 overflow-hidden"
         >
           <div className="project-media-bar">
             <div className="project-media-dots" aria-hidden="true">
@@ -409,7 +431,7 @@ export default function ProjectDetails() {
 
         {/* Screenshots & Previews Gallery */}
         {project.galleryImages.length > 0 && (
-          <section className="project-gallery mt-10 sm:mt-16">
+          <section className="project-gallery mt-8 sm:mt-10">
             <div className="section-heading">
               <p className="section-label">PROJECT GALLERY</p>
               <h2 className="project-gallery-title font-semibold mt-1">Screenshots &amp; previews</h2>
@@ -544,7 +566,7 @@ export default function ProjectDetails() {
         )}
 
         {/* Overview & Sidebar Bento Grid */}
-        <div className="project-detail-layout mt-14 sm:mt-20">
+        <div className="project-detail-layout mt-8 sm:mt-10">
           <div className="project-detail-main-column">
             {/* Overview Card */}
             <div className="project-bento-card">
@@ -644,6 +666,7 @@ export default function ProjectDetails() {
               <div className="mt-7 pt-6 border-t border-white/10">
                 <Link
                   to="/#projects"
+                  onClick={handleBackToProjects}
                   className="project-browse-link"
                 >
                   <ArrowLeft size={15} />
@@ -661,7 +684,7 @@ export default function ProjectDetails() {
                 <p className="text-sm uppercase tracking-[0.25em] text-violet-300">Explore more</p>
                 <h2 className="mt-2 text-2xl sm:text-3xl font-semibold">More selected work</h2>
               </div>
-              <Link to="/#projects" className="project-details-link">All projects <ArrowUpRight size={15} /></Link>
+              <Link to="/#projects" onClick={handleBackToProjects} className="project-details-link">All projects <ArrowUpRight size={15} /></Link>
             </div>
             <div className="project-related-grid mt-7">
               {relatedProjects.map((relatedProject) => (

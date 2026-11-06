@@ -36,8 +36,12 @@ export default function ThemeToggle() {
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
       title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
     >
-      {isDark ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
-      <span className="hidden sm:inline">{isDark ? 'Light' : 'Dark'}</span>
+      <span className="theme-toggle-icon inline-flex items-center justify-center shrink-0">
+        {isDark ? <Sun size={15} aria-hidden="true" /> : <Moon size={15} aria-hidden="true" />}
+      </span>
+      <span className="theme-toggle-label hidden sm:inline text-xs font-semibold tracking-wide">
+        {isDark ? 'Light' : 'Dark'}
+      </span>
     </button>
   )
 }

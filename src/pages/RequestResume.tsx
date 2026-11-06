@@ -14,7 +14,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { submitResumeRequest } from '../lib/resumeRequest'
 import ThemeToggle from '../components/ThemeToggle'
 import BackgroundAnimation from '../components/BackgroundAnimation'
@@ -22,11 +22,20 @@ import BackgroundAnimation from '../components/BackgroundAnimation'
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function RequestResume() {
+  const navigate = useNavigate()
   const prefersReducedMotion = useReducedMotion() ?? false
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
+
+  function handleBack() {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -71,10 +80,14 @@ export default function RequestResume() {
 
       {/* Top Navigation */}
       <div className="resume-top-nav">
-        <Link to="/" className="resume-back-btn group">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="resume-back-btn group cursor-pointer"
+        >
           <ArrowLeft size={16} className="transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to portfolio</span>
-        </Link>
+        </button>
         <div className="resume-top-actions">
           <ThemeToggle />
         </div>
@@ -149,10 +162,14 @@ export default function RequestResume() {
                   >
                     Send another request
                   </button>
-                  <Link to="/" className="resume-primary-link group">
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="resume-primary-link group cursor-pointer"
+                  >
                     <span>Return to portfolio</span>
                     <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />
-                  </Link>
+                  </button>
                 </div>
               </motion.div>
             ) : (

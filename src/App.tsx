@@ -1,6 +1,6 @@
 import PortfolioPreloader from './components/PortfolioPreloader'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
 import {
   ArrowDown,
@@ -19,8 +19,6 @@ import {
   Sparkles,
   Terminal,
   ChevronDown,
-  Check,
-  Copy,
   Send,
   FileCode,
   Layers,
@@ -77,7 +75,15 @@ import {
 import {
   getPublishedProfile,
   type PublicProfile,
+  DEFAULT_HERO_CONSOLE,
 } from './lib/profile'
+import {
+  parseMilestoneCards,
+} from './lib/milestoneCards'
+import {
+  validateContactSubmission,
+  recordContactSubmission,
+} from './lib/contactSecurity'
 import RequestResume from './pages/RequestResume'
 import ResumeAccess from './pages/ResumeAccess'
 
@@ -258,6 +264,48 @@ const technologyToneMap: Record<string, string> = {
   Firewalls: 'firewall',
 }
 
+const technologyBrandColorMap: Record<string, string> = {
+  React: '#61dafb',
+  TypeScript: '#3178c6',
+  JavaScript: '#f7df1e',
+  'Next.js': '#ffffff',
+  'Tailwind CSS': '#38bdf8',
+  'Vue.js': '#42b883',
+  HTML: '#e34f26',
+  CSS: '#1572b6',
+  Sass: '#cc6699',
+  Redux: '#764abc',
+  Vite: '#646cff',
+  Bootstrap: '#7952b3',
+  'Node.js': '#5fa04e',
+  Express: '#d1d5db',
+  NestJS: '#ea2845',
+  Python: '#3776ab',
+  Django: '#2ba977',
+  FastAPI: '#009688',
+  Java: '#ea2d2e',
+  'Spring Boot': '#6db33f',
+  'C++': '#00599c',
+  'C#': '#239120',
+  '.NET': '#512bd4',
+  Go: '#00add8',
+  Rust: '#dea584',
+  GraphQL: '#e10098',
+  'REST APIs': '#aaa1f2',
+  PostgreSQL: '#4169e1',
+  MongoDB: '#47a248',
+  MySQL: '#4479a1',
+  Redis: '#dc382d',
+  Supabase: '#3ecf8e',
+  Firebase: '#ffca28',
+  Docker: '#2496ed',
+  AWS: '#ff9900',
+  Vercel: '#ffffff',
+  Git: '#f05032',
+  GitHub: '#e2e8f0',
+  'AI APIs': '#c084fc',
+}
+
 
 
 
@@ -374,6 +422,7 @@ function GlobalBackToTop() {
 
 
 function Home() {
+  const location = useLocation()
   const prefersReducedMotion = useReducedMotion() ?? false
   const sectionReveal = prefersReducedMotion ? reducedReveal : reveal
   const sectionStagger = prefersReducedMotion ? reducedStagger : stagger
@@ -388,25 +437,239 @@ function Home() {
   const [aboutExpanded, setAboutExpanded] = useState(true)
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [heroConsoleTab, setHeroConsoleTab] = useState<'developer' | 'stack' | 'terminal'>('developer')
-  const [codeCopied, setCodeCopied] = useState(false)
-  const handleCopyCode = () => {
-    let copyText = ''
-    if (heroConsoleTab === 'developer') {
-      copyText = `// A little about me\nconst developer = {\n  name: "${profile?.full_name || "Richard D'Souza"}",\n  focus: "${profile?.professional_title || 'Software Developer'}",\n  interests: [\n    ${(profile?.interests?.length ? profile.interests : ['Web Development', 'Cloud & Security', 'AI Applications', 'System Design']).map(i => `'${i}'`).join(',\n    ')}\n  ],\n  learning: true,\n  available: true\n}`
-    } else if (heroConsoleTab === 'stack') {
-      copyText = JSON.stringify({
-        frontend: ['React', 'TypeScript', 'Tailwind CSS', 'HTML5 & CSS3'],
-        backend: ['Node.js', 'Express', 'PostgreSQL', 'MongoDB', 'Supabase'],
-        devops_ai: ['Docker', 'Git', 'REST APIs', 'AI API Integration']
-      }, null, 2)
-    } else {
-      copyText = `$ richard --status\n✔ Role        : ${profile?.professional_title || 'Software Developer'}\n✔ Education   : MSc in Information Technology\n✔ Location    : ${profile?.location || 'Goa, India'} (UTC +5:30)\n✔ Focus       : Full-Stack Web, Cloud & AI Systems\n✔ Availability: Open to Full-Time & Contract Roles`
-    }
-    navigator.clipboard.writeText(copyText)
-    setCodeCopied(true)
-    window.setTimeout(() => setCodeCopied(false), 2000)
+
+  const heroConsole = profile?.hero_console || DEFAULT_HERO_CONSOLE
+  const isLearning = heroConsole.developer?.learning ?? true
+  const isAvailable = heroConsole.developer?.available ?? true
+  const stackGroups = heroConsole.stack?.groups?.length
+    ? heroConsole.stack.groups
+    : DEFAULT_HERO_CONSOLE.stack.groups
+  const totalTechnologiesCount = stackGroups.reduce(
+    (acc, g) => acc + (g.technologies?.length || 0),
+    0
+  )
+  const termPromptUser = heroConsole.terminal?.prompt_user || 'richard@macbook'
+  const termCommand = heroConsole.terminal?.command || 'richard --status'
+  const termRole = heroConsole.terminal?.role || profile?.professional_title || 'Software Developer'
+  const termEducation = heroConsole.terminal?.education || 'MSc in Information Technology'
+  const termLocation = heroConsole.terminal?.location || (profile?.location ? `${profile.location} (UTC +5:30)` : 'Goa, India (UTC +5:30)')
+  const termFocus = heroConsole.terminal?.focus || 'Full-Stack Web, Cloud & AI Systems'
+  const termAvailability = heroConsole.terminal?.availability || 'Open to Roles & Projects'
+  const footerStatusText = heroConsole.footer?.status_text || 'Always building'
+  const footerSubline = heroConsole.footer?.subline || 'Learning. Creating. Improving.'
+  const footerBranch = heroConsole.footer?.branch || 'git:(main)'
+
+  type TerminalHistoryItem = {
+    id: string
+    command: string
+    output: React.ReactNode
   }
+
+  const [terminalHistory, setTerminalHistory] = useState<TerminalHistoryItem[]>([])
+  const [terminalInput, setTerminalInput] = useState('')
+  const terminalInputRef = useRef<HTMLInputElement>(null)
+  const terminalConsoleRef = useRef<HTMLDivElement>(null)
+
+  const executeTerminalCommand = (rawCommand: string) => {
+    const trimmed = rawCommand.trim()
+    if (!trimmed) return
+
+    const lower = trimmed.toLowerCase()
+
+    if (lower === 'clear') {
+      setTerminalHistory([])
+      setTerminalInput('')
+      return
+    }
+
+    let outputNode: React.ReactNode = null
+
+    if (lower === 'help') {
+      outputNode = (
+        <div className="hero-term-help-output space-y-1 text-zinc-300">
+          <p className="text-zinc-400 font-semibold mb-1">Available commands:</p>
+          <div className="grid grid-cols-[85px_1fr] gap-x-2 gap-y-1 font-mono text-[11px]">
+            <span className="text-cyan-400 font-semibold">skills</span>
+            <span className="text-zinc-300">View core technical stack</span>
+            <span className="text-cyan-400 font-semibold">projects</span>
+            <span className="text-zinc-300">Jump to featured projects &amp; code</span>
+            <span className="text-cyan-400 font-semibold">contact</span>
+            <span className="text-zinc-300">Smoothly scroll to contact &amp; hire</span>
+            <span className="text-cyan-400 font-semibold">coffee</span>
+            <span className="text-zinc-300">Brew fresh developer energy</span>
+            <span className="text-cyan-400 font-semibold">sudo</span>
+            <span className="text-zinc-300">Attempt superuser privileges</span>
+            <span className="text-cyan-400 font-semibold">clear</span>
+            <span className="text-zinc-300">Clear custom terminal output</span>
+          </div>
+        </div>
+      )
+    } else if (lower === 'coffee') {
+      outputNode = (
+        <p className="text-amber-300 font-medium font-mono text-[11.5px]">
+          ☕ Brewing dark roast... 100% [Done]. Enjoy!
+        </p>
+      )
+    } else if (lower === 'sudo' || lower.startsWith('sudo ')) {
+      outputNode = (
+        <p className="text-rose-400 font-medium font-mono text-[11.5px]">
+          🛡️ Nice try! Permission denied: Richard is root here 😉
+        </p>
+      )
+    } else if (lower === 'contact') {
+      outputNode = (
+        <p className="text-emerald-400 font-medium font-mono text-[11.5px]">
+          🚀 Scrolling to contact section...
+        </p>
+      )
+      setTimeout(() => {
+        document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
+      }, 250)
+    } else if (lower === 'projects') {
+      outputNode = (
+        <p className="text-cyan-400 font-medium font-mono text-[11.5px]">
+          🚀 Scrolling to projects section...
+        </p>
+      )
+      setTimeout(() => {
+        document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })
+      }, 250)
+    } else if (lower === 'skills') {
+      outputNode = (
+        <div className="space-y-1 text-zinc-300 font-mono text-[11px]">
+          <p className="text-zinc-400 font-semibold">⚡ Technical Skills Stack:</p>
+          <p><span className="text-violet-400 font-semibold">Frontend:</span> React, TypeScript, Next.js, Tailwind CSS</p>
+          <p><span className="text-cyan-400 font-semibold">Backend:</span> Node.js, Express, PostgreSQL, MongoDB, Supabase</p>
+          <p><span className="text-emerald-400 font-semibold">Cloud &amp; DevOps:</span> Docker, Git, CI/CD, REST &amp; AI APIs</p>
+        </div>
+      )
+    } else {
+      outputNode = (
+        <p className="text-red-400 font-mono text-[11px]">
+          zsh: command not found: <span className="text-white font-semibold">{trimmed}</span>. Type <span className="text-cyan-300 font-semibold">'help'</span> for available commands.
+        </p>
+      )
+    }
+
+    setTerminalHistory((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}-${Math.random()}`,
+        command: trimmed,
+        output: outputNode,
+      },
+    ])
+    setTerminalInput('')
+
+    setTimeout(() => {
+      if (terminalConsoleRef.current) {
+        terminalConsoleRef.current.scrollTop = terminalConsoleRef.current.scrollHeight
+      }
+    }, 60)
+  }
+
   const [contactStatusMessage, setContactStatusMessage] = useState('')
+  const contactStatusTimerRef = useRef<number | null>(null)
+  const contactFormMountTimeRef = useRef<number>(Date.now())
+  const contactFormInteractTimeRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (contactStatusTimerRef.current) {
+        window.clearTimeout(contactStatusTimerRef.current)
+      }
+    }
+  }, [])
+
+  const saveScrollPosition = () => {
+    sessionStorage.setItem('portfolio_restore_pending', 'true')
+    sessionStorage.setItem('portfolio_home_scroll', window.scrollY.toString())
+  }
+
+  // Continuously record home scroll position and set flag on unmount
+  useEffect(() => {
+    const handleScroll = () => {
+      sessionStorage.setItem('portfolio_home_scroll', window.scrollY.toString())
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      sessionStorage.setItem('portfolio_restore_pending', 'true')
+      sessionStorage.setItem('portfolio_home_scroll', window.scrollY.toString())
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
+
+  // Exact-spot scroll restoration engine
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+
+    const isRestorePending = sessionStorage.getItem('portfolio_restore_pending') === 'true'
+
+    if (isRestorePending) {
+      // Don't restore until projects and layout have finished loading
+      if (projectsLoading) return
+
+      sessionStorage.removeItem('portfolio_restore_pending')
+      const saved = sessionStorage.getItem('portfolio_home_scroll')
+      const targetY = saved ? parseInt(saved, 10) : 0
+
+      if (targetY > 0) {
+        let frameCount = 0
+        const performRestore = () => {
+          window.scrollTo({ top: targetY, left: 0, behavior: 'instant' })
+          window.dispatchEvent(new Event('scroll'))
+          frameCount++
+          if (frameCount < 3) {
+            requestAnimationFrame(performRestore)
+          }
+        }
+        requestAnimationFrame(performRestore)
+        return
+      }
+    }
+
+    // Explicit scroll reset (e.g. user clicked RD logo in header)
+    if (location.state && typeof location.state === 'object' && 'resetScroll' in location.state) {
+      sessionStorage.removeItem('portfolio_restore_pending')
+      sessionStorage.setItem('portfolio_home_scroll', '0')
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      window.dispatchEvent(new Event('scroll'))
+      return
+    }
+
+    // Explicit in-page hash navigation (e.g. user clicked #projects or #contact in nav)
+    if (location.hash) {
+      const targetId = location.hash.replace('#', '')
+      let attempts = 0
+      const scrollToHash = () => {
+        const el = document.getElementById(targetId)
+        if (el) {
+          el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' })
+          window.dispatchEvent(new Event('scroll'))
+        } else if (attempts < 20) {
+          attempts++
+          window.setTimeout(scrollToHash, 40)
+        }
+      }
+      const timer = window.setTimeout(scrollToHash, 40)
+      return () => window.clearTimeout(timer)
+    }
+  }, [projectsLoading, location.hash, location.state, prefersReducedMotion])
+
+  const setTimedContactStatus = (status: 'sent' | 'error', message: string, durationMs = 5500) => {
+    setContactStatus(status)
+    setContactStatusMessage(message)
+    if (contactStatusTimerRef.current) {
+      window.clearTimeout(contactStatusTimerRef.current)
+    }
+    contactStatusTimerRef.current = window.setTimeout(() => {
+      setContactStatus('idle')
+      setContactStatusMessage('')
+    }, durationMs)
+  }
   const [heroTypingCycle, setHeroTypingCycle] = useState(0)
   const [heroTypingIsExiting, setHeroTypingIsExiting] = useState(false)
   const heroName = profile?.full_name || "Richard D'Souza"
@@ -450,14 +713,38 @@ function Home() {
     const name = String(formData.get('name') || '').trim()
     const email = String(formData.get('email') || '').trim()
     const message = String(formData.get('message') || '').trim()
+    const botcheck = formData.get('botcheck')
+
+    // Determine form fill duration to protect against instantaneous bot scrapers
+    const fillDurationMs = contactFormInteractTimeRef.current
+      ? Date.now() - contactFormInteractTimeRef.current
+      : Date.now() - contactFormMountTimeRef.current
+
+    // Security & rate-limiting verification
+    const securityCheck = validateContactSubmission({
+      name,
+      email,
+      message,
+      botcheck: Boolean(botcheck),
+      fillDurationMs,
+    })
+
+    if (!securityCheck.allowed) {
+      setTimedContactStatus(
+        'error',
+        securityCheck.message || 'Submission error. Please check your inputs.',
+        6000,
+      )
+      return
+    }
 
     if (!accessKey) {
       // Fallback: If Web3Forms key is not yet configured, launch user's email client directly so the message is never lost
       const subject = encodeURIComponent(`Portfolio message from ${name || 'Website Visitor'}`)
       const body = encodeURIComponent(`From: ${name || 'Anonymous'}\nEmail: ${email || 'Not provided'}\n\nMessage:\n${message}`)
       window.location.href = `mailto:rich.dsz1997@gmail.com?subject=${subject}&body=${body}`
-      setContactStatus('sent')
-      setContactStatusMessage('Opening your email app to send directly to rich.dsz1997@gmail.com…')
+      recordContactSubmission(email, message)
+      setTimedContactStatus('sent', 'Opening your email client to send your message directly…', 6000)
       return
     }
 
@@ -465,6 +752,9 @@ function Home() {
     formData.set('subject', `Portfolio message from ${name || 'a visitor'}`)
     formData.set('from_name', "Richard D'Souza Portfolio")
     formData.set('replyto', email)
+    if (contactStatusTimerRef.current) {
+      window.clearTimeout(contactStatusTimerRef.current)
+    }
     setContactStatus('sending')
     setContactStatusMessage('Sending your message…')
 
@@ -478,12 +768,13 @@ function Home() {
 
       if (!response.ok || !result.success) throw new Error(result.message || 'Submission failed')
 
+      recordContactSubmission(email, message)
       form.reset()
-      setContactStatus('sent')
-      setContactStatusMessage('Thanks for reaching out! Your message has been sent directly to my inbox.')
+      contactFormInteractTimeRef.current = null
+      contactFormMountTimeRef.current = Date.now()
+      setTimedContactStatus('sent', 'Thank you for reaching out. Your message has been received, and I will get back to you shortly.', 5500)
     } catch {
-      setContactStatus('error')
-      setContactStatusMessage('Your message could not be sent right now. Please try again or email me directly at rich.dsz1997@gmail.com.')
+      setTimedContactStatus('error', 'Your message could not be sent right now. Please try again or email me directly at rich.dsz1997@gmail.com.', 6000)
     }
   }
   const displayedSkills = profile?.skills?.length
@@ -621,22 +912,27 @@ function Home() {
   return (
     <div className="min-h-screen overflow-x-clip bg-[#08090d] text-white">
       <BackgroundAnimation />
-      {/* Ambient Peripheral Flank Nebulae (Fills wide desktop side voids with subtle soft lavender & cosmic indigo glow) */}
-      <div className="fixed inset-y-0 left-0 w-96 max-w-[26vw] pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
-        <div className="absolute top-1/4 -left-24 w-96 h-150 rounded-full bg-linear-to-r from-indigo-600/10 via-purple-600/6 to-transparent blur-[110px]" />
-        <div className="absolute top-2/3 -left-20 w-80 h-125 rounded-full bg-linear-to-r from-[#cbc5ff]/8 via-violet-500/5 to-transparent blur-[100px]" />
+      {/* Ambient Peripheral Flank Nebulae (Fills wide desktop side voids with subtle soft lavender & cosmic indigo glow on zoom-out / wide screens) */}
+      <div className="fixed inset-y-0 left-0 w-[38vw] max-w-212.5 pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
+        <div className="absolute top-[12%] -left-32 w-136 h-192 rounded-full bg-linear-to-r from-indigo-600/14 via-purple-600/8 to-transparent blur-[130px]" />
+        <div className="absolute top-[48%] -left-28 w-120 h-160 rounded-full bg-linear-to-r from-[#cbc5ff]/10 via-violet-500/6 to-transparent blur-[120px]" />
+        <div className="absolute top-[80%] -left-32 w-lg h-176 rounded-full bg-linear-to-r from-blue-600/10 via-indigo-600/6 to-transparent blur-[130px]" />
       </div>
-      <div className="fixed inset-y-0 right-0 w-96 max-w-[26vw] pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
-        <div className="absolute top-1/3 -right-24 w-96 h-150 rounded-full bg-linear-to-l from-[#cbc5ff]/10 via-purple-500/6 to-transparent blur-[110px]" />
-        <div className="absolute top-3/4 -right-20 w-80 h-125 rounded-full bg-linear-to-l from-cyan-500/8 via-indigo-600/5 to-transparent blur-[100px]" />
+      <div className="fixed inset-y-0 right-0 w-[38vw] max-w-212.5 pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
+        <div className="absolute top-[18%] -right-32 w-136 h-192 rounded-full bg-linear-to-l from-[#cbc5ff]/12 via-purple-500/8 to-transparent blur-[130px]" />
+        <div className="absolute top-[55%] -right-28 w-120 h-160 rounded-full bg-linear-to-l from-cyan-500/10 via-indigo-600/6 to-transparent blur-[120px]" />
+        <div className="absolute top-[82%] -right-32 w-lg h-176 rounded-full bg-linear-to-l from-violet-600/10 via-purple-600/6 to-transparent blur-[130px]" />
       </div>
-
       
       
       <header className="portfolio-nav fixed inset-x-0 top-0 z-50 border-b border-white/7 bg-[#08090d]/85 backdrop-blur-xl">
-        <nav className="mx-auto flex h-19 max-w-7xl 2xl:max-w-360 items-center justify-between px-4 sm:px-6 lg:px-10 2xl:px-12">
+        <nav className="portfolio-container flex h-19 items-center justify-between">
           <a
             href="#home"
+            onClick={() => {
+              sessionStorage.removeItem('portfolio_restore_pending')
+              sessionStorage.setItem('portfolio_home_scroll', '0')
+            }}
             className="portfolio-nav-logo inline-flex items-center"
             aria-label="Richard D'Souza Home"
           >
@@ -664,27 +960,24 @@ function Home() {
             ))}
           </div>
 
-          <div className="hidden items-center gap-3 sm:flex">
-          <ThemeToggle />
-          <a
-            href="#contact"
-            className="portfolio-nav-cta inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-sm transition hover:border-violet-400 hover:bg-violet-400/10"
-          >
-            Let's connect <ArrowUpRight size={16} />
-          </a>
-          </div>
-
-          <div className="flex items-center gap-2 sm:hidden">
-          <ThemeToggle />
-          <button
-            type="button"
-            aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="rounded-lg border border-white/10 p-2 md:hidden"
-          >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <ThemeToggle />
+            <a
+              href="#contact"
+              className="portfolio-nav-cta hidden sm:inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-white/15 px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition hover:border-violet-400 hover:bg-violet-400/10 shrink-0"
+            >
+              <span>Let's connect</span>
+              <ArrowUpRight size={15} />
+            </a>
+            <button
+              type="button"
+              aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="rounded-lg border border-white/10 p-2 text-zinc-300 hover:text-white md:hidden inline-flex items-center justify-center shrink-0"
+            >
+              {menuOpen ? <X size={19} /> : <Menu size={19} />}
+            </button>
           </div>
         </nav>
 
@@ -710,7 +1003,7 @@ function Home() {
           id="home"
           className="hero-section relative flex scroll-mt-20 items-center"
         >
-          <div className="relative mx-auto grid w-full max-w-7xl 2xl:max-w-360 items-center gap-10 px-4 sm:px-6 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16 lg:px-10 2xl:px-12">
+          <div className="portfolio-container relative grid w-full items-center gap-10 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
             <motion.div
               className="hero-copy"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
@@ -874,27 +1167,6 @@ function Home() {
                       </button>
                     </div>
                   </div>
-
-                  {/* 1-Click Copy Code Button */}
-                  <button
-                    type="button"
-                    onClick={handleCopyCode}
-                    className="hero-code-copy-btn"
-                    title="Copy code to clipboard"
-                    aria-label="Copy code to clipboard"
-                  >
-                    {codeCopied ? (
-                      <>
-                        <Check size={11} className="text-emerald-400 shrink-0" />
-                        <span className="hero-copy-btn-label">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={11} className="shrink-0" />
-                        <span className="hero-copy-btn-label">Copy</span>
-                      </>
-                    )}
-                  </button>
                 </div>
 
                 {/* Sub-Header Breadcrumb */}
@@ -971,13 +1243,13 @@ function Home() {
                           <p className="hero-code-line">
                             <span className="hero-code-key">learning</span>
                             <span className="hero-code-colon">:</span>{' '}
-                            <span className="hero-code-value">true</span>
+                            <span className="hero-code-value">{isLearning ? 'true' : 'false'}</span>
                             <span className="text-zinc-500">,</span>
                           </p>
                           <p className="hero-code-line">
                             <span className="hero-code-key">available</span>
                             <span className="hero-code-colon">:</span>{' '}
-                            <span className="hero-code-value">true</span>
+                            <span className="hero-code-value">{isAvailable ? 'true' : 'false'}</span>
                           </p>
                         </div>
                         <p className="hero-code-line">
@@ -1008,44 +1280,42 @@ function Home() {
                 {heroConsoleTab === 'stack' && (
                   <div className="hero-stack-panel" key="stack">
                     <div className="hero-stack-matrix">
-                      <div className="hero-stack-group">
-                        <div className="hero-stack-group-title">
-                          <span className="hero-stack-dot bg-cyan-400" />
-                          <span>Frontend &amp; UI</span>
-                        </div>
-                        <div className="hero-stack-chips">
-                          <span className="hero-stack-chip"><SiReact className="text-[#61dafb]" /> React</span>
-                          <span className="hero-stack-chip"><SiTypescript className="text-[#3178c6]" /> TypeScript</span>
-                          <span className="hero-stack-chip"><SiTailwindcss className="text-[#38bdf8]" /> Tailwind CSS</span>
-                          <span className="hero-stack-chip"><SiJavascript className="text-[#f7df1e]" /> JavaScript</span>
-                        </div>
-                      </div>
+                      {stackGroups.map((group, groupIdx) => {
+                        const dotClass =
+                          group.color === 'emerald'
+                            ? 'bg-emerald-400'
+                            : group.color === 'violet'
+                            ? 'bg-violet-400'
+                            : group.color === 'amber'
+                            ? 'bg-amber-400'
+                            : 'bg-cyan-400'
 
-                      <div className="hero-stack-group">
-                        <div className="hero-stack-group-title">
-                          <span className="hero-stack-dot bg-emerald-400" />
-                          <span>Backend &amp; Data</span>
-                        </div>
-                        <div className="hero-stack-chips">
-                          <span className="hero-stack-chip"><SiNodedotjs className="text-[#5fa04e]" /> Node.js</span>
-                          <span className="hero-stack-chip"><SiExpress className="text-zinc-300" /> Express</span>
-                          <span className="hero-stack-chip"><SiPostgresql className="text-[#4169e1]" /> PostgreSQL</span>
-                          <span className="hero-stack-chip"><SiMongodb className="text-[#47a248]" /> MongoDB</span>
-                          <span className="hero-stack-chip"><SiSupabase className="text-[#3ecf8e]" /> Supabase</span>
-                        </div>
-                      </div>
-
-                      <div className="hero-stack-group">
-                        <div className="hero-stack-group-title">
-                          <span className="hero-stack-dot bg-violet-400" />
-                          <span>DevOps &amp; Cloud</span>
-                        </div>
-                        <div className="hero-stack-chips">
-                          <span className="hero-stack-chip"><SiDocker className="text-[#2496ed]" /> Docker</span>
-                          <span className="hero-stack-chip"><SiGit className="text-[#f05032]" /> Git</span>
-                          <span className="hero-stack-chip"><Sparkles className="text-violet-400" /> AI APIs</span>
-                        </div>
-                      </div>
+                        return (
+                          <div className="hero-stack-group" key={`${group.title}-${groupIdx}`}>
+                            <div className="hero-stack-group-title">
+                              <span className={`hero-stack-dot ${dotClass}`} />
+                              <span>{group.title}</span>
+                            </div>
+                            <div className="hero-stack-chips">
+                              {group.technologies.map((tech) => {
+                                const BrandIcon = getTechnologyIcon(tech)
+                                const FallbackIcon = technologyLucideIconMap[tech] || Code2
+                                const brandColor = technologyBrandColorMap[tech] || (group.color === 'emerald' ? '#4ade80' : group.color === 'violet' ? '#a78bfa' : '#38bdf8')
+                                return (
+                                  <span className="hero-stack-chip" key={tech}>
+                                    {BrandIcon ? (
+                                      <BrandIcon style={{ color: brandColor }} />
+                                    ) : (
+                                      <FallbackIcon style={{ color: brandColor }} />
+                                    )}
+                                    <span>{tech}</span>
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
 
                     <div className="hero-editor-statusbar" aria-hidden="true">
@@ -1054,7 +1324,7 @@ function Home() {
                         <span className="text-zinc-400 hero-status-utf8">UTF-8</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-cyan-400 font-medium">12 Technologies</span>
+                        <span className="text-cyan-400 font-medium">{totalTechnologiesCount} Technologies</span>
                       </div>
                     </div>
                   </div>
@@ -1062,30 +1332,89 @@ function Home() {
 
                 {/* Tab 3: terminal.sh Live Output */}
                 {heroConsoleTab === 'terminal' && (
-                  <div className="hero-terminal-panel" key="terminal">
-                    <div className="hero-terminal-console">
+                  <div
+                    className="hero-terminal-panel"
+                    key="terminal"
+                    onClick={() => terminalInputRef.current?.focus()}
+                  >
+                    <div className="hero-terminal-console" ref={terminalConsoleRef}>
                       <div className="hero-terminal-prompt">
-                        <span className="hero-terminal-user">richard@macbook</span>
+                        <span className="hero-terminal-user">{termPromptUser}</span>
                         <span className="hero-terminal-sep">:</span>
                         <span className="hero-terminal-path">~</span>
                         <span className="hero-terminal-dollar">$</span>
-                        <span className="hero-terminal-cmd">richard --status</span>
+                        <span className="hero-terminal-cmd">{termCommand}</span>
                       </div>
 
                       <div className="hero-terminal-output">
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">role</span>: <span className="text-violet-300 font-medium">{profile?.professional_title || 'Software Developer'}</span></p>
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">education</span>: <span className="text-zinc-200">MSc in Information Technology</span></p>
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">location</span>: <span className="text-zinc-200">{profile?.location || 'Goa, India'} (UTC +5:30)</span></p>
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">focus</span>: <span className="text-cyan-300">Full-Stack Web, Cloud &amp; AI Systems</span></p>
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">availability</span>: <span className="text-emerald-300 font-semibold">Open to Roles &amp; Projects</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">role</span>: <span className="text-violet-300 font-medium">{termRole}</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">education</span>: <span className="text-zinc-200">{termEducation}</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">location</span>: <span className="text-zinc-200">{termLocation}</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">focus</span>: <span className="text-cyan-300">{termFocus}</span></p>
+                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">availability</span>: <span className="text-emerald-300 font-semibold">{termAvailability}</span></p>
                       </div>
 
-                      <div className="hero-terminal-prompt hero-terminal-active-line">
-                        <span className="hero-terminal-user">richard@macbook</span>
+                      {/* Custom User Commands History */}
+                      {terminalHistory.map((item) => (
+                        <div key={item.id} className="hero-terminal-history-entry">
+                          <div className="hero-terminal-prompt">
+                            <span className="hero-terminal-user">{termPromptUser}</span>
+                            <span className="hero-terminal-sep">:</span>
+                            <span className="hero-terminal-path">~</span>
+                            <span className="hero-terminal-dollar">$</span>
+                            <span className="hero-terminal-cmd">{item.command}</span>
+                          </div>
+                          <div className="hero-terminal-cmd-output">
+                            {item.output}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Interactive Active Prompt Form */}
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault()
+                          executeTerminalCommand(terminalInput)
+                        }}
+                        className="hero-terminal-prompt hero-terminal-active-line"
+                      >
+                        <span className="hero-terminal-user">{termPromptUser}</span>
                         <span className="hero-terminal-sep">:</span>
                         <span className="hero-terminal-path">~</span>
                         <span className="hero-terminal-dollar">$</span>
-                        <span className="hero-terminal-cursor">█</span>
+                        <div className="hero-terminal-input-container">
+                          <input
+                            ref={terminalInputRef}
+                            type="text"
+                            value={terminalInput}
+                            onChange={(e) => setTerminalInput(e.target.value)}
+                            placeholder="type 'help' or click to run commands..."
+                            className="hero-terminal-input"
+                            autoComplete="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            aria-label="Terminal command prompt"
+                          />
+                          <span className="hero-terminal-cursor" aria-hidden="true">█</span>
+                        </div>
+                      </form>
+
+                      {/* Clickable Quick Command Chips */}
+                      <div className="hero-terminal-chips-bar" aria-label="Quick commands">
+                        <span className="hero-terminal-chips-label">Try:</span>
+                        {(['help', 'coffee', 'projects', 'contact', 'clear'] as const).map((cmd) => (
+                          <button
+                            key={cmd}
+                            type="button"
+                            className="hero-terminal-action-chip"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              executeTerminalCommand(cmd)
+                            }}
+                          >
+                            {cmd}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -1110,14 +1439,14 @@ function Home() {
                         <span className="hero-live-dot" />
                       </span>
                       <p className="text-sm font-semibold tracking-wide">
-                        Always building
+                        {footerStatusText}
                       </p>
                     </div>
                     <p className="mt-0.5 text-xs text-zinc-400 flex items-center gap-2 hero-profile-footer-sub">
-                      <span>Learning. Creating. Improving.</span>
+                      <span>{footerSubline}</span>
                       <span className="inline-block w-1 h-1 rounded-full bg-zinc-500 hero-profile-footer-dot" />
                       <span className="inline-flex items-center gap-1 font-mono text-[11px] text-violet-400">
-                        git:(main)
+                        {footerBranch}
                       </span>
                     </p>
                   </div>
@@ -1147,9 +1476,9 @@ function Home() {
   className="about-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
 >
   <motion.div
-    className="mx-auto max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12"
+    className="portfolio-container"
     variants={sectionReveal}
-    initial="hidden"
+    initial={false}
     whileInView="visible"
     viewport={{ once: true, amount: 0.15 }}
   >
@@ -1164,7 +1493,7 @@ function Home() {
     <motion.div
       className="about-layout"
       variants={sectionStagger}
-      initial="hidden"
+      initial={false}
       whileInView="visible"
       viewport={{ once: true, amount: 0.15 }}
     >
@@ -1233,103 +1562,55 @@ function Home() {
                   {profile.biography && (
                     <div className="about-timeline-stream">
                       {(() => {
-                        const paragraphs = profile.biography
-                          .split(/\r?\n/)
-                          .map((p) => p.trim())
-                          .filter((p) => p.length > 0)
+                        const milestoneCards = parseMilestoneCards(profile.biography)
 
-                        const usedTags = new Set<string>()
+                        const iconMap = {
+                          code: Code2,
+                          education: GraduationCap,
+                          layers: Layers,
+                          sparkles: Sparkles,
+                          terminal: Terminal,
+                          shield: ShieldCheck,
+                        }
 
-                        return paragraphs.map((rawParagraph, index) => {
-                          let title = ''
-                          let content = rawParagraph
+                        const colorMap: Record<string, string> = {
+                          emerald: 'text-emerald-400',
+                          cyan: 'text-cyan-400',
+                          violet: 'text-violet-400',
+                          amber: 'text-amber-400',
+                          rose: 'text-rose-400',
+                          blue: 'text-blue-400',
+                        }
 
-                          // Support custom titles from admin: "[Title]: Content" or "Title: Content" or "### Title"
-                          const bracketMatch = rawParagraph.match(/^\[(.*?)\]\s*:?\s*(.*)$/s)
-                          const colonMatch = !bracketMatch && rawParagraph.match(/^([A-Z][A-Za-z0-9\s&/-]{2,30}):\s+(.+)$/s)
-                          const hashMatch = !bracketMatch && !colonMatch && rawParagraph.match(/^#{1,3}\s+(.*?)\n+(.*)$/s)
+                        const dotColorMap: Record<string, string> = {
+                          emerald: '#34d399',
+                          cyan: '#22d3ee',
+                          violet: '#a78bfa',
+                          amber: '#fbbf24',
+                          rose: '#fb7185',
+                          blue: '#60a5fa',
+                        }
 
-                          if (bracketMatch) {
-                            title = bracketMatch[1].trim()
-                            content = bracketMatch[2].trim()
-                          } else if (colonMatch) {
-                            title = colonMatch[1].trim()
-                            content = colonMatch[2].trim()
-                          } else if (hashMatch) {
-                            title = hashMatch[1].trim()
-                            content = hashMatch[2].trim()
-                          }
-
-                          const lower = content.toLowerCase()
-                          let tag = title
-                          let StepIcon = Terminal
-                          let colorClass = 'text-violet-400'
-
-                          if (!tag) {
-                            // Priority 1: Hands-on Projects & Engineering (checked BEFORE education so "academic projects" is properly recognized as Projects!)
-                            if (/projects|react|typescript|node|full-stack|mongodb|postgresql|crm|skillpath|sentinel|built|building applications/i.test(lower)) {
-                              tag = 'Hands-on Projects & Stack'
-                              StepIcon = Code2
-                              colorClass = 'text-emerald-400'
-                            }
-                            // Priority 2: Philosophy, Mindset & Continuous Improvement
-                            else if (/learning by building|solving problems|continuously improving|philosophy|mindset|curiosity|approach/i.test(lower)) {
-                              tag = 'Philosophy & Approach'
-                              StepIcon = Sparkles
-                              colorClass = 'text-amber-400'
-                            }
-                            // Priority 3: Education & Academic Foundations (requires genuine institution/degree keywords)
-                            else if (/msc|b\.?sc|btech|mtech|college|university|degree|parvatibai|chowgule|graduat/i.test(lower)) {
-                              tag = 'Education & Foundations'
-                              StepIcon = GraduationCap
-                              colorClass = 'text-violet-400'
-                            }
-                            // Priority 4: Technical Domains & Craft
-                            else if (/interests|frontend|backend|database|cloud|ai\b|intelligence|interface|system design|security/i.test(lower)) {
-                              tag = 'Technical Domain & Craft'
-                              StepIcon = Layers
-                              colorClass = 'text-cyan-400'
-                            }
-                            // Fallback
-                            else {
-                              tag = `Milestone 0${index + 1}`
-                              StepIcon = Terminal
-                              colorClass = 'text-violet-400'
-                            }
-
-                            // Prevent duplicate consecutive tags across cards
-                            if (usedTags.has(tag)) {
-                              tag = `${tag} (${index + 1})`
-                            }
-                          } else {
-                            if (/edu|degree|college|school/i.test(tag)) {
-                              StepIcon = GraduationCap
-                              colorClass = 'text-violet-400'
-                            } else if (/project|code|stack|build|dev/i.test(tag)) {
-                              StepIcon = Code2
-                              colorClass = 'text-emerald-400'
-                            } else if (/domain|tech|skill|cloud/i.test(tag)) {
-                              StepIcon = Layers
-                              colorClass = 'text-cyan-400'
-                            } else if (/phil|goal|grow|vision|mind/i.test(tag)) {
-                              StepIcon = Sparkles
-                              colorClass = 'text-amber-400'
-                            }
-                          }
-
-                          usedTags.add(tag)
+                        return milestoneCards.map((card, index) => {
+                          const StepIcon = iconMap[card.icon] || Code2
+                          const colorClass = colorMap[card.color] || 'text-emerald-400'
+                          const dotColor = dotColorMap[card.color] || '#a78bfa'
 
                           return (
-                            <div key={index} className="about-timeline-item">
-                              <span className="about-timeline-dot" aria-hidden="true" />
+                            <div key={card.id || index} className="about-timeline-item">
+                              <span
+                                className="about-timeline-dot"
+                                style={{ background: dotColor, boxShadow: `0 0 8px ${dotColor}` }}
+                                aria-hidden="true"
+                              />
                               <div className="about-timeline-card">
                                 <div className="about-timeline-card-header">
                                   <span className={`about-timeline-tag ${colorClass}`}>
                                     <StepIcon size={13} className="shrink-0" />
-                                    <span>{tag}</span>
+                                    <span>{card.title}</span>
                                   </span>
                                 </div>
-                                <p className="about-timeline-text">{content}</p>
+                                <p className="about-timeline-text">{card.content}</p>
                               </div>
                             </div>
                           )
@@ -1383,7 +1664,7 @@ function Home() {
               </button>
             )}
 
-            <Link to="/request-resume" className="about-cta-resume">
+            <Link to="/request-resume" onClick={saveScrollPosition} className="about-cta-resume">
               <span>Request Resume</span>
               <ArrowUpRight size={15} aria-hidden="true" />
             </Link>
@@ -1481,11 +1762,11 @@ function Home() {
   id="skills"
   className="skills-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
 >
-  <div className="mx-auto max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
+  <div className="portfolio-container">
     <motion.div
       className="section-heading skills-heading"
       variants={sectionReveal}
-      initial="hidden"
+      initial={false}
       whileInView="visible"
       viewport={{ once: true, amount: 0.25 }}
     >
@@ -1500,7 +1781,7 @@ function Home() {
     <motion.div
       className="skills-grid"
       variants={sectionStagger}
-      initial="hidden"
+      initial={false}
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
     >
@@ -1560,11 +1841,11 @@ function Home() {
           id="projects"
           className="projects-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
         >
-          <div className="mx-auto max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
+          <div className="portfolio-container">
             <motion.div
               className="projects-heading-row"
               variants={sectionReveal}
-              initial="hidden"
+              initial={false}
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
             >
@@ -1581,11 +1862,11 @@ function Home() {
             </motion.div>
 
             <motion.div
-          className={`projects-grid ${projects.length === 1 ? 'projects-grid-single' : ''}`}
-          variants={sectionStagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
+              className="projects-grid"
+              variants={sectionStagger}
+              initial={false}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
             >
               {!projectsLoading && !projectsError && projects.map((project) => (
                 <motion.article
@@ -1621,12 +1902,12 @@ function Home() {
                       {project.stack.map((technology) => <span key={technology}>{technology}</span>)}
                     </div>
                     <div className="project-card-actions">
-                      <Link to={`/projects/${project.slug}`} className="project-details-link">
+                      <Link to={`/projects/${project.slug}`} onClick={saveScrollPosition} className="project-details-link">
                         View details <ArrowUpRight size={15} />
                       </Link>
                       <div className="project-card-quick-actions">
                         {project.demoVideo && (
-                          <Link to={`/projects/${project.slug}#demo`} className="project-quick-action">
+                          <Link to={`/projects/${project.slug}#demo`} onClick={saveScrollPosition} className="project-quick-action">
                             <PlayCircle size={15} /> Watch demo
                           </Link>
                         )}
@@ -1675,11 +1956,11 @@ function Home() {
           id="contact"
           className="contact-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
         >
-          <div className="mx-auto max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
+          <div className="portfolio-container">
             <motion.div
               className="section-heading contact-heading"
               variants={sectionReveal}
-              initial="hidden"
+              initial={false}
               whileInView="visible"
               viewport={{ once: true, amount: 0.15 }}
             >
@@ -1693,7 +1974,7 @@ function Home() {
             <motion.div
               className="contact-grid"
               variants={sectionStagger}
-              initial="hidden"
+              initial={false}
               whileInView="visible"
               viewport={{ once: true, amount: 0.15 }}
             >
@@ -1707,7 +1988,15 @@ function Home() {
                   <span className="contact-response-badge">Direct to Inbox</span>
                 </div>
 
-                <form className="contact-form" onSubmit={handleContactSubmit}>
+                <form
+                  className="contact-form"
+                  onSubmit={handleContactSubmit}
+                  onFocus={() => {
+                    if (!contactFormInteractTimeRef.current) {
+                      contactFormInteractTimeRef.current = Date.now()
+                    }
+                  }}
+                >
                   <div className="contact-form-fields">
                     <div className="contact-field-group">
                       <label className="contact-field">
@@ -1740,7 +2029,7 @@ function Home() {
                       <textarea
                         name="message"
                         rows={5}
-                        placeholder="Tell me about your project, team, or opportunity..."
+                        placeholder="Share details about your project, engineering requirements, or opportunity..."
                         maxLength={5000}
                         required
                       />
@@ -1766,17 +2055,22 @@ function Home() {
                     </div>
                   </div>
 
-                  {contactStatusMessage && (
-                    <motion.p
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`contact-form-status ${contactStatus === 'error' ? 'is-error' : 'is-success'}`}
-                      role={contactStatus === 'error' ? 'alert' : 'status'}
-                      aria-live="polite"
-                    >
-                      {contactStatusMessage}
-                    </motion.p>
-                  )}
+                  <AnimatePresence>
+                    {contactStatusMessage && (
+                      <motion.p
+                        key="contact-status-msg"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.3 }}
+                        className={`contact-form-status ${contactStatus === 'error' ? 'is-error' : 'is-success'}`}
+                        role={contactStatus === 'error' ? 'alert' : 'status'}
+                        aria-live="polite"
+                      >
+                        {contactStatusMessage}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </form>
               </motion.div>
 
@@ -1821,7 +2115,7 @@ function Home() {
 
       <footer className="portfolio-footer">
         <div className="footer-glow-bar" aria-hidden="true" />
-        <div className="mx-auto flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10 max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
+        <div className="portfolio-container flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10">
           <div className="footer-brand max-w-md">
             <a href="#home" className="footer-brand-title">
               <span>{profile?.full_name || "Richard D'Souza"}</span>
@@ -1846,7 +2140,7 @@ function Home() {
             </nav>
 
             <div className="footer-actions">
-              <Link to="/request-resume" className="footer-resume-btn">
+              <Link to="/request-resume" onClick={saveScrollPosition} className="footer-resume-btn">
                 <span>Request Resume</span>
                 <ArrowUpRight size={13} aria-hidden="true" />
               </Link>
@@ -1875,7 +2169,7 @@ function Home() {
             </div>
           </div>
         </div>
-        <div className="footer-bottom mx-auto mt-10 max-w-7xl 2xl:max-w-360 px-4 sm:px-6 lg:px-10 2xl:px-12">
+        <div className="footer-bottom portfolio-container mt-10">
           <p className="footer-copyright">
             © {new Date().getFullYear()} {profile?.full_name || "Richard D'Souza"}. Handcrafted with modern web tech.
           </p>
@@ -1898,48 +2192,40 @@ function Home() {
 
 function AnimatedRoutes() {
   const location = useLocation()
-  const prefersReducedMotion = useReducedMotion() ?? false
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    // When navigating to subpages (like /projects/:slug or /request-resume), always start at top
+    if (location.pathname !== '/') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }
   }, [location.pathname])
 
   return (
     <>
       <ScrollProgress />
       <GlobalBackToTop />
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={location.pathname}
-          initial={prefersReducedMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={prefersReducedMotion ? undefined : { opacity: 0 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.2, ease: 'easeOut' }}
-        >
-          <Routes location={location}>
-            <Route path="/" element={<Home />} />
-            <Route path="/request-resume" element={<RequestResume />} />
-            <Route path="/resume-access" element={<ResumeAccess />} />
-            <Route path="/projects/:slug" element={<ProjectDetails />} />
-            <Route
-              path="*"
-              element={
-                <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-semibold">Page not found</h1>
-                    <Link
-                      to="/"
-                      className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
-                    >
-                      Return home
-                    </Link>
-                  </div>
-                </main>
-              }
-            />
-          </Routes>
-        </motion.div>
-      </AnimatePresence>
+      <Routes location={location}>
+        <Route path="/" element={<Home />} />
+        <Route path="/request-resume" element={<RequestResume />} />
+        <Route path="/resume-access" element={<ResumeAccess />} />
+        <Route path="/projects/:slug" element={<ProjectDetails />} />
+        <Route
+          path="*"
+          element={
+            <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
+              <div className="text-center">
+                <h1 className="text-4xl font-semibold">Page not found</h1>
+                <Link
+                  to="/"
+                  className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
+                >
+                  Return home
+                </Link>
+              </div>
+            </main>
+          }
+        />
+      </Routes>
     </>
   )
 }

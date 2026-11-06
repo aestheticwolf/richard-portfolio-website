@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, ShieldCheck, AlertCircle, Loader2, Lock } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { redeemResumeAccess } from '../lib/resumeAccess'
 import ThemeToggle from '../components/ThemeToggle'
 import BackgroundAnimation from '../components/BackgroundAnimation'
@@ -9,8 +9,17 @@ import BackgroundAnimation from '../components/BackgroundAnimation'
 const tokenPattern = /^[A-Za-z0-9_-]{43}$/
 
 export default function ResumeAccess() {
+  const navigate = useNavigate()
   const prefersReducedMotion = useReducedMotion() ?? false
   const started = useRef(false)
+
+  function handleBack() {
+    if (window.history.length > 1) {
+      navigate(-1)
+    } else {
+      navigate('/')
+    }
+  }
 
   const [token] = useState(
     () => new URLSearchParams(window.location.search).get('token'),
@@ -58,10 +67,14 @@ export default function ResumeAccess() {
       <div className="resume-ambient-glow-2" aria-hidden="true" />
 
       <div className="resume-top-nav">
-        <Link to="/" className="resume-back-btn group">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="resume-back-btn group cursor-pointer"
+        >
           <ArrowLeft size={16} className="transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to portfolio</span>
-        </Link>
+        </button>
         <div className="resume-top-actions">
           <ThemeToggle />
         </div>
@@ -109,10 +122,14 @@ export default function ResumeAccess() {
                   <Lock size={15} />
                   <span>Request New Link</span>
                 </Link>
-                <Link to="/" className="resume-secondary-btn group">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="resume-secondary-btn group cursor-pointer"
+                >
                   <span>Return to portfolio</span>
                   <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />
-                </Link>
+                </button>
               </div>
             </div>
           )}
