@@ -1958,155 +1958,117 @@ function Home() {
         >
           <div className="portfolio-container">
             <motion.div
-              className="section-heading contact-heading"
-              variants={sectionReveal}
-              initial={false}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.15 }}
-            >
-              <p className="section-label">04 / CONTACT</p>
-              <h2>Let&apos;s build something with intention.</h2>
-              <p className="section-summary">
-                I&apos;m open to meaningful conversations with recruiters, engineering teams, and collaborators who value thoughtful software.
-              </p>
-            </motion.div>
-
-            <motion.div
-              className="contact-grid"
+              className="contact-split-grid"
               variants={sectionStagger}
               initial={false}
               whileInView="visible"
               viewport={{ once: true, amount: 0.15 }}
             >
-              {/* Interactive Contact Form Card */}
-              <motion.div className="contact-form-card" variants={sectionReveal}>
-                <div className="contact-form-header">
-                  <div className="contact-badge">
-                    <Send size={14} className="text-violet-400" />
-                    <span>Send a Message</span>
-                  </div>
-                  <span className="contact-response-badge">Direct to Inbox</span>
-                </div>
-
-                <form
-                  className="contact-form"
-                  onSubmit={handleContactSubmit}
-                  onFocus={() => {
-                    if (!contactFormInteractTimeRef.current) {
-                      contactFormInteractTimeRef.current = Date.now()
-                    }
-                  }}
-                >
-                  <div className="contact-form-fields">
-                    <div className="contact-field-group">
-                      <label className="contact-field">
-                        <span>Your Name</span>
-                        <input
-                          name="name"
-                          type="text"
-                          autoComplete="name"
-                          placeholder="e.g. Alex Morgan"
-                          maxLength={120}
-                          required
-                        />
-                      </label>
-
-                      <label className="contact-field">
-                        <span>Email Address</span>
-                        <input
-                          name="email"
-                          type="email"
-                          autoComplete="email"
-                          placeholder="alex@company.com"
-                          maxLength={254}
-                          required
-                        />
-                      </label>
-                    </div>
-
-                    <label className="contact-field">
-                      <span>Message</span>
-                      <textarea
-                        name="message"
-                        rows={5}
-                        placeholder="Share details about your project, engineering requirements, or opportunity..."
-                        maxLength={5000}
-                        required
-                      />
-                    </label>
-                  </div>
-
-                  <input className="contact-honeypot" name="botcheck" type="checkbox" tabIndex={-1} aria-hidden="true" />
-
-                  <div className="contact-form-footer">
-                    <button
-                      className="contact-submit-btn"
-                      type="submit"
-                      disabled={contactStatus === 'sending'}
-                    >
-                      <Send size={16} className={contactStatus === 'sending' ? 'animate-pulse' : ''} />
-                      <span>{contactStatus === 'sending' ? 'Sending Message…' : 'Send Message'}</span>
-                      <ArrowUpRight size={15} />
-                    </button>
-
-                    <div className="contact-direct-link">
-                      <span>Or email:</span>
-                      <a href="mailto:rich.dsz1997@gmail.com">rich.dsz1997@gmail.com</a>
-                    </div>
-                  </div>
-
-                  <AnimatePresence>
-                    {contactStatusMessage && (
-                      <motion.p
-                        key="contact-status-msg"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.3 }}
-                        className={`contact-form-status ${contactStatus === 'error' ? 'is-error' : 'is-success'}`}
-                        role={contactStatus === 'error' ? 'alert' : 'status'}
-                        aria-live="polite"
-                      >
-                        {contactStatusMessage}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </form>
+              {/* Left Column: Heading & Description */}
+              <motion.div className="contact-editorial-col" variants={sectionReveal}>
+                <p className="section-label">04 / CONTACT</p>
+                <h2 className="contact-editorial-title">Let&apos;s build something with intention.</h2>
+                <p className="contact-editorial-desc">
+                  I&apos;m open to meaningful conversations with recruiters, engineering teams, and collaborators who value thoughtful software.
+                </p>
               </motion.div>
 
-              {/* Social Profiles Bento Grid */}
-              <motion.div className="contact-social-grid mt-6" variants={sectionReveal}>
-                <a
-                  href={profile?.github_url || 'https://github.com/aestheticwolf'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="contact-social-card group"
-                >
-                  <div className="contact-social-icon">
-                    <FaGithub size={20} />
+              {/* Right Column: Send a Message Form Card Only */}
+              <motion.div className="contact-form-col" variants={sectionReveal}>
+                <div className="contact-form-card">
+                  <div className="contact-form-header">
+                    <div className="contact-badge">
+                      <Send size={14} className="text-violet-400" />
+                      <span>Send a Message</span>
+                    </div>
+                    <span className="contact-response-badge">Direct to Inbox</span>
                   </div>
-                  <div className="contact-social-text">
-                    <strong>GitHub</strong>
-                    <span>Code & Projects</span>
-                  </div>
-                  <ArrowUpRight size={16} className="contact-social-arrow" />
-                </a>
 
-                <a
-                  href={profile?.linkedin_url || 'https://www.linkedin.com/'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="contact-social-card group"
-                >
-                  <div className="contact-social-icon">
-                    <FaLinkedinIn size={19} />
-                  </div>
-                  <div className="contact-social-text">
-                    <strong>LinkedIn</strong>
-                    <span>Professional Network</span>
-                  </div>
-                  <ArrowUpRight size={16} className="contact-social-arrow" />
-                </a>
+                  <form
+                    className="contact-form"
+                    onSubmit={handleContactSubmit}
+                    onFocus={() => {
+                      if (!contactFormInteractTimeRef.current) {
+                        contactFormInteractTimeRef.current = Date.now()
+                      }
+                    }}
+                  >
+                    <div className="contact-form-fields">
+                      <div className="contact-field-group">
+                        <label className="contact-field">
+                          <span>Your Name</span>
+                          <input
+                            name="name"
+                            type="text"
+                            autoComplete="name"
+                            placeholder="e.g. Alex Morgan"
+                            maxLength={120}
+                            required
+                          />
+                        </label>
+
+                        <label className="contact-field">
+                          <span>Email Address</span>
+                          <input
+                            name="email"
+                            type="email"
+                            autoComplete="email"
+                            placeholder="alex@company.com"
+                            maxLength={254}
+                            required
+                          />
+                        </label>
+                      </div>
+
+                      <label className="contact-field">
+                        <span>Message</span>
+                        <textarea
+                          name="message"
+                          rows={4}
+                          placeholder="Share details about your project, engineering requirements, or opportunity..."
+                          maxLength={5000}
+                          required
+                        />
+                      </label>
+                    </div>
+
+                    <input className="contact-honeypot" name="botcheck" type="checkbox" tabIndex={-1} aria-hidden="true" />
+
+                    <div className="contact-form-footer">
+                      <button
+                        className="contact-submit-btn"
+                        type="submit"
+                        disabled={contactStatus === 'sending'}
+                      >
+                        <Send size={15} className={contactStatus === 'sending' ? 'animate-pulse' : ''} />
+                        <span>{contactStatus === 'sending' ? 'Sending Message…' : 'Send Message'}</span>
+                        <ArrowUpRight size={14} />
+                      </button>
+
+                      <div className="contact-direct-link">
+                        <span>Or email directly:</span>
+                        <a href="mailto:rich.dsz1997@gmail.com">rich.dsz1997@gmail.com</a>
+                      </div>
+                    </div>
+
+                    <AnimatePresence>
+                      {contactStatusMessage && (
+                        <motion.p
+                          key="contact-status-msg"
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.3 }}
+                          className={`contact-form-status ${contactStatus === 'error' ? 'is-error' : 'is-success'}`}
+                          role={contactStatus === 'error' ? 'alert' : 'status'}
+                          aria-live="polite"
+                        >
+                          {contactStatusMessage}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </form>
+                </div>
               </motion.div>
             </motion.div>
           </div>
@@ -2124,10 +2086,6 @@ function Home() {
             <p className="footer-brand-tagline">
               {profile?.professional_title || 'Software Developer'} • Engineering scalable web applications with clean code & modern architecture.
             </p>
-            <div className="footer-status-badge">
-              <span className="footer-status-dot" aria-hidden="true" />
-              <span>Available for engineering opportunities</span>
-            </div>
           </div>
 
           <div className="footer-right-cluster">
