@@ -91,7 +91,9 @@ export default function ProjectDetails() {
   const closeLightboxButtonRef = useRef<HTMLButtonElement>(null)
   const previouslyFocusedElement = useRef<HTMLElement | null>(null)
 
-  const galleryImages = project?.galleryImages.slice(0, 6) ?? []
+  const galleryImages = (project?.galleryImages ?? [])
+    .filter((img): img is string => typeof img === 'string' && img.trim().length > 0)
+    .slice(0, 6)
   const isLightboxOpen = activeImageIndex !== null
   const relatedProjects = project
     ? publishedProjects.filter((item) => item.id !== project.id).slice(0, 3)
@@ -299,10 +301,10 @@ export default function ProjectDetails() {
   }
 
   return (
-    <div className="project-detail-page min-h-screen overflow-hidden bg-[#08090d] text-white">
+    <div className="project-detail-page min-h-screen overflow-x-clip bg-[#08090d] text-white">
       <BackgroundAnimation />
       <header className="portfolio-nav border-b border-white/8">
-        <nav className="mx-auto flex h-19 max-w-7xl items-center justify-between px-6 lg:px-10">
+        <nav className="portfolio-container flex h-16 items-center justify-between">
           <Link
             to="/"
             onClick={() => {
@@ -329,7 +331,7 @@ export default function ProjectDetails() {
         </nav>
       </header>
 
-      <main className="project-detail-content mx-auto max-w-4xl px-4 sm:px-6 py-6 sm:py-10">
+      <main className="project-detail-content portfolio-container py-4 sm:py-7">
         {/* Project Header */}
         <motion.div
           className="project-detail-header"
@@ -358,7 +360,7 @@ export default function ProjectDetails() {
             </p>
           )}
 
-          <div className="project-detail-actions mt-5 flex flex-wrap gap-2.5">
+          <div className="project-detail-actions mt-3.5 sm:mt-4 flex flex-wrap gap-2 sm:gap-2.5">
             {project.github && (
               <a
                 href={project.github}
@@ -396,7 +398,7 @@ export default function ProjectDetails() {
           initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.12 }}
-          className="project-detail-hero-frame mt-6 sm:mt-8 overflow-hidden"
+          className="project-detail-hero-frame mt-4 sm:mt-6 overflow-hidden"
         >
           <div className="project-media-bar">
             <div className="project-media-dots" aria-hidden="true">
@@ -430,39 +432,30 @@ export default function ProjectDetails() {
         </motion.section>
 
         {/* Screenshots & Previews Gallery */}
-        {project.galleryImages.length > 0 && (
-          <section className="project-gallery mt-8 sm:mt-10">
+        {galleryImages.length > 0 && (
+          <section className="project-gallery mt-5 sm:mt-7">
             <div className="section-heading">
               <p className="section-label">PROJECT GALLERY</p>
               <h2 className="project-gallery-title font-semibold mt-1">Screenshots &amp; previews</h2>
-              <p className="project-gallery-summary mt-1.5 text-zinc-400">
+              <p className="project-gallery-summary mt-1 text-zinc-400">
                 Click any screenshot to inspect in full-screen interactive preview.
               </p>
             </div>
 
-            <motion.div
-              className="project-gallery-grid mt-5"
-              initial={prefersReducedMotion ? false : 'hidden'}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.15 }}
-              variants={{ hidden: {}, visible: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.08 } } }}
-            >
-              {project.galleryImages.slice(0, 6).map((image, index) => (
-                <motion.button
+            <div className="project-gallery-grid mt-3.5 sm:mt-4">
+              {galleryImages.map((image, index) => (
+                <button
                   key={`${image}-${index}`}
                   type="button"
                   onClick={() => setActiveImageIndex(index)}
                   aria-label={`Open screenshot ${index + 1} in full screen`}
                   className="project-gallery-card group"
-                  variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0 } }}
-                  whileHover={prefersReducedMotion ? undefined : { y: -3 }}
-                  transition={{ duration: prefersReducedMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <div className="project-gallery-img-wrap">
                     {brokenImages.includes(image) ? (
                       <div className="project-gallery-fallback">
-                        <Code2 size={26} className="text-violet-400" />
-                        <p className="mt-2 text-xs text-zinc-400">
+                        <Code2 size={24} className="text-violet-400" />
+                        <p className="mt-1.5 text-xs text-zinc-400">
                           Image unavailable
                         </p>
                       </div>
@@ -477,7 +470,7 @@ export default function ProjectDetails() {
                         />
                         <div className="project-gallery-overlay">
                           <span className="project-gallery-zoom-pill">
-                            <Maximize2 size={13} /> Full View
+                            <Maximize2 size={12} /> Full View
                           </span>
                         </div>
                       </>
@@ -487,114 +480,42 @@ export default function ProjectDetails() {
                     <span className="project-gallery-caption-name font-semibold text-zinc-300">Screenshot {index + 1}</span>
                     <span className="project-gallery-caption-action text-zinc-400 group-hover:text-violet-300 transition-colors">Expand ↗</span>
                   </div>
-                </motion.button>
+                </button>
               ))}
-
-              {isLightboxOpen && galleryImages.length > 0 && (
-                <div
-                  ref={lightboxRef}
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 sm:p-8"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-label="Screenshot lightbox"
-                  onClick={closeLightbox}
-                >
-                  <button
-                    ref={closeLightboxButtonRef}
-                    type="button"
-                    onClick={closeLightbox}
-                    aria-label="Close full view"
-                    className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-white/10 p-3 text-white hover:bg-white/20 sm:right-6 sm:top-6"
-                  >
-                    <X size={20} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      showPreviousImage()
-                    }}
-                    aria-label="Previous image"
-                    className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-white/10 p-3 text-white hover:bg-white/20 sm:left-6"
-                  >
-                    <ChevronLeft size={28} />
-                  </button>
-
-                  {brokenImages.includes(galleryImages[activeImageIndex]) ? (
-                    <div
-                      className="flex max-h-[85vh] max-w-[85vw] flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 p-10 text-center"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <Code2 size={36} className="text-violet-300" />
-                      <p className="mt-4 text-white">Image unavailable</p>
-                      <p className="mt-2 text-sm text-zinc-400">
-                        This image could not be loaded.
-                      </p>
-                    </div>
-                  ) : (
-                    <img
-                      src={galleryImages[activeImageIndex]}
-                      alt={`${project.name} screenshot ${activeImageIndex + 1}`}
-                      className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg"
-                      onError={() =>
-                        markImageAsBroken(galleryImages[activeImageIndex])
-                      }
-                      onClick={(event) => event.stopPropagation()}
-                    />
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      showNextImage()
-                    }}
-                    aria-label="Next image"
-                    className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-white/10 p-3 text-white hover:bg-white/20 sm:right-6"
-                  >
-                    <ChevronRight size={28} />
-                  </button>
-
-                  <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-zinc-300">
-                    {activeImageIndex + 1} / {galleryImages.length}
-                  </p>
-                </div>
-              )}
-            </motion.div>
+            </div>
           </section>
         )}
 
         {/* Overview & Sidebar Bento Grid */}
-        <div className="project-detail-layout mt-8 sm:mt-10">
+        <div className="project-detail-layout mt-5 sm:mt-7">
           <div className="project-detail-main-column">
             {/* Overview Card */}
             <div className="project-bento-card">
               <div className="project-bento-card-header">
                 <span className="section-label">OVERVIEW</span>
-                <h2 className="text-2xl font-semibold mt-1">About this project</h2>
+                <h2 className="text-base sm:text-xl font-semibold mt-0.5">About this project</h2>
               </div>
-              <p className="project-detail-description mt-4">
+              <p className="project-detail-description mt-2.5 sm:mt-3.5">
                 {project.description}
               </p>
             </div>
 
             {/* Key Features Card */}
             {project.features.length > 0 && (
-              <div className="project-bento-card mt-6">
+              <div className="project-bento-card mt-3.5 sm:mt-5">
                 <div className="project-bento-card-header">
                   <div className="flex items-center gap-2">
                     <Sparkles size={16} className="text-violet-400" />
                     <span className="section-label">HIGHLIGHTS</span>
                   </div>
-                  <h2 className="text-xl font-semibold mt-1">Key features</h2>
+                  <h2 className="text-base sm:text-xl font-semibold mt-1">Key features</h2>
                 </div>
 
-                <div className="project-features-grid mt-5">
+                <div className="project-features-grid mt-3.5 sm:mt-5">
                   {project.features.map((feature, idx) => (
                     <div key={`${feature}-${idx}`} className="project-feature-item">
                       <div className="project-feature-icon">
-                        <CheckCircle2 size={16} className="text-violet-400" />
+                        <CheckCircle2 size={15} className="text-violet-400 shrink-0" />
                       </div>
                       <span className="project-feature-text">{feature}</span>
                     </div>
@@ -606,11 +527,11 @@ export default function ProjectDetails() {
 
           <aside className="project-detail-sidebar">
             <div className="project-sidebar-card">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-2.5 sm:mb-3">
                 <Layers size={16} className="text-violet-400" />
                 <span className="section-label">TECH STACK</span>
               </div>
-              <h3 className="text-lg font-semibold mb-4">Technologies used</h3>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Technologies used</h3>
               <div className="project-tech-chips">
                 {project.stack.map((technology) => (
                   <span
@@ -623,12 +544,12 @@ export default function ProjectDetails() {
               </div>
 
               {project.demoVideo && (
-                <div id="demo" className="project-demo-box mt-7 pt-6 border-t border-white/10">
-                  <div className="flex items-center gap-2 mb-3">
+                <div id="demo" className="project-demo-box mt-5 sm:mt-7 pt-4 sm:pt-6 border-t border-white/10">
+                  <div className="flex items-center gap-2 mb-2.5 sm:mb-3">
                     <PlayCircle size={16} className="text-violet-400" />
                     <span className="section-label">DEMO WALKTHROUGH</span>
                   </div>
-                  <div className="project-video-wrapper mt-3">
+                  <div className="project-video-wrapper mt-2.5 sm:mt-3">
                     {getVideoEmbedUrl(project.demoVideo) ? (
                       <iframe
                         src={getVideoEmbedUrl(project.demoVideo)!}
@@ -663,7 +584,7 @@ export default function ProjectDetails() {
                 </div>
               )}
 
-              <div className="mt-7 pt-6 border-t border-white/10">
+              <div className="mt-5 sm:mt-7 pt-4 sm:pt-6 border-t border-white/10">
                 <Link
                   to="/#projects"
                   onClick={handleBackToProjects}
@@ -678,7 +599,7 @@ export default function ProjectDetails() {
         </div>
 
         {relatedProjects.length > 0 && (
-          <section className="project-related mt-16 border-t border-white/10 pt-12 sm:mt-20">
+          <section className="project-related mt-8 border-t border-white/10 pt-6 sm:mt-12 sm:pt-8">
             <div className="project-related-heading">
               <div>
                 <p className="text-sm uppercase tracking-[0.25em] text-violet-300">Explore more</p>
@@ -711,6 +632,78 @@ export default function ProjectDetails() {
       <footer className="border-t border-white/8 px-6 py-8 text-center text-sm text-zinc-500">
         Richard D&apos;Souza · Software Developer
       </footer>
+
+      {isLightboxOpen && activeImageIndex !== null && galleryImages.length > 0 && (
+        <div
+          ref={lightboxRef}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 sm:p-8"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Screenshot lightbox"
+          onClick={closeLightbox}
+        >
+          <button
+            ref={closeLightboxButtonRef}
+            type="button"
+            onClick={closeLightbox}
+            aria-label="Close full view"
+            className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-white/10 p-3 text-white hover:bg-white/20 sm:right-6 sm:top-6"
+          >
+            <X size={20} />
+          </button>
+
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              showPreviousImage()
+            }}
+            aria-label="Previous image"
+            className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-white/10 p-3 text-white hover:bg-white/20 sm:left-6"
+          >
+            <ChevronLeft size={28} />
+          </button>
+
+          {brokenImages.includes(galleryImages[activeImageIndex]) ? (
+            <div
+              className="flex max-h-[85vh] max-w-[85vw] flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 p-10 text-center"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Code2 size={36} className="text-violet-300" />
+              <p className="mt-4 text-white">Image unavailable</p>
+              <p className="mt-2 text-sm text-zinc-400">
+                This image could not be loaded.
+              </p>
+            </div>
+          ) : (
+            <img
+              src={galleryImages[activeImageIndex]}
+              alt={`${project.name} screenshot ${activeImageIndex + 1}`}
+              className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg"
+              onError={() =>
+                markImageAsBroken(galleryImages[activeImageIndex])
+              }
+              onClick={(event) => event.stopPropagation()}
+            />
+          )}
+
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              showNextImage()
+            }}
+            aria-label="Next image"
+            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-white/10 p-3 text-white hover:bg-white/20 sm:right-6"
+          >
+            <ChevronRight size={28} />
+          </button>
+
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sm text-zinc-300">
+            {activeImageIndex + 1} / {galleryImages.length}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

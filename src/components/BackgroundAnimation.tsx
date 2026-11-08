@@ -30,8 +30,10 @@ export default function BackgroundAnimation() {
     if (!ctx) return
 
     let animationFrameId: number
-    let width = (canvas.width = window.innerWidth)
-    let height = (canvas.height = window.innerHeight)
+    let width = (document.documentElement.clientWidth || window.innerWidth)
+    let height = (document.documentElement.clientHeight || window.innerHeight)
+    canvas.width = width
+    canvas.height = height
 
     // Check prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -63,12 +65,13 @@ export default function BackgroundAnimation() {
     // Handle high DPI and window resize
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      width = window.innerWidth
-      height = window.innerHeight
-      canvas.width = width * dpr
-      canvas.height = height * dpr
-      canvas.style.width = `${width}px`
-      canvas.style.height = `${height}px`
+      width = document.documentElement.clientWidth || window.innerWidth
+      height = document.documentElement.clientHeight || window.innerHeight
+      canvas.width = Math.round(width * dpr)
+      canvas.height = Math.round(height * dpr)
+      canvas.style.width = '100%'
+      canvas.style.height = '100%'
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.scale(dpr, dpr)
       initParticles()
     }
@@ -109,6 +112,12 @@ export default function BackgroundAnimation() {
 
     resize()
     window.addEventListener('resize', resize, { passive: true })
+    window.addEventListener('orientationchange', resize, { passive: true })
+
+    const resizeObserver = new ResizeObserver(() => {
+      resize()
+    })
+    resizeObserver.observe(document.documentElement)
 
     // Animation Loop
     let lastPulseSpawn = 0
@@ -283,8 +292,10 @@ export default function BackgroundAnimation() {
     return () => {
       cancelAnimationFrame(animationFrameId)
       window.removeEventListener('resize', resize)
+      window.removeEventListener('orientationchange', resize)
       window.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseleave', handleMouseLeave)
+      resizeObserver.disconnect()
       observer.disconnect()
     }
   }, [])

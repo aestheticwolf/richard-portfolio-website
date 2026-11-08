@@ -1,6 +1,6 @@
 import PortfolioPreloader from './components/PortfolioPreloader'
 
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
 import {
   ArrowDown,
@@ -23,6 +23,10 @@ import {
   FileCode,
   Layers,
   Compass,
+  BookOpen,
+  Clock,
+  Cpu,
+  Smartphone,
 } from 'lucide-react'
 import { FaGithub, FaLinkedinIn, FaAws } from 'react-icons/fa'
 import type { IconType } from 'react-icons'
@@ -98,7 +102,10 @@ const navigation = [
 const skills = [
   {
     name: 'Frontend Development',
+    categoryTag: 'UI / UX & Web',
+    description: 'Modern reactive interfaces, responsive web apps, and clean component systems.',
     icon: Code2,
+    accent: 'cyan',
     technologies: [
       { name: 'React', icon: SiReact, tone: 'react' },
       { name: 'TypeScript', icon: SiTypescript, tone: 'typescript' },
@@ -108,7 +115,10 @@ const skills = [
   },
   {
     name: 'Backend Development',
-    icon: Code2,
+    categoryTag: 'Server & APIs',
+    description: 'Server-side runtimes, asynchronous endpoints, and robust database querying.',
+    icon: Terminal,
+    accent: 'emerald',
     technologies: [
       { name: 'Node.js', icon: SiNodedotjs, tone: 'node' },
       { name: 'Express', icon: SiExpress, tone: 'express' },
@@ -117,7 +127,10 @@ const skills = [
   },
   {
     name: 'Cloud & Deployment',
+    categoryTag: 'DevOps & BaaS',
+    description: 'Serverless architecture, relational & NoSQL databases, and automated edge deploys.',
     icon: Cloud,
+    accent: 'violet',
     technologies: [
       { name: 'Firebase', icon: SiFirebase, tone: 'firebase' },
       { name: 'Supabase', icon: SiSupabase, tone: 'supabase' },
@@ -126,7 +139,10 @@ const skills = [
   },
   {
     name: 'Security Fundamentals',
+    categoryTag: 'App Protection',
+    description: 'Role-based access control, secure session auth, and network defense policies.',
     icon: ShieldCheck,
+    accent: 'rose',
     technologies: [
       { name: 'Authentication', icon: KeyRound, tone: 'auth' },
       { name: 'Authorization', icon: ShieldCheck, tone: 'authz' },
@@ -306,6 +322,89 @@ const technologyBrandColorMap: Record<string, string> = {
   'AI APIs': '#c084fc',
 }
 
+const getInterestMeta = (interest: string) => {
+  const lower = interest.toLowerCase()
+  if (lower.includes('full stack') || lower.includes('frontend') || lower.includes('web')) {
+    return {
+      icon: Code2,
+      color: 'text-cyan-400',
+      badgeClass: 'about-tag-cyan',
+    }
+  }
+  if (lower.includes('cloud') || lower.includes('backend') || lower.includes('api') || lower.includes('server')) {
+    return {
+      icon: Cloud,
+      color: 'text-emerald-400',
+      badgeClass: 'about-tag-emerald',
+    }
+  }
+  if (lower.includes('ai') || lower.includes('intelligence') || lower.includes('machine') || lower.includes('deep')) {
+    return {
+      icon: Sparkles,
+      color: 'text-amber-400',
+      badgeClass: 'about-tag-amber',
+    }
+  }
+  if (lower.includes('system') || lower.includes('architecture') || lower.includes('design') || lower.includes('scalable')) {
+    return {
+      icon: Layers,
+      color: 'text-violet-400',
+      badgeClass: 'about-tag-violet',
+    }
+  }
+  if (lower.includes('mobile') || lower.includes('app') || lower.includes('native') || lower.includes('ios') || lower.includes('android')) {
+    return {
+      icon: Smartphone,
+      color: 'text-rose-400',
+      badgeClass: 'about-tag-rose',
+    }
+  }
+  return {
+    icon: Sparkles,
+    color: 'text-indigo-400',
+    badgeClass: 'about-tag-default',
+  }
+}
+
+const educationJourney = [
+  {
+    id: 'msc-it',
+    levelTag: 'Postgraduate',
+    degree: 'M.Sc. in Information Technology',
+    institution: 'Parvatibai Chowgule College of Arts and Science (Autonomous)',
+    location: 'Goa, India',
+    period: 'June 2024 – June 2026',
+    score: 'CGPA: 7.70 / 10',
+    theme: 'violet',
+    accentColor: '#a78bfa',
+    icon: GraduationCap,
+  },
+  {
+    id: 'bca',
+    levelTag: 'Undergraduate',
+    degree: 'Bachelor of Computer Applications (B.C.A)',
+    institution: 'Fr. Agnel College of Arts and Commerce',
+    location: 'Goa, India',
+    period: 'June 2018 – August 2021',
+    score: 'Graduated',
+    theme: 'cyan',
+    accentColor: '#22d3ee',
+    icon: BookOpen,
+  },
+  {
+    id: 'hssc',
+    levelTag: 'Higher Secondary',
+    degree: 'H.S.S.C – Vocational Stream (Computer Technology)',
+    institution: 'Fr. Agnel Higher Secondary School',
+    location: 'Goa, India',
+    period: 'June 2016 – March 2018',
+    score: 'Completed (10+2)',
+    theme: 'emerald',
+    accentColor: '#34d399',
+    icon: Cpu,
+  },
+]
+
 
 
 
@@ -405,7 +504,22 @@ function GlobalBackToTop() {
           whileHover={prefersReducedMotion ? undefined : { y: -4, scale: 1.08 }}
           whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
           transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-          onClick={() => window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })}
+          onClick={() => {
+            window.scrollTo({
+              top: 0,
+              left: 0,
+              behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            })
+            if (document.documentElement.scrollLeft !== 0) {
+              document.documentElement.scrollLeft = 0
+            }
+            if (document.body.scrollLeft !== 0) {
+              document.body.scrollLeft = 0
+            }
+            document.querySelectorAll('.project-detail-page, main').forEach((el) => {
+              if (el.scrollLeft !== 0) el.scrollLeft = 0
+            })
+          }}
         >
           <span className="back-to-top-halo" aria-hidden="true" />
           <span className="back-to-top-body">
@@ -670,37 +784,82 @@ function Home() {
       setContactStatusMessage('')
     }, durationMs)
   }
-  const [heroTypingCycle, setHeroTypingCycle] = useState(0)
-  const [heroTypingIsExiting, setHeroTypingIsExiting] = useState(false)
   const heroName = profile?.full_name || "Richard D'Souza"
-  const heroNameCharacters = [...heroName]
-  const surnameSIndex = heroName.toLowerCase().indexOf('s', heroName.indexOf(' ') + 1)
-  const heroTypingCycleDuration = 10_000
-  const heroLetterAnimationDuration = 2_600
-  const heroLetterStagger = 55
-  const heroTypingExitDelay = Math.max(
-    0,
-    heroTypingCycleDuration -
-      heroLetterAnimationDuration -
-      (heroNameCharacters.length - 1) * heroLetterStagger,
-  )
+  const heroSlides = useMemo(() => {
+    const rawSlides = [
+      {
+        kicker: "HELLO, I'M",
+        text: heroName,
+        accentWord: "D'souza",
+        accentClass: 'hero-title-accent-sheen',
+      },
+      {
+        kicker: 'CURRENT ROLE',
+        text: profile?.professional_title || 'Software Developer',
+        accentWord: 'Developer',
+        accentClass: 'hero-title-accent-cyan',
+      },
+      {
+        kicker: 'FOCUSING ON',
+        text: 'Full-Stack & Cloud',
+        accentWord: 'Cloud',
+        accentClass: 'hero-title-accent-emerald',
+      },
+    ]
+
+    return rawSlides.map((slide) => {
+      const accentIdx = slide.text.toLowerCase().indexOf(slide.accentWord.toLowerCase())
+      const tokens: { char: string; isAccent: boolean }[] = []
+
+      for (let i = 0; i < slide.text.length; i++) {
+        const char = slide.text[i]
+        // Combine apostrophe with following letter (e.g. 's in D'souza) so they never line-break separately
+        if (char === "'" && i + 1 < slide.text.length && /[a-zA-Z]/.test(slide.text[i + 1])) {
+          const combined = char + slide.text[i + 1]
+          const isAccent = accentIdx !== -1 && i >= accentIdx
+          tokens.push({ char: combined, isAccent })
+          i++
+          continue
+        }
+        const isAccent = accentIdx !== -1 && i >= accentIdx
+        tokens.push({ char, isAccent })
+      }
+
+      return {
+        ...slide,
+        tokens,
+        fullText: slide.text,
+      }
+    })
+  }, [heroName, profile?.professional_title])
+
+  const [heroSlideIndex, setHeroSlideIndex] = useState(0)
+  const [heroSlideExiting, setHeroSlideExiting] = useState(false)
 
   useEffect(() => {
     if (prefersReducedMotion) return
 
+    const currentSlide = heroSlides[heroSlideIndex]
+    const tokenCount = currentSlide?.tokens.length || 15
+    const typeInDuration = tokenCount * 52 + 480
+    const readPause = 3400
+    const slideDuration = typeInDuration + readPause
+    const exitDuration = tokenCount * 16 + 260
+
     const exitTimer = window.setTimeout(() => {
-      setHeroTypingIsExiting(true)
-    }, heroTypingExitDelay)
-    const typingCycleTimer = window.setTimeout(() => {
-      setHeroTypingIsExiting(false)
-      setHeroTypingCycle((currentCycle) => currentCycle + 1)
-    }, heroTypingCycleDuration)
+      setHeroSlideExiting(true)
+    }, slideDuration)
+
+    const switchTimer = window.setTimeout(() => {
+      setHeroSlideIndex((prev) => (prev + 1) % heroSlides.length)
+      setHeroSlideExiting(false)
+    }, slideDuration + exitDuration)
 
     return () => {
       window.clearTimeout(exitTimer)
-      window.clearTimeout(typingCycleTimer)
+      window.clearTimeout(switchTimer)
     }
-  }, [heroTypingCycle, heroTypingCycleDuration, heroTypingExitDelay, prefersReducedMotion])
+  }, [heroSlideIndex, prefersReducedMotion, heroSlides])
 
   const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -780,21 +939,40 @@ function Home() {
   const displayedSkills = profile?.skills?.length
     ? profile.skills
         .filter((skill) => skill && typeof skill.name === 'string')
-        .map((skill) => ({
-          name: skill.name,
-          icon: /cloud|deploy/i.test(skill.name)
-            ? Cloud
-            : /security/i.test(skill.name)
-              ? ShieldCheck
-              : Code2,
-          technologies: (Array.isArray(skill.technologies) ? skill.technologies : [])
-            .filter((technology): technology is string => typeof technology === 'string' && technology.trim().length > 0)
-            .map((name) => ({
-              name,
-              icon: getTechnologyIcon(name) ?? technologyLucideIconMap[name] ?? Code2,
-              tone: technologyToneMap[name] ?? 'default',
-            })),
-        }))
+        .map((skill, index) => {
+          const fallback =
+            skills.find(
+              (item) => item.name.toLowerCase() === skill.name.toLowerCase(),
+            ) || skills[index % skills.length]
+          return {
+            name: skill.name,
+            categoryTag: fallback?.categoryTag || 'Core Stack',
+            description:
+              fallback?.description ||
+              'Key engineering tools and frameworks for building modern production apps.',
+            icon: /cloud|deploy/i.test(skill.name)
+              ? Cloud
+              : /security/i.test(skill.name)
+                ? ShieldCheck
+                : /backend|server|api/i.test(skill.name)
+                  ? Terminal
+                  : Code2,
+            accent: /cloud|deploy/i.test(skill.name)
+              ? 'violet'
+              : /security/i.test(skill.name)
+                ? 'rose'
+                : /backend/i.test(skill.name)
+                  ? 'emerald'
+                  : 'cyan',
+            technologies: (Array.isArray(skill.technologies) ? skill.technologies : [])
+              .filter((technology): technology is string => typeof technology === 'string' && technology.trim().length > 0)
+              .map((name) => ({
+                name,
+                icon: getTechnologyIcon(name) ?? technologyLucideIconMap[name] ?? Code2,
+                tone: technologyToneMap[name] ?? 'default',
+              })),
+          }
+        })
     : skills
 
   const markProjectImageAsBroken = (imageUrl: string) => {
@@ -1018,35 +1196,39 @@ function Home() {
                 <span>Engineering scalable web applications & modern software</span>
               </div>
 
-              <p className="hero-kicker">
-                Hello, I'm
-              </p>
+              <div className="hero-morph-wrapper">
+                <p
+                  key={`kicker-${heroSlideIndex}`}
+                  className={`hero-kicker ${heroSlideExiting ? 'hero-morph-kicker-exit' : 'hero-morph-kicker-enter'}`}
+                >
+                  {heroSlides[heroSlideIndex].kicker}
+                </p>
 
-              <h1 className="hero-title" aria-label={heroName}>
-                <span className="hero-title-typing" aria-hidden="true">
-                  {heroNameCharacters.map((character, index, characters) => {
-                    const combinesSurnameS =
-                      surnameSIndex > 0 && index === surnameSIndex - 1 && character === "'"
-                    const isCombinedSurnameS =
-                      surnameSIndex > 0 && index === surnameSIndex && characters[index - 1] === "'"
-                    if (isCombinedSurnameS) return null
-
-                    const letter = combinesSurnameS
-                      ? `${character}${characters[index + 1] ?? ''}`
-                      : character
-
-                    return (
+                <h1
+                  className="hero-title"
+                  aria-label={`${heroSlides[heroSlideIndex].kicker} ${heroSlides[heroSlideIndex].fullText}`}
+                >
+                  <span
+                    key={`title-typing-${heroSlideIndex}`}
+                    className="hero-title-typing"
+                    aria-hidden="true"
+                  >
+                    {heroSlides[heroSlideIndex].tokens.map((token, index, arr) => (
                       <span
-                        key={`${heroTypingCycle}-${character}-${index}`}
-                        className={`hero-title-letter ${index > heroName.indexOf(' ') ? 'hero-title-accent' : ''} ${heroTypingIsExiting ? 'hero-title-letter-exiting' : ''}`}
-                        style={{ animationDelay: `${index * heroLetterStagger}ms` }}
+                        key={`char-${heroSlideIndex}-${index}`}
+                        className={`hero-title-letter ${token.isAccent ? `hero-title-accent ${heroSlides[heroSlideIndex].accentClass}` : ''} ${heroSlideExiting ? 'hero-title-letter-exiting' : ''}`}
+                        style={{
+                          animationDelay: heroSlideExiting
+                            ? `${(arr.length - 1 - index) * 16}ms`
+                            : `${index * 52}ms`,
+                        }}
                       >
-                        {letter === ' ' ? '\u00a0' : letter}
+                        {token.char === ' ' ? '\u00a0' : token.char}
                       </span>
-                    )
-                  })}
-                </span>
-              </h1>
+                    ))}
+                  </span>
+                </h1>
+              </div>
 
               <p className="hero-intro">
                 {profile?.short_intro ||
@@ -1090,7 +1272,10 @@ function Home() {
                   <FaLinkedinIn size={18} />
                 </a>
 
-                <span className="hero-location">Based in {profile?.location || 'India'}</span>
+                <span className="hero-location">
+                  <span className="hero-location-dot" aria-hidden="true" />
+                  <span>Based in {profile?.location || 'India'}</span>
+                </span>
               </div>
             </motion.div>
 
@@ -1111,10 +1296,12 @@ function Home() {
               )}
 
               <motion.div
-                className="hero-profile-card"
+                className="hero-profile-card group"
                 whileHover={prefersReducedMotion ? undefined : { y: -3 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
               >
+                <div className="hero-card-top-beam" />
+                <div className="hero-card-ambient-aura" />
                 {/* Window Titlebar */}
                 <div className="hero-profile-heading">
                   <div className="hero-profile-markers" aria-hidden="true">
@@ -1505,6 +1692,7 @@ function Home() {
 
       {profile ? (
         <motion.div className="about-story" variants={sectionReveal}>
+          <div className="about-card-top-shine" />
           {/* Card Top Header & Status */}
           <div className="about-story-header">
             <div className="about-story-badge">
@@ -1526,24 +1714,32 @@ function Home() {
 
           {/* Quick Highlight Pills from Profile & Interests */}
           <div className="about-story-highlights">
-            <div className="about-highlight-pill">
-              <GraduationCap size={15} className="text-violet-400 shrink-0" />
-              <span>{profile.interests?.[0] || 'MSc in IT'}</span>
-            </div>
-            <div className="about-highlight-pill">
-              <Code2 size={15} className="text-cyan-400 shrink-0" />
-              <span>{profile.interests?.[1] || 'Full-Stack & Cloud'}</span>
-            </div>
-            {profile.interests?.[2] ? (
-              <div className="about-highlight-pill">
-                <Sparkles size={15} className="text-amber-400 shrink-0" />
-                <span>{profile.interests[2]}</span>
-              </div>
+            {profile.interests && profile.interests.length > 0 ? (
+              profile.interests.slice(0, 3).map((interest) => {
+                const meta = getInterestMeta(interest)
+                const IconComponent = meta.icon
+                return (
+                  <div key={interest} className={`about-highlight-pill ${meta.badgeClass}`}>
+                    <IconComponent size={14} className={`shrink-0 ${meta.color}`} />
+                    <span>{interest}</span>
+                  </div>
+                )
+              })
             ) : (
-              <div className="about-highlight-pill">
-                <Sparkles size={15} className="text-amber-400 shrink-0" />
-                <span>AI Integration</span>
-              </div>
+              <>
+                <div className="about-highlight-pill about-tag-violet">
+                  <GraduationCap size={15} className="text-violet-400 shrink-0" />
+                  <span>MSc in IT</span>
+                </div>
+                <div className="about-highlight-pill about-tag-cyan">
+                  <Code2 size={15} className="text-cyan-400 shrink-0" />
+                  <span>Full-Stack & Cloud</span>
+                </div>
+                <div className="about-highlight-pill about-tag-amber">
+                  <Sparkles size={15} className="text-amber-400 shrink-0" />
+                  <span>AI Integration</span>
+                </div>
+              </>
             )}
           </div>
 
@@ -1678,79 +1874,69 @@ function Home() {
         )
       )}
 
-      {/* Right Column Bento Cards */}
-      <motion.aside className="about-facts" variants={sectionStagger} aria-label="Professional profile details">
-        {/* Role & Expertise */}
-        <motion.div className="about-fact-card group" variants={sectionReveal}>
-          <div className="about-card-icon-wrap">
-            <Code2 size={22} aria-hidden="true" />
+      {/* Right Column: Education Journey Bento Cards */}
+      <motion.aside className="about-facts" variants={sectionStagger} aria-label="Education journey and qualifications">
+        {/* Education Section Header */}
+        <div className="about-edu-section-head">
+          <div className="about-edu-title-wrap">
+            <span className="about-card-pill-badge edu-badge">
+              <span className="about-badge-dot edu-dot" />
+              Academic Progression
+            </span>
+            <h3 className="about-edu-main-title">Education Journey</h3>
           </div>
-          <div className="about-card-content">
-            <span className="about-card-badge">Current Role</span>
-            <strong>{profile?.professional_title || 'Software Developer'}</strong>
-            <p className="about-card-sub">Modern Web, Cloud & Scalable Systems</p>
-          </div>
-        </motion.div>
+          <span className="about-card-status-indicator">
+            <GraduationCap size={13} className="inline mr-1 text-violet-400" />
+            2016 – 2026
+          </span>
+        </div>
 
-        {/* Academic Background */}
-        <motion.div className="about-fact-card group" variants={sectionReveal}>
-          <div className="about-card-icon-wrap">
-            <GraduationCap size={22} aria-hidden="true" />
-          </div>
-          <div className="about-card-content">
-            <span className="about-card-badge">Education & Foundations</span>
-            <strong>MSc in Information Technology</strong>
-            <p className="about-card-sub">Parvatibai Chowgule College, Goa</p>
-          </div>
-        </motion.div>
+        {/* 3 Chronological Education Cards from Resume */}
+        {educationJourney.map((item) => {
+          const IconComp = item.icon
+          return (
+            <motion.div
+              key={item.id}
+              className={`about-fact-card about-edu-card about-edu-${item.theme} group`}
+              variants={sectionReveal}
+            >
+              <div className="about-card-top-shine" />
+              <div className={`about-card-ambient-glow ${item.theme}-glow`} />
 
-        {/* Location & Timezone */}
-        {profile?.location && (
-          <motion.div className="about-fact-card group" variants={sectionReveal}>
-            <div className="about-card-icon-wrap">
-              <MapPin size={22} aria-hidden="true" />
-            </div>
-            <div className="about-card-content">
-              <span className="about-card-badge">Location</span>
-              <strong>{profile.location}</strong>
-              <p className="about-card-sub">IST (UTC +5:30) • Open to Remote & Hybrid</p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Areas of Interest with Interactive Chips */}
-        {profile?.interests && profile.interests.length > 0 && (
-          <motion.div className="about-interests-card group" variants={sectionReveal}>
-            <div className="about-interests-header">
-              <div className="about-card-icon-wrap">
-                <Sparkles size={22} aria-hidden="true" />
+              <div className="about-card-head-row">
+                <div className={`about-card-pill-badge ${item.theme}-badge`}>
+                  <span className={`about-badge-dot ${item.theme}-dot`} />
+                  <span>{item.levelTag}</span>
+                </div>
+                <div className="about-edu-meta-badges">
+                  {item.score && (
+                    <span className="about-edu-score-badge">
+                      {item.score}
+                    </span>
+                  )}
+                  <span className="about-card-status-indicator">
+                    <Clock size={11} className="inline mr-1" />
+                    {item.period}
+                  </span>
+                </div>
               </div>
-              <div className="about-card-content">
-                <span className="about-card-badge">Domains & Passion</span>
-                <strong>Areas of Interest</strong>
-              </div>
-            </div>
-            <div className="about-interest-tags">
-              {profile.interests.map((interest) => (
-                <span key={interest} className="about-interest-chip">
-                  {interest}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-        )}
 
-        {/* Quick Connect Callout */}
-        <motion.div className="about-quick-cta" variants={sectionReveal}>
-          <div className="about-quick-cta-glow" />
-          <div>
-            <p className="about-quick-cta-title">Interested in collaborating?</p>
-            <p className="about-quick-cta-desc">Let's discuss projects, opportunities, or engineering ideas.</p>
-          </div>
-          <a href="#contact" className="about-quick-cta-btn">
-            Get in touch <ArrowUpRight size={15} />
-          </a>
-        </motion.div>
+              <div className="about-card-main">
+                <div className={`about-card-icon-wrap ${item.theme}-icon-wrap`}>
+                  <IconComp size={20} aria-hidden="true" />
+                </div>
+                <div className="about-card-content">
+                  <strong>{item.degree}</strong>
+                  <p className="about-card-sub">{item.institution}</p>
+                  <p className="about-edu-location">
+                    <MapPin size={11} className="inline mr-1 text-zinc-400 shrink-0" aria-hidden="true" />
+                    <span>{item.location}</span>
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )
+        })}
       </motion.aside>
     </motion.div>
   </motion.div>
@@ -1787,21 +1973,28 @@ function Home() {
     >
       {displayedSkills.map((skill, skillIndex) => {
         const Icon = skill.icon
+        const accent = skill.accent || 'cyan'
 
         return (
           <motion.div
             key={skill.name}
             variants={sectionReveal}
-            className="skill-card group"
-            whileHover={prefersReducedMotion ? undefined : { y: -6, scale: 1.01 }}
+            className={`skill-card skill-card-${accent} group`}
+            whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.01 }}
             whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
+            <div className="skill-card-top-shine" />
             <div className="skill-card-glow" />
             <div className="skill-card-aura" />
             <div className="skill-card-header">
-              <div className="skill-icon">
-                <Icon size={20} aria-hidden="true" />
+              <div className="skill-icon-wrap">
+                <div className="skill-icon">
+                  <Icon size={19} aria-hidden="true" />
+                </div>
+                {skill.categoryTag && (
+                  <span className="skill-category-tag">{skill.categoryTag}</span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <span className="skill-card-count">{skill.technologies.length} tools</span>
@@ -1809,7 +2002,12 @@ function Home() {
               </div>
             </div>
 
-            <h3 className="skill-card-title">{skill.name}</h3>
+            <div className="skill-card-body-wrap">
+              <h3 className="skill-card-title">{skill.name}</h3>
+              {skill.description && (
+                <p className="skill-card-desc">{skill.description}</p>
+              )}
+            </div>
 
             <div className="skill-tags">
               {skill.technologies.map((technology) => {
@@ -1820,7 +2018,7 @@ function Home() {
                   <motion.span
                     className={`technology-tag technology-${tone}`}
                     key={technology.name}
-                    whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.04 }}
+                    whileHover={prefersReducedMotion ? undefined : { y: -2.5, scale: 1.04 }}
                     transition={{ duration: 0.15 }}
                   >
                     <TechnologyIcon size={14} className="shrink-0" aria-hidden="true" />
@@ -2136,7 +2334,17 @@ function Home() {
             className="footer-back-to-top"
             onClick={(e) => {
               e.preventDefault()
-              window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' })
+              window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: prefersReducedMotion ? 'auto' : 'smooth',
+              })
+              if (document.documentElement.scrollLeft !== 0) {
+                document.documentElement.scrollLeft = 0
+              }
+              if (document.body.scrollLeft !== 0) {
+                document.body.scrollLeft = 0
+              }
             }}
           >
             <span>Back to top</span>
