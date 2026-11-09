@@ -86,7 +86,7 @@ export default function CustomCursor() {
 
   return (
     <div
-      className={`custom-cursor-root pointer-events-none fixed inset-0 z-[9999] overflow-hidden ${
+      className={`custom-cursor-root pointer-events-none fixed inset-0 z-9999 overflow-hidden ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       aria-hidden="true"
@@ -104,11 +104,11 @@ export default function CustomCursor() {
         ref={ringRef}
         className={`custom-cursor-ring fixed top-0 left-0 rounded-full transition-[width,height,margin,border-color,background-color,box-shadow,opacity] duration-200 ease-out ${
           isClicking
-            ? '-ml-4 -mt-4 h-8 w-8 scale-90 border-[2px] is-clicking'
+            ? '-ml-4 -mt-4 h-8 w-8 scale-90 border-2 is-clicking'
             : isHovering
             ? '-ml-7 -mt-7 h-14 w-14 border-[1.5px] is-hovering shadow-lg'
             : isTextHover
-            ? '-ml-4 -mt-4 h-8 w-8 border-[1px] opacity-40'
+            ? '-ml-4 -mt-4 h-8 w-8 border opacity-40'
             : '-ml-4 -mt-4 h-8 w-8 border-[1.5px] opacity-80'
         }`}
       />

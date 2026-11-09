@@ -1185,7 +1185,7 @@ export default function ProjectDetails() {
         createPortal(
           <div
             ref={lightboxRef}
-            className="fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-black/92 p-4 sm:p-8 backdrop-blur-md select-none"
+            className="fixed inset-0 z-999999 flex flex-col items-center justify-center bg-black/92 p-4 sm:p-8 backdrop-blur-md select-none"
             role="dialog"
             aria-modal="true"
             aria-label="Screenshot lightbox"
@@ -1197,7 +1197,7 @@ export default function ProjectDetails() {
               type="button"
               onClick={closeLightbox}
               aria-label="Close full view"
-              className="fixed right-4 top-4 z-[1000000] flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md transition hover:bg-white/20 hover:scale-105 active:scale-95 sm:right-6 sm:top-6 cursor-pointer shadow-lg"
+              className="fixed right-4 top-4 z-1000000 flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md transition hover:bg-white/20 hover:scale-105 active:scale-95 sm:right-6 sm:top-6 cursor-pointer shadow-lg"
             >
               <X size={20} />
             </button>
@@ -1211,7 +1211,7 @@ export default function ProjectDetails() {
                   showPreviousImage()
                 }}
                 aria-label="Previous image"
-                className="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-[1000000] flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md transition hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+                className="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-1000000 flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md transition hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
               >
                 <ChevronLeft size={28} />
               </button>
@@ -1249,7 +1249,7 @@ export default function ProjectDetails() {
                   showNextImage()
                 }}
                 aria-label="Next image"
-                className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-[1000000] flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md transition hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
+                className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-1000000 flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md transition hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer shadow-lg"
               >
                 <ChevronRight size={28} />
               </button>
@@ -1257,7 +1257,7 @@ export default function ProjectDetails() {
 
             {/* Bottom active counter */}
             {inspectionImages.length > 1 && (
-              <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[1000000] rounded-full border border-white/15 bg-black/70 px-4 py-1.5 text-xs font-mono font-medium text-zinc-300 backdrop-blur-md shadow-lg">
+              <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-1000000 rounded-full border border-white/15 bg-black/70 px-4 py-1.5 text-xs font-mono font-medium text-zinc-300 backdrop-blur-md shadow-lg">
                 {activeImageIndex + 1} / {inspectionImages.length}
               </div>
             )}
