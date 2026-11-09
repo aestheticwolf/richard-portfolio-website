@@ -18,7 +18,8 @@ import {
   GraduationCap,
   Sparkles,
   Terminal,
-  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Send,
   FileCode,
   Layers,
@@ -72,6 +73,8 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import ProjectDetails from './pages/ProjectDetails'
 import ThemeToggle from './components/ThemeToggle'
 import BackgroundAnimation from './components/BackgroundAnimation'
+import CosmicHorizonDivider from './components/CosmicHorizonDivider'
+import { smoothScrollToTop } from './lib/smoothScroll'
 import {
   getPublishedProjects,
   type PortfolioProject,
@@ -81,9 +84,6 @@ import {
   type PublicProfile,
   DEFAULT_HERO_CONSOLE,
 } from './lib/profile'
-import {
-  parseMilestoneCards,
-} from './lib/milestoneCards'
 import {
   validateContactSubmission,
   recordContactSubmission,
@@ -378,6 +378,7 @@ const educationJourney = [
     theme: 'violet',
     accentColor: '#a78bfa',
     icon: GraduationCap,
+    highlights: ['Cloud Systems', 'Full-Stack Architecture', 'Machine Learning', 'Autonomous Tech'],
   },
   {
     id: 'bca',
@@ -390,6 +391,7 @@ const educationJourney = [
     theme: 'cyan',
     accentColor: '#22d3ee',
     icon: BookOpen,
+    highlights: ['Software Engineering', 'Data Structures', 'Database Systems', 'Web Tech'],
   },
   {
     id: 'hssc',
@@ -402,6 +404,7 @@ const educationJourney = [
     theme: 'emerald',
     accentColor: '#34d399',
     icon: Cpu,
+    highlights: ['Computer Technology', 'Programming Foundations', 'Hardware & Electronics'],
   },
 ]
 
@@ -479,15 +482,31 @@ function ScrollProgress() {
 function GlobalBackToTop() {
   const prefersReducedMotion = useReducedMotion() ?? false
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const [isLaunching, setIsLaunching] = useState(false)
 
   useEffect(() => {
-    const updateBackToTop = () => {
-      setShowBackToTop(window.scrollY > 420)
+    const checkVisibility = () => {
+      const scrollY = window.scrollY
+      const innerHeight = window.innerHeight
+      const scrollHeight = document.documentElement.scrollHeight
+      const footerEl = document.querySelector('.portfolio-footer')
+      const footerRect = footerEl ? footerEl.getBoundingClientRect() : null
+      
+      // Hide if approaching bottom or when footer enters the viewport
+      const isNearFooter = innerHeight + scrollY >= scrollHeight - 460
+      const isFooterInView = footerRect ? footerRect.top < innerHeight + 60 : isNearFooter
+
+      setShowBackToTop(scrollY > 420 && !isNearFooter && !isFooterInView)
     }
 
-    window.addEventListener('scroll', updateBackToTop, { passive: true })
-    updateBackToTop()
-    return () => window.removeEventListener('scroll', updateBackToTop)
+    window.addEventListener('scroll', checkVisibility, { passive: true })
+    window.addEventListener('resize', checkVisibility, { passive: true })
+    checkVisibility()
+
+    return () => {
+      window.removeEventListener('scroll', checkVisibility)
+      window.removeEventListener('resize', checkVisibility)
+    }
   }, [])
 
   return (
@@ -495,7 +514,7 @@ function GlobalBackToTop() {
       {showBackToTop && (
         <motion.button
           type="button"
-          className="back-to-top-button group"
+          className={`back-to-top-button group ${isLaunching ? 'is-launching' : ''}`}
           aria-label="Back to top"
           title="Back to top"
           initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.88 }}
@@ -505,19 +524,9 @@ function GlobalBackToTop() {
           whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
           transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
           onClick={() => {
-            window.scrollTo({
-              top: 0,
-              left: 0,
-              behavior: prefersReducedMotion ? 'auto' : 'smooth',
-            })
-            if (document.documentElement.scrollLeft !== 0) {
-              document.documentElement.scrollLeft = 0
-            }
-            if (document.body.scrollLeft !== 0) {
-              document.body.scrollLeft = 0
-            }
-            document.querySelectorAll('.project-detail-page, main').forEach((el) => {
-              if (el.scrollLeft !== 0) el.scrollLeft = 0
+            setIsLaunching(true)
+            smoothScrollToTop(() => {
+              setIsLaunching(false)
             })
           }}
         >
@@ -545,11 +554,14 @@ function Home() {
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [projectsLoading, setProjectsLoading] = useState(true)
   const [projectsError, setProjectsError] = useState('')
+  const [activeProjectIndex, setActiveProjectIndex] = useState(0)
   const [brokenProjectImages, setBrokenProjectImages] = useState<string[]>([])
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [profileError, setProfileError] = useState('')
-  const [aboutExpanded, setAboutExpanded] = useState(true)
+  const [aboutActiveTab, setAboutActiveTab] = useState<'overview' | 'mindset' | 'vision'>('overview')
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [selectedSkillCategory, setSelectedSkillCategory] = useState<string>('all')
+  const [hoveredTool, setHoveredTool] = useState<string | null>(null)
   const [heroConsoleTab, setHeroConsoleTab] = useState<'developer' | 'stack' | 'terminal'>('developer')
 
   const heroConsole = profile?.hero_console || DEFAULT_HERO_CONSOLE
@@ -861,6 +873,39 @@ function Home() {
     }
   }, [heroSlideIndex, prefersReducedMotion, heroSlides])
 
+  const handlePrevProject = () => {
+    if (projects.length <= 1) return
+    setActiveProjectIndex((prev) => (prev - 1 + projects.length) % projects.length)
+  }
+
+  const handleNextProject = () => {
+    if (projects.length <= 1) return
+    setActiveProjectIndex((prev) => (prev + 1) % projects.length)
+  }
+
+  useEffect(() => {
+    if (projects.length <= 1) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
+      if (tag === 'input' || tag === 'textarea') return
+
+      if (e.key === 'ArrowLeft') {
+        setActiveProjectIndex((prev) => (prev - 1 + projects.length) % projects.length)
+      } else if (e.key === 'ArrowRight') {
+        setActiveProjectIndex((prev) => (prev + 1) % projects.length)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [projects.length])
+
+  useEffect(() => {
+    if (projects.length > 0 && activeProjectIndex >= projects.length) {
+      setActiveProjectIndex(0)
+    }
+  }, [projects.length, activeProjectIndex])
+
   const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (contactStatus === 'sending') return
@@ -974,6 +1019,42 @@ function Home() {
           }
         })
     : skills
+
+  const totalSkillTools = displayedSkills.reduce(
+    (acc, s) => acc + (s.technologies?.length || 0),
+    0
+  )
+
+  const allFlatTechnologies = useMemo(() => {
+    const list: Array<{
+      name: string
+      category: string
+      categoryTag: string
+      accent: string
+      icon: any
+      tone: string
+      brandColor: string
+      description?: string
+    }> = []
+
+    displayedSkills.forEach((cat) => {
+      cat.technologies.forEach((tech) => {
+        if (!list.some((item) => item.name.toLowerCase() === tech.name.toLowerCase())) {
+          list.push({
+            name: tech.name,
+            category: cat.name,
+            categoryTag: cat.categoryTag || cat.name,
+            accent: cat.accent || 'cyan',
+            icon: tech.icon,
+            tone: tech.tone,
+            brandColor: technologyBrandColorMap[tech.name] || '#00d8ff',
+            description: cat.description,
+          })
+        }
+      })
+    })
+    return list
+  }, [displayedSkills])
 
   const markProjectImageAsBroken = (imageUrl: string) => {
     setBrokenProjectImages((current) =>
@@ -1152,7 +1233,7 @@ function Home() {
               aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen(!menuOpen)}
-              className="rounded-lg border border-white/10 p-2 text-zinc-300 hover:text-white md:hidden inline-flex items-center justify-center shrink-0"
+              className="portfolio-nav-toggle rounded-lg border border-white/10 p-2 text-zinc-300 hover:text-white md:hidden inline-flex items-center justify-center shrink-0"
             >
               {menuOpen ? <X size={19} /> : <Menu size={19} />}
             </button>
@@ -1181,21 +1262,13 @@ function Home() {
           id="home"
           className="hero-section relative flex scroll-mt-20 items-center"
         >
-          <div className="portfolio-container relative grid w-full items-center gap-10 pb-12 pt-24 sm:pt-28 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
+          <div className="portfolio-container relative grid w-full items-center gap-10 pb-10 pt-20 sm:pt-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
             <motion.div
               className="hero-copy"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.72, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="hero-status">
-                <span className="hero-status-beacon" aria-hidden="true">
-                  <span className="hero-status-ping" />
-                  <span className="hero-status-dot" />
-                </span>
-                <span>Engineering scalable web applications & modern software</span>
-              </div>
-
               <div className="hero-morph-wrapper">
                 <p
                   key={`kicker-${heroSlideIndex}`}
@@ -1286,13 +1359,24 @@ function Home() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.82, delay: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
             >
               {profile?.profile_image_url && (
-                <figure className="hero-portrait">
-                  <img
-                    src={profile.profile_image_url}
-                    alt={profile.full_name}
-                    className="hero-portrait-image"
-                  />
-                </figure>
+                <div className="hero-portrait-wrapper" aria-label={`${profile.full_name}'s portrait`}>
+                  <figure className="hero-portrait group">
+                    {/* Atmospheric Ambient Glow Aura */}
+                    <div className="hero-portrait-ambient-aura" aria-hidden="true" />
+
+                    {/* Continuous Holographic Rotating Conic-Gradient Ring */}
+                    <div className="hero-portrait-hologram-ring" aria-hidden="true" />
+
+                    {/* Obsidian Glass Inner Bezel Frame */}
+                    <div className="hero-portrait-inner-frame">
+                      <img
+                        src={profile.profile_image_url}
+                        alt={profile.full_name}
+                        className="hero-portrait-image"
+                      />
+                    </div>
+                  </figure>
+                </div>
               )}
 
               <motion.div
@@ -1359,15 +1443,15 @@ function Home() {
                 {/* Sub-Header Breadcrumb */}
                 <div className="hero-editor-breadcrumb" aria-hidden="true">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-zinc-500 font-mono text-[10px]">src</span>
-                    <span className="text-zinc-600 text-[10px]">/</span>
-                    <span className="text-zinc-500 font-mono text-[10px]">config</span>
-                    <span className="text-zinc-600 text-[10px]">/</span>
-                    <span className="text-violet-300 font-mono text-[10px] font-semibold">
+                    <span className="hero-breadcrumb-text">src</span>
+                    <span className="hero-breadcrumb-sep">/</span>
+                    <span className="hero-breadcrumb-text">config</span>
+                    <span className="hero-breadcrumb-sep">/</span>
+                    <span className="hero-breadcrumb-file">
                       {heroConsoleTab === 'developer' ? 'developer.ts' : heroConsoleTab === 'stack' ? 'stack.json' : 'terminal.sh'}
                     </span>
                   </div>
-                  </div>
+                </div>
 
                 {/* Tab 1: developer.ts Code View */}
                 {heroConsoleTab === 'developer' && (
@@ -1395,7 +1479,7 @@ function Home() {
                         <p className="hero-code-line">
                           <span className="hero-code-keyword">const</span>{' '}
                           <span className="hero-code-ident">developer</span>{' '}
-                          <span className="text-zinc-400">=</span>{' '}
+                          <span className="hero-code-operator">=</span>{' '}
                           <span className="hero-code-bracket-gold">{'{'}</span>
                         </p>
                         <div className="hero-code-block-inner">
@@ -1403,13 +1487,13 @@ function Home() {
                             <span className="hero-code-key">name</span>
                             <span className="hero-code-colon">:</span>{' '}
                             <span className="hero-code-string">'{profile?.full_name || "Richard D'Souza"}'</span>
-                            <span className="text-zinc-500">,</span>
+                            <span className="hero-code-punct">,</span>
                           </p>
                           <p className="hero-code-line">
                             <span className="hero-code-key">focus</span>
                             <span className="hero-code-colon">:</span>{' '}
                             <span className="hero-code-string">'{profile?.professional_title || 'Software Developer'}'</span>
-                            <span className="text-zinc-500">,</span>
+                            <span className="hero-code-punct">,</span>
                           </p>
                           <p className="hero-code-line">
                             <span className="hero-code-key">interests</span>
@@ -1419,19 +1503,19 @@ function Home() {
                           <div className="hero-code-nested-inner">
                             {(profile?.interests?.length ? profile.interests : ['Web Development', 'Cloud & Security', 'AI Applications', 'System Design']).map((interest, index, arr) => (
                               <p className="hero-code-line hero-code-interest" key={`${interest}-${index}`}>
-                                '{interest}'{index < arr.length - 1 ? <span className="text-zinc-500">,</span> : ''}
+                                '{interest}'{index < arr.length - 1 ? <span className="hero-code-punct">,</span> : ''}
                               </p>
                             ))}
                           </div>
                           <p className="hero-code-line">
                             <span className="hero-code-bracket-cyan">]</span>
-                            <span className="text-zinc-500">,</span>
+                            <span className="hero-code-punct">,</span>
                           </p>
                           <p className="hero-code-line">
                             <span className="hero-code-key">learning</span>
                             <span className="hero-code-colon">:</span>{' '}
                             <span className="hero-code-value">{isLearning ? 'true' : 'false'}</span>
-                            <span className="text-zinc-500">,</span>
+                            <span className="hero-code-punct">,</span>
                           </p>
                           <p className="hero-code-line">
                             <span className="hero-code-key">available</span>
@@ -1449,15 +1533,15 @@ function Home() {
                     <div className="hero-editor-statusbar" aria-hidden="true">
                       <div className="flex items-center gap-2">
                         <span className="hero-status-pill">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span className="hero-status-dot w-1.5 h-1.5 rounded-full" />
                           <span>TS</span>
                         </span>
-                        <span className="text-zinc-400 hero-status-utf8">UTF-8</span>
+                        <span className="hero-status-meta">UTF-8</span>
                       </div>
                       <div className="flex items-center gap-2.5">
-                        <span className="text-zinc-400">Ln 3, Col 9</span>
-                        <span className="text-zinc-600">•</span>
-                        <span className="text-emerald-400 font-medium">0 errors</span>
+                        <span className="hero-status-meta">Ln 3, Col 9</span>
+                        <span className="hero-status-sep">•</span>
+                        <span className="hero-status-success font-medium">0 errors</span>
                       </div>
                     </div>
                   </div>
@@ -1507,11 +1591,11 @@ function Home() {
 
                     <div className="hero-editor-statusbar" aria-hidden="true">
                       <div className="flex items-center gap-2">
-                        <span className="hero-status-pill text-cyan-400">JSON</span>
-                        <span className="text-zinc-400 hero-status-utf8">UTF-8</span>
+                        <span className="hero-status-pill hero-status-pill-json">JSON</span>
+                        <span className="hero-status-meta">UTF-8</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-cyan-400 font-medium">{totalTechnologiesCount} Technologies</span>
+                        <span className="hero-status-info font-medium">{totalTechnologiesCount} Technologies</span>
                       </div>
                     </div>
                   </div>
@@ -1534,11 +1618,11 @@ function Home() {
                       </div>
 
                       <div className="hero-terminal-output">
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">role</span>: <span className="text-violet-300 font-medium">{termRole}</span></p>
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">education</span>: <span className="text-zinc-200">{termEducation}</span></p>
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">location</span>: <span className="text-zinc-200">{termLocation}</span></p>
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">focus</span>: <span className="text-cyan-300">{termFocus}</span></p>
-                        <p><span className="text-emerald-400 font-bold">✔</span> <span className="text-zinc-400">availability</span>: <span className="text-emerald-300 font-semibold">{termAvailability}</span></p>
+                        <p><span className="hero-term-check">✔</span> <span className="hero-term-key">role</span>: <span className="hero-term-val-role">{termRole}</span></p>
+                        <p><span className="hero-term-check">✔</span> <span className="hero-term-key">education</span>: <span className="hero-term-val-text">{termEducation}</span></p>
+                        <p><span className="hero-term-check">✔</span> <span className="hero-term-key">location</span>: <span className="hero-term-val-text">{termLocation}</span></p>
+                        <p><span className="hero-term-check">✔</span> <span className="hero-term-key">focus</span>: <span className="hero-term-val-focus">{termFocus}</span></p>
+                        <p><span className="hero-term-check">✔</span> <span className="hero-term-key">availability</span>: <span className="hero-term-val-avail">{termAvailability}</span></p>
                       </div>
 
                       {/* Custom User Commands History */}
@@ -1607,11 +1691,11 @@ function Home() {
 
                     <div className="hero-editor-statusbar" aria-hidden="true">
                       <div className="flex items-center gap-2">
-                        <span className="hero-status-pill text-emerald-400">ZSH</span>
-                        <span className="text-zinc-400">tty1</span>
+                        <span className="hero-status-pill hero-status-pill-sh">ZSH</span>
+                        <span className="hero-status-meta">tty1</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-emerald-400 font-medium">Exit code: 0</span>
+                        <span className="hero-status-success font-medium">Exit code: 0</span>
                       </div>
                     </div>
                   </div>
@@ -1631,16 +1715,16 @@ function Home() {
                     </div>
                     <p className="mt-0.5 text-xs text-zinc-400 flex items-center gap-2 hero-profile-footer-sub">
                       <span>{footerSubline}</span>
-                      <span className="inline-block w-1 h-1 rounded-full bg-zinc-500 hero-profile-footer-dot" />
-                      <span className="inline-flex items-center gap-1 font-mono text-[11px] text-violet-400">
+                      <span className="inline-block w-1 h-1 rounded-full hero-profile-footer-dot" />
+                      <span className="inline-flex items-center gap-1 font-mono text-[11px] hero-profile-footer-branch">
                         {footerBranch}
                       </span>
                     </p>
                   </div>
 
-                  {heroConsoleTab === 'developer' && <Code2 className="text-violet-400 transition-colors" size={20} />}
-                  {heroConsoleTab === 'stack' && <Layers className="text-cyan-400 transition-colors" size={20} />}
-                  {heroConsoleTab === 'terminal' && <Terminal className="text-emerald-400 transition-colors" size={20} />}
+                  {heroConsoleTab === 'developer' && <Code2 className="hero-profile-footer-icon transition-colors" size={20} />}
+                  {heroConsoleTab === 'stack' && <Layers className="hero-profile-footer-icon transition-colors" size={20} />}
+                  {heroConsoleTab === 'terminal' && <Terminal className="hero-profile-footer-icon transition-colors" size={20} />}
                 </div>
               </motion.div>
             </motion.div>
@@ -1657,11 +1741,12 @@ function Home() {
           </div>
         </section>
 
+        <CosmicHorizonDivider theme="about" />
 
-<section
-  id="about"
-  className="about-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
->
+        <section
+          id="about"
+          className="about-section scroll-mt-24 py-20 sm:py-28"
+        >
   <motion.div
     className="portfolio-container"
     variants={sectionReveal}
@@ -1671,7 +1756,10 @@ function Home() {
   >
     <div className="section-heading about-heading">
       <p className="section-label">01 / ABOUT</p>
-      <h2>Thoughtful software, built with purpose.</h2>
+      <h2>
+        Thoughtful software,{' '}
+        <span className="about-headline-accent">built with purpose.</span>
+      </h2>
       <p className="section-summary">
         I value practical solutions, clear experiences, and the steady craft behind reliable digital products.
       </p>
@@ -1696,6 +1784,11 @@ function Home() {
           {/* Card Top Header & Status */}
           <div className="about-story-header">
             <div className="about-story-badge">
+              <div className="about-terminal-dots" aria-hidden="true">
+                <span className="about-dot dot-red" />
+                <span className="about-dot dot-yellow" />
+                <span className="about-dot dot-green" />
+              </div>
               <Terminal size={14} className="text-violet-400" />
               <span>Engineer Journey</span>
             </div>
@@ -1705,160 +1798,187 @@ function Home() {
             </div>
           </div>
 
-          {/* Lead Quote */}
-          {profile.short_intro && (
-            <div className="about-lead-box">
-              <p className="about-lead-text">{profile.short_intro}</p>
-            </div>
-          )}
-
-          {/* Quick Highlight Pills from Profile & Interests */}
-          <div className="about-story-highlights">
-            {profile.interests && profile.interests.length > 0 ? (
-              profile.interests.slice(0, 3).map((interest) => {
-                const meta = getInterestMeta(interest)
-                const IconComponent = meta.icon
-                return (
-                  <div key={interest} className={`about-highlight-pill ${meta.badgeClass}`}>
-                    <IconComponent size={14} className={`shrink-0 ${meta.color}`} />
-                    <span>{interest}</span>
-                  </div>
-                )
-              })
-            ) : (
-              <>
-                <div className="about-highlight-pill about-tag-violet">
-                  <GraduationCap size={15} className="text-violet-400 shrink-0" />
-                  <span>MSc in IT</span>
-                </div>
-                <div className="about-highlight-pill about-tag-cyan">
-                  <Code2 size={15} className="text-cyan-400 shrink-0" />
-                  <span>Full-Stack & Cloud</span>
-                </div>
-                <div className="about-highlight-pill about-tag-amber">
-                  <Sparkles size={15} className="text-amber-400 shrink-0" />
-                  <span>AI Integration</span>
-                </div>
-              </>
-            )}
+          {/* Interactive Multi-Deck Navigation Tabs */}
+          <div className="about-deck-tabs" role="tablist" aria-label="Engineer Journey Deck Tabs">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={aboutActiveTab === 'overview'}
+              onClick={() => setAboutActiveTab('overview')}
+              className={`about-deck-tab-btn ${aboutActiveTab === 'overview' ? 'is-active' : ''}`}
+            >
+              <Sparkles size={13} className="shrink-0" />
+              <span>Overview</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={aboutActiveTab === 'mindset'}
+              onClick={() => setAboutActiveTab('mindset')}
+              className={`about-deck-tab-btn ${aboutActiveTab === 'mindset' ? 'is-active' : ''}`}
+            >
+              <Code2 size={13} className="shrink-0" />
+              <span>Mindset &amp; Craft</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={aboutActiveTab === 'vision'}
+              onClick={() => setAboutActiveTab('vision')}
+              className={`about-deck-tab-btn ${aboutActiveTab === 'vision' ? 'is-active' : ''}`}
+            >
+              <Compass size={13} className="shrink-0" />
+              <span>Vision &amp; Projects</span>
+            </button>
           </div>
 
-          {/* Expandable Detailed Narrative */}
-          <AnimatePresence initial={false}>
-            {aboutExpanded && (
-              <motion.div
-                key="about-expanded-narrative"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-                className="about-expanded-body overflow-hidden"
-              >
-                <div className="about-timeline">
-                  {profile.biography && (
-                    <div className="about-timeline-stream">
-                      {(() => {
-                        const milestoneCards = parseMilestoneCards(profile.biography)
-
-                        const iconMap = {
-                          code: Code2,
-                          education: GraduationCap,
-                          layers: Layers,
-                          sparkles: Sparkles,
-                          terminal: Terminal,
-                          shield: ShieldCheck,
-                        }
-
-                        const colorMap: Record<string, string> = {
-                          emerald: 'text-emerald-400',
-                          cyan: 'text-cyan-400',
-                          violet: 'text-violet-400',
-                          amber: 'text-amber-400',
-                          rose: 'text-rose-400',
-                          blue: 'text-blue-400',
-                        }
-
-                        const dotColorMap: Record<string, string> = {
-                          emerald: '#34d399',
-                          cyan: '#22d3ee',
-                          violet: '#a78bfa',
-                          amber: '#fbbf24',
-                          rose: '#fb7185',
-                          blue: '#60a5fa',
-                        }
-
-                        return milestoneCards.map((card, index) => {
-                          const StepIcon = iconMap[card.icon] || Code2
-                          const colorClass = colorMap[card.color] || 'text-emerald-400'
-                          const dotColor = dotColorMap[card.color] || '#a78bfa'
-
-                          return (
-                            <div key={card.id || index} className="about-timeline-item">
-                              <span
-                                className="about-timeline-dot"
-                                style={{ background: dotColor, boxShadow: `0 0 8px ${dotColor}` }}
-                                aria-hidden="true"
-                              />
-                              <div className="about-timeline-card">
-                                <div className="about-timeline-card-header">
-                                  <span className={`about-timeline-tag ${colorClass}`}>
-                                    <StepIcon size={13} className="shrink-0" />
-                                    <span>{card.title}</span>
-                                  </span>
-                                </div>
-                                <p className="about-timeline-text">{card.content}</p>
-                              </div>
-                            </div>
-                          )
-                        })
-                      })()}
+          {/* Interactive Tab Body */}
+          <div className="about-deck-viewport">
+            <AnimatePresence mode="wait">
+              {aboutActiveTab === 'overview' && (
+                <motion.div
+                  key="tab-overview"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+                  className="about-deck-pane"
+                >
+                  {profile.short_intro && (
+                    <div className="about-lead-box">
+                      <span className="about-code-prefix">
+                        // software engineering &amp; digital craft
+                      </span>
+                      <p className="about-lead-text">{profile.short_intro}</p>
                     </div>
                   )}
 
-                  {profile.secondary_biography && (
-                    <div className="about-focus-card">
-                      <div className="about-focus-header">
-                        <div className="flex items-center gap-2">
-                          <Compass size={16} className="text-violet-400 shrink-0" />
-                          <span className="about-focus-title">Focus & Future Vision</span>
+                  <div className="about-story-highlights">
+                    {profile.interests && profile.interests.length > 0 ? (
+                      profile.interests.slice(0, 3).map((interest) => {
+                        const meta = getInterestMeta(interest)
+                        const IconComponent = meta.icon
+                        return (
+                          <div key={interest} className={`about-highlight-pill ${meta.badgeClass}`}>
+                            <IconComponent size={14} className={`shrink-0 ${meta.color}`} />
+                            <span>{interest}</span>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <>
+                        <div className="about-highlight-pill about-tag-violet">
+                          <GraduationCap size={15} className="text-violet-400 shrink-0" />
+                          <span>MSc in IT</span>
                         </div>
-                        <span className="about-focus-badge">Aspirations</span>
-                      </div>
-                      <div className="about-focus-body">
-                        {profile.secondary_biography
-                          .split(/\r?\n/)
-                          .map((p) => p.trim())
-                          .filter((p) => p.length > 0)
-                          .map((para, pIdx) => (
-                            <p key={pIdx} className="about-focus-text">
-                              {para}
-                            </p>
-                          ))}
-                      </div>
+                        <div className="about-highlight-pill about-tag-cyan">
+                          <Code2 size={15} className="text-cyan-400 shrink-0" />
+                          <span>Full-Stack &amp; Cloud</span>
+                        </div>
+                        <div className="about-highlight-pill about-tag-amber">
+                          <Sparkles size={15} className="text-amber-400 shrink-0" />
+                          <span>AI Integration</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="about-deck-subcard about-deck-foundations">
+                    <div className="about-deck-subcard-head">
+                      <GraduationCap size={15} className="text-violet-400 shrink-0" />
+                      <span className="about-deck-subcard-title">Academic &amp; Technical Foundations</span>
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    <p className="about-deck-subcard-text">
+                      Software Developer completing an M.Sc in Information Technology from Parvatibai Chowgule College of Arts and Science. Focused on building reliable web &amp; mobile applications, exploring modern cloud architectures, and finding practical solutions to real-world problems.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {aboutActiveTab === 'mindset' && (
+                <motion.div
+                  key="tab-mindset"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+                  className="about-deck-pane"
+                >
+                  <div className="about-deck-subcard">
+                    <div className="about-deck-subcard-head">
+                      <Sparkles size={15} className="text-amber-400 shrink-0" />
+                      <span className="about-deck-subcard-title">Continuous Growth &amp; Curiosity</span>
+                    </div>
+                    <p className="about-deck-subcard-text">
+                      I&apos;m constantly looking to learn, embrace challenging engineering problems, and improve my technical craft across frontend and backend systems. Every project is an opportunity to master new paradigms and build with higher precision.
+                    </p>
+                  </div>
+
+                  <div className="about-deck-subcard">
+                    <div className="about-deck-subcard-head">
+                      <Code2 size={15} className="text-cyan-400 shrink-0" />
+                      <span className="about-deck-subcard-title">Engineering Philosophy</span>
+                    </div>
+                    <p className="about-deck-subcard-text">
+                      I believe the best software balances elegant architecture with clear, intuitive user experience. Clean, maintainable code is not just an aesthetic choice—it is the bedrock of dependable digital products.
+                    </p>
+                  </div>
+
+                  <div className="about-deck-tags-row">
+                    <span className="about-deck-tag"><ShieldCheck size={12} className="text-emerald-400" /> Clean Architecture</span>
+                    <span className="about-deck-tag"><Layers size={12} className="text-cyan-400" /> End-to-End Ownership</span>
+                    <span className="about-deck-tag"><Terminal size={12} className="text-violet-400" /> Practical Solutions</span>
+                  </div>
+                </motion.div>
+              )}
+
+              {aboutActiveTab === 'vision' && (
+                <motion.div
+                  key="tab-vision"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+                  className="about-deck-pane"
+                >
+                  <div className="about-deck-subcard">
+                    <div className="about-deck-subcard-head">
+                      <Compass size={15} className="text-violet-400 shrink-0" />
+                      <span className="about-deck-subcard-title">Focus &amp; Future Vision</span>
+                    </div>
+                    <p className="about-deck-subcard-text">
+                      Dedicated to building software that solves practical operational problems. Enthusiastic about system design, application security, cloud technologies, and the purposeful integration of artificial intelligence in everyday products.
+                    </p>
+                  </div>
+
+                  <div className="about-deck-projects-box">
+                    <span className="about-deck-projects-label">Featured Projects in Focus:</span>
+                    <div className="about-deck-project-chips">
+                      <a href="#projects" className="about-project-chip">
+                        <span className="about-project-chip-name">SkillPath</span>
+                        <span className="about-project-chip-sub">Learning Companion</span>
+                      </a>
+                      <a href="#projects" className="about-project-chip">
+                        <span className="about-project-chip-name">Sentinel Grid</span>
+                        <span className="about-project-chip-sub">Security Management</span>
+                      </a>
+                      <a href="#projects" className="about-project-chip">
+                        <span className="about-project-chip-name">AI CRM Platform</span>
+                        <span className="about-project-chip-sub">Intelligent Workflows</span>
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Action Row */}
           <div className="about-actions-row">
-            {(profile.biography || profile.secondary_biography) && (
-              <button
-                type="button"
-                className="about-toggle-button"
-                onClick={() => setAboutExpanded((expanded) => !expanded)}
-                aria-expanded={aboutExpanded}
-              >
-                <span>{aboutExpanded ? 'Show less' : 'Read full journey'}</span>
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform duration-300 ${aboutExpanded ? 'rotate-180' : ''}`}
-                  aria-hidden="true"
-                />
-              </button>
-            )}
+            <div className="about-tab-indicator-hint font-mono text-xs text-zinc-400">
+              <span className="text-violet-400/80 mr-1.5">●</span>
+              <span>MODE: {aboutActiveTab === 'overview' ? '01 / OVERVIEW' : aboutActiveTab === 'mindset' ? '02 / MINDSET' : '03 / VISION'}</span>
+            </div>
 
             <Link to="/request-resume" onClick={saveScrollPosition} className="about-cta-resume">
               <span>Request Resume</span>
@@ -1874,80 +1994,124 @@ function Home() {
         )
       )}
 
-      {/* Right Column: Education Journey Bento Cards */}
+      {/* Right Column: Unified Education Journey Stream */}
       <motion.aside className="about-facts" variants={sectionStagger} aria-label="Education journey and qualifications">
-        {/* Education Section Header */}
-        <div className="about-edu-section-head">
-          <div className="about-edu-title-wrap">
-            <span className="about-card-pill-badge edu-badge">
-              <span className="about-badge-dot edu-dot" />
-              Academic Progression
+        <div className="about-edu-stream-card group">
+          {/* Top Border Beam Shine */}
+          <div className="about-card-top-shine" aria-hidden="true" />
+          <div className="about-edu-ambient-aura" aria-hidden="true" />
+
+          {/* Education Header */}
+          <div className="about-edu-stream-head">
+            <div className="about-edu-title-wrap">
+              <span className="about-card-pill-badge edu-badge">
+                <span className="about-badge-dot edu-dot" />
+                Academic Progression
+              </span>
+              <h3 className="about-edu-main-title">Education Journey</h3>
+            </div>
+            <span className="about-card-status-indicator font-mono">
+              <GraduationCap size={13} className="inline mr-1 text-violet-400" />
+              2016 – 2026
             </span>
-            <h3 className="about-edu-main-title">Education Journey</h3>
           </div>
-          <span className="about-card-status-indicator">
-            <GraduationCap size={13} className="inline mr-1 text-violet-400" />
-            2016 – 2026
-          </span>
+
+          {/* Integrated Timeline Stream */}
+          <div className="about-edu-stream-timeline">
+            {/* Embedded Gradient Rail Line */}
+            <div className="about-edu-stream-rail" aria-hidden="true">
+              <div className="about-edu-stream-rail-beam" />
+            </div>
+
+            <div className="about-edu-stream-list">
+              {educationJourney.map((item, idx) => {
+                const IconComp = item.icon
+                const isLatest = idx === 0
+                return (
+                  <motion.div
+                    key={item.id}
+                    className={`about-edu-stream-item about-edu-theme-${item.theme} ${isLatest ? 'is-active' : ''}`}
+                    variants={sectionReveal}
+                  >
+                    {/* Integrated Timeline Node */}
+                    <div className="about-edu-stream-node" aria-hidden="true">
+                      {isLatest && <span className="about-edu-stream-ping" />}
+                      <span className="about-edu-stream-dot" />
+                    </div>
+
+                    {/* Milestone Content */}
+                    <div className="about-edu-stream-body">
+                      {/* Level Tag & Period / Score Row */}
+                      <div className="about-edu-stream-row">
+                        <div className="about-edu-stream-level">
+                          <span className="about-edu-stream-level-tag">{item.levelTag}</span>
+                          {isLatest && (
+                            <span className="about-edu-stream-status-pill">
+                              <span className="about-edu-stream-pulse-dot" />
+                              Active
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="about-edu-stream-meta-right">
+                          {item.score && (
+                            <span className="about-edu-stream-score-badge">
+                              {item.score}
+                            </span>
+                          )}
+                          <span className="about-edu-stream-period">
+                            <Clock size={11} className="inline mr-1 opacity-70" />
+                            {item.period}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Degree Title & Institution */}
+                      <div className="about-edu-stream-degree-row">
+                        <div className="about-edu-stream-icon-wrap" aria-hidden="true">
+                          <IconComp size={16} />
+                        </div>
+                        <div className="about-edu-stream-title-box">
+                          <h4 className="about-edu-stream-degree">{item.degree}</h4>
+                          <p className="about-edu-stream-inst">
+                            <span>{item.institution}</span>
+                            <span className="about-edu-stream-sep" aria-hidden="true">•</span>
+                            <span className="about-edu-stream-loc">
+                              <MapPin size={11} className="inline mr-0.5 opacity-60" aria-hidden="true" />
+                              {item.location}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Coursework Tags */}
+                      {item.highlights && item.highlights.length > 0 && (
+                        <div className="about-edu-stream-tags">
+                          {item.highlights.map((tag) => (
+                            <span key={tag} className="about-edu-stream-tag">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </div>
         </div>
-
-        {/* 3 Chronological Education Cards from Resume */}
-        {educationJourney.map((item) => {
-          const IconComp = item.icon
-          return (
-            <motion.div
-              key={item.id}
-              className={`about-fact-card about-edu-card about-edu-${item.theme} group`}
-              variants={sectionReveal}
-            >
-              <div className="about-card-top-shine" />
-              <div className={`about-card-ambient-glow ${item.theme}-glow`} />
-
-              <div className="about-card-head-row">
-                <div className={`about-card-pill-badge ${item.theme}-badge`}>
-                  <span className={`about-badge-dot ${item.theme}-dot`} />
-                  <span>{item.levelTag}</span>
-                </div>
-                <div className="about-edu-meta-badges">
-                  {item.score && (
-                    <span className="about-edu-score-badge">
-                      {item.score}
-                    </span>
-                  )}
-                  <span className="about-card-status-indicator">
-                    <Clock size={11} className="inline mr-1" />
-                    {item.period}
-                  </span>
-                </div>
-              </div>
-
-              <div className="about-card-main">
-                <div className={`about-card-icon-wrap ${item.theme}-icon-wrap`}>
-                  <IconComp size={20} aria-hidden="true" />
-                </div>
-                <div className="about-card-content">
-                  <strong>{item.degree}</strong>
-                  <p className="about-card-sub">{item.institution}</p>
-                  <p className="about-edu-location">
-                    <MapPin size={11} className="inline mr-1 text-zinc-400 shrink-0" aria-hidden="true" />
-                    <span>{item.location}</span>
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )
-        })}
       </motion.aside>
     </motion.div>
   </motion.div>
-</section>
+        </section>
 
+        <CosmicHorizonDivider theme="skills" />
 
-
-<section
-  id="skills"
-  className="skills-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
->
+        <section
+          id="skills"
+          className="skills-section scroll-mt-24 py-20 sm:py-24"
+        >
   <div className="portfolio-container">
     <motion.div
       className="section-heading skills-heading"
@@ -1957,87 +2121,135 @@ function Home() {
       viewport={{ once: true, amount: 0.25 }}
     >
       <p className="section-label">02 / SKILLS</p>
-      <h2>A practical, growing technical toolkit.</h2>
+      <h2>
+        Building with a modern,{' '}
+        <span className="skills-headline-accent">connected stack</span>
+      </h2>
       <p className="section-summary">
-        Technologies and tools I use to build applications, solve problems,
-        and continuously improve as a developer.
+        A unified ecosystem of frontend architectures, backend systems, and cloud infrastructure engineered for scale and speed.
       </p>
     </motion.div>
 
+    {/* Interactive Category Filter Bar */}
+    <div className="skills-filter-wrap" role="tablist" aria-label="Skills Category Filter">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={selectedSkillCategory === 'all'}
+        onClick={() => setSelectedSkillCategory('all')}
+        className={`skills-filter-btn ${selectedSkillCategory === 'all' ? 'is-active' : ''}`}
+      >
+        <Sparkles size={12} className="shrink-0" />
+        <span>All Stack ({totalSkillTools})</span>
+      </button>
+      {displayedSkills.map((skill) => {
+        const isSelected = selectedSkillCategory === skill.name
+        return (
+          <button
+            key={skill.name}
+            type="button"
+            role="tab"
+            aria-selected={isSelected}
+            onClick={() => setSelectedSkillCategory(isSelected ? 'all' : skill.name)}
+            className={`skills-filter-btn ${isSelected ? 'is-active' : ''}`}
+          >
+            <span>{skill.categoryTag || skill.name}</span>
+          </button>
+        )
+      })}
+    </div>
+
+    {/* Clean Scannable Technology Pills Stage */}
     <motion.div
-      className="skills-grid"
-      variants={sectionStagger}
+      className="tech-pills-stage"
+      variants={sectionReveal}
       initial={false}
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
     >
-      {displayedSkills.map((skill, skillIndex) => {
-        const Icon = skill.icon
-        const accent = skill.accent || 'cyan'
+      {/* Ambient Radial Lights */}
+      <div className="tech-pills-radial-glow" aria-hidden="true" />
+      <div className="tech-pills-grid-pattern" aria-hidden="true" />
 
-        return (
-          <motion.div
-            key={skill.name}
-            variants={sectionReveal}
-            className={`skill-card skill-card-${accent} group`}
-            whileHover={prefersReducedMotion ? undefined : { y: -5, scale: 1.01 }}
-            whileTap={prefersReducedMotion ? undefined : { scale: 0.99 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div className="skill-card-top-shine" />
-            <div className="skill-card-glow" />
-            <div className="skill-card-aura" />
-            <div className="skill-card-header">
-              <div className="skill-icon-wrap">
-                <div className="skill-icon">
-                  <Icon size={19} aria-hidden="true" />
-                </div>
-                {skill.categoryTag && (
-                  <span className="skill-category-tag">{skill.categoryTag}</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="skill-card-count">{skill.technologies.length} tools</span>
-                <span className="skill-card-index">{String(skillIndex + 1).padStart(2, '0')}</span>
-              </div>
-            </div>
+      {/* Technology Pills Grid */}
+      <div className="tech-pills-wrap">
+        {allFlatTechnologies.map((tech) => {
+          const ToolIcon = tech.icon
+          const isSelected = selectedSkillCategory === 'all' || selectedSkillCategory === tech.category
+          const isHovered = hoveredTool === tech.name
+          const activeColor = tech.brandColor || '#00d8ff'
 
-            <div className="skill-card-body-wrap">
-              <h3 className="skill-card-title">{skill.name}</h3>
-              {skill.description && (
-                <p className="skill-card-desc">{skill.description}</p>
-              )}
-            </div>
+          return (
+            <button
+              key={tech.name}
+              type="button"
+              className={`tech-pill-btn ${isSelected ? 'is-selected' : 'is-dimmed'} ${isHovered ? 'is-hovered' : ''}`}
+              style={{
+                '--pill-color': activeColor,
+                '--pill-glow': `${activeColor}40`,
+              } as React.CSSProperties}
+              onMouseEnter={() => setHoveredTool(tech.name)}
+              onMouseLeave={() => setHoveredTool(null)}
+              onClick={() => setSelectedSkillCategory(selectedSkillCategory === tech.category ? 'all' : tech.category)}
+              aria-label={`${tech.name} - ${tech.categoryTag}`}
+            >
+              <span className="tech-pill-icon-box" style={{ color: activeColor }}>
+                <ToolIcon size={16} aria-hidden="true" />
+              </span>
+              <span className="tech-pill-name">{tech.name}</span>
+            </button>
+          )
+        })}
+      </div>
 
-            <div className="skill-tags">
-              {skill.technologies.map((technology) => {
-                const TechnologyIcon = technology.icon
-                const tone = technologyToneMap[technology.name] ?? normalizeTechnologyName(technology.name)
-
-                return (
-                  <motion.span
-                    className={`technology-tag technology-${tone}`}
-                    key={technology.name}
-                    whileHover={prefersReducedMotion ? undefined : { y: -2.5, scale: 1.04 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <TechnologyIcon size={14} className="shrink-0" aria-hidden="true" />
-                    <span>{technology.name}</span>
-                  </motion.span>
-                )
-              })}
-            </div>
-          </motion.div>
-        )
-      })}
+      {/* Bottom Telemetry Footer Strip */}
+      <div className="tech-pills-footer">
+        {hoveredTool ? (
+          <div className="tech-footer-active">
+            <span className="tech-footer-dot" />
+            <span className="font-mono text-zinc-400 text-xs uppercase tracking-wider">ACTIVE TOOL:</span>
+            <span className="text-white font-semibold text-xs">{hoveredTool}</span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-cyan-400 text-xs">
+              {allFlatTechnologies.find((t) => t.name === hoveredTool)?.categoryTag}
+            </span>
+            <span className="text-zinc-600 hidden sm:inline">•</span>
+            <span className="text-zinc-400 text-xs hidden sm:inline">
+              {allFlatTechnologies.find((t) => t.name === hoveredTool)?.description}
+            </span>
+          </div>
+        ) : selectedSkillCategory !== 'all' ? (
+          <div className="tech-footer-active">
+            <span className="tech-footer-dot" />
+            <span className="font-mono text-zinc-400 text-xs uppercase tracking-wider">FILTER:</span>
+            <span className="text-white font-semibold text-xs">{selectedSkillCategory}</span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-cyan-400 text-xs">
+              {allFlatTechnologies.filter((t) => t.category === selectedSkillCategory).length} tools
+            </span>
+            <span className="text-zinc-600 hidden sm:inline">•</span>
+            <span className="text-zinc-400 text-xs hidden sm:inline">
+              {displayedSkills.find((s) => s.name === selectedSkillCategory)?.description}
+            </span>
+          </div>
+        ) : (
+          <div className="tech-footer-idle">
+            <span className="text-cyan-400 text-xs">✦</span>
+            <span className="text-zinc-400 text-xs">
+              Production Engineering Stack ({allFlatTechnologies.length} core technologies) • Click any category or hover to inspect
+            </span>
+          </div>
+        )}
+      </div>
     </motion.div>
   </div>
-</section>
+        </section>
 
+        <CosmicHorizonDivider theme="projects" />
 
         <section
           id="projects"
-          className="projects-section scroll-mt-24 border-t border-white/6 py-20 sm:py-24"
+          className="projects-section scroll-mt-24 py-20 sm:py-24"
         >
           <div className="portfolio-container">
             <motion.div
@@ -2049,7 +2261,10 @@ function Home() {
             >
               <div className="section-heading">
                 <p className="section-label">03 / SELECTED WORK</p>
-                <h2>Selected projects, thoughtfully built.</h2>
+                <h2>
+                  Selected projects,{' '}
+                  <span className="projects-headline-accent">thoughtfully built.</span>
+                </h2>
                 <p className="section-summary">
                   A selection of software projects spanning product experiences, practical systems, and emerging technology.
                 </p>
@@ -2059,73 +2274,305 @@ function Home() {
               </span>
             </motion.div>
 
-            <motion.div
-              className="projects-grid"
-              variants={sectionStagger}
-              initial={false}
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
-            >
-              {!projectsLoading && !projectsError && projects.map((project) => (
-                <motion.article
-                  key={project.id}
-                  variants={sectionReveal}
-                  className="project-card"
-                  whileHover={prefersReducedMotion ? undefined : { y: -6 }}
-                  transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            {!projectsLoading && !projectsError && projects.length > 0 && (
+              <motion.div
+                className="projects-carousel-wrapper"
+                variants={sectionReveal}
+                initial={false}
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.1 }}
+              >
+                {/* Floating Left Navigation Arrow */}
+                {projects.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handlePrevProject}
+                    className="projects-stage-arrow projects-stage-prev"
+                    aria-label="Previous project slide"
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                )}
+
+                {/* 3D Stage with Touch / Drag Gestures */}
+                <motion.div
+                  className="projects-carousel-stage"
+                  drag={projects.length > 1 ? 'x' : false}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.16}
+                  onDragEnd={(_e, info) => {
+                    if (info.offset.x < -45 || info.velocity.x < -250) {
+                      handleNextProject()
+                    } else if (info.offset.x > 45 || info.velocity.x > 250) {
+                      handlePrevProject()
+                    }
+                  }}
                 >
-                  <div className="project-card-media">
-                    {project.imageUrl && !brokenProjectImages.includes(project.imageUrl) ? (
-                      <img
-                        src={project.imageUrl}
-                        alt={`${project.name} project preview`}
-                        className="project-card-image"
-                        loading="lazy"
-                        onError={() => markProjectImageAsBroken(project.imageUrl)}
-                      />
-                    ) : (
-                      <div className={`project-card-fallback bg-linear-to-br ${project.color}`}>
-                        <Code2 size={30} aria-hidden="true" />
-                        <span>Project preview</span>
-                      </div>
-                    )}
-                    <span className="project-card-number">{project.number}</span>
-                    {project.category && <span className="project-card-category">{project.category}</span>}
-                  </div>
+                  {projects.map((project, index) => {
+                    const count = projects.length
+                    let offset = index - activeProjectIndex
+                    if (count > 2) {
+                      if (offset > count / 2) offset -= count
+                      if (offset < -count / 2) offset += count
+                    }
+                    const isActive = offset === 0
+                    const isVisible = Math.abs(offset) <= 1 || count <= 2
 
-                  <div className="project-card-body">
-                    <h3>{project.name}</h3>
-                    {project.summary && <p>{project.summary}</p>}
-                    <div className="project-stack" aria-label={`${project.name} technology stack`}>
-                      {project.stack.map((technology) => <span key={technology}>{technology}</span>)}
-                    </div>
-                    <div className="project-card-actions">
-                      <Link to={`/projects/${project.slug}`} onClick={saveScrollPosition} className="project-details-link">
-                        View details <ArrowUpRight size={15} />
-                      </Link>
-                      <div className="project-card-quick-actions">
-                        {project.demoVideo && (
-                          <Link to={`/projects/${project.slug}#demo`} onClick={saveScrollPosition} className="project-quick-action">
-                            <PlayCircle size={15} /> Watch demo
-                          </Link>
-                        )}
-                        {project.github && (
-                          <a href={project.github} target="_blank" rel="noreferrer" className="project-quick-action" aria-label={`Open ${project.name} repository`}>
-                            <FaGithub size={15} /> Source
-                          </a>
-                        )}
-                        {project.liveUrl && (
-                          <a href={project.liveUrl} target="_blank" rel="noreferrer" className="project-quick-action" aria-label={`Open ${project.name} live application`}>
-                            <ExternalLink size={15} /> Live
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </motion.article>
-              ))}
+                    // Horizontal-first then Move-Up levitation animation
+                    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+                    const cardStepX = isMobile ? 190 : 250
 
-            </motion.div>
+                    const animationProps = prefersReducedMotion
+                      ? {
+                          x: offset === 0 ? 0 : offset > 0 ? 250 : -250,
+                          y: 0,
+                          scale: 1,
+                          opacity: offset === 0 ? 1 : 0,
+                          rotateY: 0,
+                          zIndex: offset === 0 ? 20 : 1,
+                        }
+                      : offset === 0
+                      ? {
+                          x: 0,
+                          y: -20, // Clean, steady elevation
+                          scale: 1, // Steady scale - zero zoom glitch
+                          rotateY: 0,
+                          opacity: 1,
+                          zIndex: 20,
+                        }
+                      : offset === -1
+                      ? {
+                          x: -cardStepX,
+                          y: 8,
+                          scale: 0.94,
+                          rotateY: 5,
+                          opacity: isMobile ? 0.3 : 0.55,
+                          zIndex: 10,
+                        }
+                      : offset === 1
+                      ? {
+                          x: cardStepX,
+                          y: 8,
+                          scale: 0.94,
+                          rotateY: -5,
+                          opacity: isMobile ? 0.3 : 0.55,
+                          zIndex: 10,
+                        }
+                      : {
+                          x: offset < 0 ? -cardStepX * 1.8 : cardStepX * 1.8,
+                          y: 12,
+                          scale: 0.9,
+                          rotateY: offset < 0 ? 10 : -10,
+                          opacity: 0,
+                          zIndex: 1,
+                        }
+
+                    // Spotify-grade fluid easing curve - pure single-stage momentum
+                    const transitionProps = prefersReducedMotion
+                      ? { duration: 0.25 }
+                      : {
+                          duration: 0.46,
+                          ease: [0.25, 1, 0.5, 1] as const,
+                        }
+
+                    if (!isVisible && Math.abs(offset) > 2) return null
+
+                    return (
+                      <motion.div
+                        key={project.id}
+                        className={`projects-carousel-card-wrapper ${isActive ? 'is-active' : ''}`}
+                        animate={animationProps}
+                        transition={transitionProps}
+                        whileHover={
+                          isActive && !prefersReducedMotion
+                            ? { y: -24, transition: { duration: 0.2, ease: 'easeOut' } }
+                            : undefined
+                        }
+                        onClick={() => {
+                          if (!isActive) {
+                            setActiveProjectIndex(index)
+                          }
+                        }}
+                      >
+                        {isActive && <div className="projects-carousel-ambient-glow" aria-hidden="true" />}
+                        <article className="project-poster-card">
+                          {/* Dedicated Top Visual Preview Window (50% height) */}
+                          <div className="project-poster-media-window">
+                            {project.imageUrl && !brokenProjectImages.includes(project.imageUrl) ? (
+                              <img
+                                src={project.imageUrl}
+                                alt={`${project.name} project preview`}
+                                className="project-poster-image"
+                                loading="lazy"
+                                onError={() => markProjectImageAsBroken(project.imageUrl)}
+                              />
+                            ) : (
+                              <div className={`project-poster-fallback bg-linear-to-br ${project.color}`}>
+                                <Code2 size={32} aria-hidden="true" />
+                                <span>{project.name}</span>
+                              </div>
+                            )}
+
+                            {/* Floating Header Badges */}
+                            <div className="project-poster-header">
+                              <span className="project-poster-number">{project.number}</span>
+                              {project.category && (
+                                <span className="project-poster-category">{project.category}</span>
+                              )}
+                            </div>
+
+                            <div className="project-poster-bottom-gradient" />
+                          </div>
+
+                          {/* Bottom Editorial Glass Body (50% height) */}
+                          <div className="project-poster-body">
+                            <div className="project-poster-title-row">
+                              <h3 className="project-poster-title">{project.name}</h3>
+                              {!isActive && (
+                                <span className="project-poster-side-hint">View</span>
+                              )}
+                            </div>
+
+                            {isActive ? (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.22 }}
+                                className="project-poster-active-content"
+                              >
+                                {project.summary && (
+                                  <p className="project-poster-desc">{project.summary}</p>
+                                )}
+
+                                {project.stack && project.stack.length > 0 && (
+                                  <div className="project-poster-tags" aria-label={`${project.name} tech stack`}>
+                                    {project.stack.slice(0, 3).map((technology) => (
+                                      <span key={technology} className="project-poster-tag">
+                                        {technology}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Action row: Details + circular icons */}
+                                <div className="project-poster-actions">
+                                  <Link
+                                    to={`/projects/${project.slug}`}
+                                    onClick={saveScrollPosition}
+                                    className="project-poster-details-btn"
+                                    title="View Details"
+                                  >
+                                    <span>View details</span>
+                                    <ArrowUpRight size={13} />
+                                  </Link>
+
+                                  <div className="project-poster-icon-group">
+                                    {project.liveUrl && (
+                                      <a
+                                        href={project.liveUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="project-circle-btn"
+                                        aria-label={`Open ${project.name} live application`}
+                                        title="Live Application"
+                                      >
+                                        <ExternalLink size={13} />
+                                      </a>
+                                    )}
+
+                                    {project.github && (
+                                      <a
+                                        href={project.github}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="project-circle-btn"
+                                        aria-label={`Open ${project.name} repository`}
+                                        title="Source Code"
+                                      >
+                                        <FaGithub size={13} />
+                                      </a>
+                                    )}
+
+                                    {project.demoVideo && (
+                                      <Link
+                                        to={`/projects/${project.slug}#demo`}
+                                        onClick={saveScrollPosition}
+                                        className="project-circle-btn"
+                                        aria-label={`Watch ${project.name} demo`}
+                                        title="Watch Demo"
+                                      >
+                                        <PlayCircle size={13} />
+                                      </Link>
+                                    )}
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ) : (
+                              <p className="project-poster-side-role">
+                                {project.category || 'FEATURED WORK'}
+                              </p>
+                            )}
+                          </div>
+                        </article>
+                      </motion.div>
+                    )
+                  })}
+                </motion.div>
+
+                {/* Floating Right Navigation Arrow */}
+                {projects.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleNextProject}
+                    className="projects-stage-arrow projects-stage-next"
+                    aria-label="Next project slide"
+                  >
+                    <ChevronRight size={22} />
+                  </button>
+                )}
+
+                {/* Bottom Interactive Controls & Dots */}
+                {projects.length > 1 && (
+                  <div className="projects-carousel-controls">
+                    <button
+                      type="button"
+                      onClick={handlePrevProject}
+                      className="projects-control-arrow-btn"
+                      aria-label="Previous project"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+
+                    <div className="projects-carousel-dots" role="tablist" aria-label="Project slide navigation">
+                      {projects.map((p, idx) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={idx === activeProjectIndex}
+                          aria-label={`Jump to project ${idx + 1}: ${p.name}`}
+                          onClick={() => setActiveProjectIndex(idx)}
+                          className={`projects-carousel-dot ${idx === activeProjectIndex ? 'is-active' : ''}`}
+                        />
+                      ))}
+                    </div>
+
+                    <span className="projects-carousel-counter">
+                      {String(activeProjectIndex + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={handleNextProject}
+                      className="projects-control-arrow-btn"
+                      aria-label="Next project"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {projectsLoading && (
               <p className="mt-8 text-sm text-zinc-400">
@@ -2150,9 +2597,11 @@ function Home() {
           </div>
         </section>
 
+        <CosmicHorizonDivider theme="contact" />
+
         <section
           id="contact"
-          className="contact-section scroll-mt-24 border-t border-white/6 py-20 sm:py-28"
+          className="contact-section scroll-mt-24 py-20 sm:py-28"
         >
           <div className="portfolio-container">
             <motion.div
@@ -2165,7 +2614,10 @@ function Home() {
               {/* Left Column: Heading & Description */}
               <motion.div className="contact-editorial-col" variants={sectionReveal}>
                 <p className="section-label">04 / CONTACT</p>
-                <h2 className="contact-editorial-title">Let&apos;s build something with intention.</h2>
+                <h2 className="contact-editorial-title">
+                  Let&apos;s build something{' '}
+                  <span className="contact-headline-accent">with intention.</span>
+                </h2>
                 <p className="contact-editorial-desc">
                   I&apos;m open to meaningful conversations with recruiters, engineering teams, and collaborators who value thoughtful software.
                 </p>
@@ -2179,7 +2631,6 @@ function Home() {
                       <Send size={14} className="text-violet-400" />
                       <span>Send a Message</span>
                     </div>
-                    <span className="contact-response-badge">Direct to Inbox</span>
                   </div>
 
                   <form
@@ -2273,83 +2724,119 @@ function Home() {
         </section>
       </main>
 
+      <CosmicHorizonDivider theme="footer" />
+
       <footer className="portfolio-footer">
         <div className="footer-glow-bar" aria-hidden="true" />
-        <div className="portfolio-container flex flex-col lg:flex-row lg:items-start lg:justify-between gap-10">
-          <div className="footer-brand max-w-md">
-            <a href="#home" className="footer-brand-title">
-              <span>{profile?.full_name || "Richard D'Souza"}</span>
-              <span className="footer-brand-dot" aria-hidden="true" />
-            </a>
-            <p className="footer-brand-tagline">
-              {profile?.professional_title || 'Software Developer'} • Engineering scalable web applications with clean code & modern architecture.
-            </p>
+        
+        <div className="portfolio-container footer-body-wrapper">
+          {/* Top Row: Brand on Left, Connect on Right */}
+          <div className="footer-top-row">
+            {/* Brand Block */}
+            <div className="footer-brand-block">
+              <div className="footer-brand-header">
+                <a href="#home" className="footer-brand-title group">
+                  <span className="footer-brand-monogram">RD</span>
+                  <span className="footer-brand-name">{profile?.full_name || "Richard D'Souza"}</span>
+                  <span className="footer-brand-dot" aria-hidden="true" />
+                </a>
+              </div>
+
+              <p className="footer-brand-tagline">
+                <span className="footer-tagline-role">{profile?.professional_title || 'Software Developer'}</span>
+                <span className="footer-tagline-bullet" aria-hidden="true">•</span>
+                Focused on building reliable web applications with{' '}
+                <span className="footer-tagline-accent">clean code and modern architecture.</span>
+              </p>
+            </div>
+
+            {/* Connect Block */}
+            <div className="footer-connect-block">
+              <p className="footer-section-heading">Connect & Opportunities</p>
+
+              <div className="footer-action-stack">
+                <Link to="/request-resume" onClick={saveScrollPosition} className="footer-resume-btn group">
+                  <span>Request Resume</span>
+                  <ArrowUpRight size={14} className="footer-resume-icon" aria-hidden="true" />
+                </Link>
+
+                <div className="footer-social-row">
+                  <a
+                    href={profile?.github_url || 'https://github.com/aestheticwolf'}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="GitHub Profile"
+                    className="footer-social-pill"
+                    title="GitHub"
+                  >
+                    <FaGithub size={15} aria-hidden="true" />
+                    <span>GitHub</span>
+                  </a>
+
+                  <a
+                    href={profile?.linkedin_url || 'https://www.linkedin.com/'}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="LinkedIn Profile"
+                    className="footer-social-pill"
+                    title="LinkedIn"
+                  >
+                    <FaLinkedinIn size={14} aria-hidden="true" />
+                    <span>LinkedIn</span>
+                  </a>
+
+                  <a
+                    href="mailto:rich.dsz1997@gmail.com"
+                    className="footer-social-pill"
+                    title="Send Email"
+                    aria-label="Send direct email"
+                  >
+                    <Send size={13} aria-hidden="true" />
+                    <span>Email</span>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="footer-right-cluster">
-            <nav className="footer-nav" aria-label="Footer navigation">
+          {/* Navigation Rail: Sleek Horizontal Interactive Glass Pills */}
+          <div className="footer-nav-rail">
+            <div className="footer-nav-label-group">
+              <span className="footer-nav-label">Navigation</span>
+            </div>
+            <nav className="footer-nav-links-row" aria-label="Footer navigation">
               {navigation.map((item) => (
-                <a key={item.label} href={item.href} className="footer-nav-link">
-                  {item.label}
+                <a key={item.label} href={item.href} className="footer-nav-pill">
+                  <span>{item.label}</span>
                 </a>
               ))}
             </nav>
-
-            <div className="footer-actions">
-              <Link to="/request-resume" onClick={saveScrollPosition} className="footer-resume-btn">
-                <span>Request Resume</span>
-                <ArrowUpRight size={13} aria-hidden="true" />
-              </Link>
-              <a
-                href={profile?.github_url || 'https://github.com/aestheticwolf'}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="GitHub Profile"
-                className="footer-social-btn"
-                title="GitHub"
-              >
-                <FaGithub size={16} aria-hidden="true" />
-                <span className="footer-social-label">GitHub</span>
-              </a>
-              <a
-                href={profile?.linkedin_url || 'https://www.linkedin.com/'}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="LinkedIn Profile"
-                className="footer-social-btn"
-                title="LinkedIn"
-              >
-                <FaLinkedinIn size={15} aria-hidden="true" />
-                <span className="footer-social-label">LinkedIn</span>
-              </a>
-            </div>
           </div>
-        </div>
-        <div className="footer-bottom portfolio-container mt-10">
-          <p className="footer-copyright">
-            © {new Date().getFullYear()} {profile?.full_name || "Richard D'Souza"}. Handcrafted with modern web tech.
-          </p>
-          <a
-            href="#home"
-            className="footer-back-to-top"
-            onClick={(e) => {
-              e.preventDefault()
-              window.scrollTo({
-                top: 0,
-                left: 0,
-                behavior: prefersReducedMotion ? 'auto' : 'smooth',
-              })
-              if (document.documentElement.scrollLeft !== 0) {
-                document.documentElement.scrollLeft = 0
-              }
-              if (document.body.scrollLeft !== 0) {
-                document.body.scrollLeft = 0
-              }
-            }}
-          >
-            <span>Back to top</span>
-            <ArrowUp size={13} className="footer-back-icon" aria-hidden="true" />
-          </a>
+
+          {/* Footer Bottom Colophon */}
+          <div className="footer-bottom-divider" aria-hidden="true" />
+          <div className="footer-bottom-content">
+            <p className="footer-copyright">
+              © {new Date().getFullYear()}{' '}
+              <span className="footer-copyright-name">{profile?.full_name || "Richard D'Souza"}</span>. All rights reserved.
+            </p>
+
+            <a
+              href="#home"
+              className="footer-back-to-top group"
+              onClick={(e) => {
+                e.preventDefault()
+                const target = e.currentTarget
+                target.classList.add('is-launching')
+                smoothScrollToTop(() => {
+                  target.classList.remove('is-launching')
+                })
+              }}
+            >
+              <span>Back to top</span>
+              <ArrowUp size={13} className="footer-back-icon" aria-hidden="true" />
+            </a>
+          </div>
         </div>
       </footer>
     </div>

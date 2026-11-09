@@ -73,7 +73,7 @@ export async function getPublishedProjects(): Promise<PortfolioProject[]> {
   'id, slug, title, category, short_description, description, tech_stack, live_url, github_url, image_url, gallery_images, features, demo_video_url, sort_order',
 )
     .eq('status', 'published')
-    .order('sort_order', { ascending: true })
+    .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
 
   if (error) {
