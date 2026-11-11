@@ -9309,7 +9309,121 @@ main,
   .projects-section::after { animation: none; }
 }
 
-/* Stage one: align the hero to the full desktop canvas without changing its data flow. */
+/* Hero responsive side-by-side layout across all screen sizes */
+.hero-section > div {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr) !important;
+  column-gap: clamp(0.75rem, 2.5vw, 2.5rem) !important;
+  align-items: center !important;
+}
+
+@media (max-width: 639px) {
+  .hero-section > div {
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, 0.84fr) !important;
+    column-gap: 0.65rem !important;
+    padding-top: 4.75rem !important;
+    padding-bottom: 2rem !important;
+    align-items: center !important;
+  }
+  .hero-copy {
+    max-width: 100% !important;
+    padding-right: 0.15rem !important;
+  }
+  .hero-visual {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-top: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+  .hero-morph-wrapper {
+    margin-top: 0 !important;
+    min-height: auto !important;
+  }
+  .hero-kicker {
+    font-size: 0.62rem !important;
+    letter-spacing: 0.14em !important;
+    margin-bottom: 0.15rem !important;
+  }
+  .hero-title {
+    font-size: clamp(1.08rem, 4.3vw, 1.38rem) !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.16 !important;
+    margin-top: 0.1rem !important;
+    margin-bottom: 0.25rem !important;
+    word-break: normal !important;
+  }
+  .hero-title-typing {
+    white-space: normal !important;
+  }
+  .hero-intro {
+    font-size: clamp(0.66rem, 2.25vw, 0.74rem) !important;
+    line-height: 1.38 !important;
+    margin-top: 0.35rem !important;
+    margin-bottom: 0.55rem !important;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    opacity: 0.85;
+  }
+  .hero-actions {
+    gap: 0.4rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .hero-primary-action {
+    padding: 0.38rem 0.8rem !important;
+    font-size: 0.72rem !important;
+    border-radius: 9999px !important;
+  }
+  .hero-meta {
+    margin-top: 0.5rem !important;
+    gap: 0.45rem !important;
+    flex-wrap: wrap !important;
+  }
+  .hero-social-link {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+  }
+  .hero-location {
+    font-size: 0.65rem !important;
+  }
+  .hero-scroll-cue {
+    display: none !important;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .hero-section > div {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr) !important;
+    column-gap: clamp(1.25rem, 3.5vw, 3rem) !important;
+    align-items: center !important;
+    padding-top: 5.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+  .hero-copy {
+    max-width: 32rem !important;
+  }
+  .hero-title {
+    font-size: clamp(1.85rem, 4vw, 2.5rem) !important;
+    line-height: 1.15 !important;
+  }
+  .hero-intro {
+    font-size: 0.88rem !important;
+    line-height: 1.55 !important;
+    margin-top: 0.65rem !important;
+    margin-bottom: 0.85rem !important;
+  }
+  .hero-visual {
+    width: 100% !important;
+    max-width: 25rem !important;
+    justify-self: center !important;
+    padding-top: 0 !important;
+  }
+}
+
 @media (min-width: 1024px) {
   .hero-section > div {
     grid-template-columns: minmax(0, 1.05fr) minmax(32rem, 0.95fr) !important;
@@ -9317,13 +9431,13 @@ main,
   }
 
   .hero-copy {
-    max-width: 36rem;
+    max-width: 36rem !important;
   }
 
   .hero-visual {
     width: min(100%, 34.5rem) !important;
-    justify-self: end;
-    margin-right: 0;
+    justify-self: end !important;
+    margin-right: 0 !important;
   }
 
   .hero-profile-card {
@@ -10714,10 +10828,12 @@ textarea {
   user-select: none;
 }
 
+.hero-mascot-frame,
 .hero-mascot-img {
   filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 25px rgba(6, 182, 212, 0.15));
 }
 
+[data-theme='light'] .hero-mascot-frame,
 [data-theme='light'] .hero-mascot-img {
   filter: drop-shadow(0 15px 30px rgba(15, 23, 42, 0.22)) drop-shadow(0 0 20px rgba(99, 102, 241, 0.12));
 }
@@ -10740,6 +10856,148 @@ textarea {
 
 [data-theme='light'] .hero-tech-badge span {
   color: #0f172a !important;
+}
+
+/* ==========================================================================
+   Hero Mascot Speech & Greeting Bubbles (Premium Frosted Glass Design)
+   ========================================================================== */
+.hero-speech-bubble {
+  white-space: nowrap !important;
+  background: rgba(15, 17, 28, 0.88) !important;
+  border: 1px solid rgba(167, 139, 250, 0.3) !important;
+  color: #f8fafc !important;
+  box-shadow:
+    0 12px 32px -4px rgba(0, 0, 0, 0.65),
+    0 0 20px rgba(167, 139, 250, 0.16),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+.hero-speech-bubble span,
+.hero-speech-bubble p {
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  white-space: nowrap !important;
+}
+.hero-speech-bubble .bubble-pointer {
+  background: #0f111c !important;
+  border-color: rgba(167, 139, 250, 0.3) !important;
+}
+.hero-speech-bubble button {
+  color: #94a3b8 !important;
+  transition: all 150ms ease !important;
+}
+.hero-speech-bubble button:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+@media (max-width: 639px) {
+  .hero-speech-bubble {
+    font-size: 0.68rem !important;
+    padding: 0.26rem 0.52rem !important;
+    gap: 0.3rem !important;
+    white-space: nowrap !important;
+  }
+  .hero-speech-bubble span {
+    font-size: 0.68rem !important;
+    white-space: nowrap !important;
+  }
+}
+
+.hero-greeting-bubble {
+  background: rgba(15, 17, 28, 0.82) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow:
+    0 10px 25px -4px rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(167, 139, 250, 0.14),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.hero-greeting-bubble:hover {
+  border-color: rgba(167, 139, 250, 0.4) !important;
+  box-shadow:
+    0 14px 30px -4px rgba(0, 0, 0, 0.7),
+    0 0 22px rgba(167, 139, 250, 0.22),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22) !important;
+}
+.hero-greeting-bubble span {
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+}
+.hero-greeting-bubble button {
+  color: #94a3b8 !important;
+  transition: all 150ms ease !important;
+}
+.hero-greeting-bubble button:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Light Mode / White Mode */
+[data-theme='light'] .hero-speech-bubble {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  box-shadow:
+    0 12px 28px -4px rgba(15, 23, 42, 0.1),
+    0 3px 8px -2px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+[data-theme='light'] .hero-speech-bubble span,
+[data-theme='light'] .hero-speech-bubble p {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+[data-theme='light'] .hero-speech-bubble .bubble-pointer {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+[data-theme='light'] .hero-speech-bubble button {
+  color: #64748b !important;
+  transition: all 150ms ease !important;
+}
+[data-theme='light'] .hero-speech-bubble button:hover {
+  color: #0f172a !important;
+  background: rgba(15, 23, 42, 0.08) !important;
+}
+
+[data-theme='light'] .hero-greeting-bubble {
+  background: rgba(255, 255, 255, 0.90) !important;
+  border: 1px solid rgba(15, 23, 42, 0.09) !important;
+  box-shadow:
+    0 10px 24px -4px rgba(15, 23, 42, 0.08),
+    0 2px 6px -1px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+[data-theme='light'] .hero-greeting-bubble:hover {
+  border-color: rgba(99, 102, 241, 0.35) !important;
+  box-shadow:
+    0 12px 28px -4px rgba(99, 102, 241, 0.12),
+    0 2px 6px -1px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
+}
+[data-theme='light'] .hero-greeting-bubble span {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+}
+[data-theme='light'] .hero-greeting-bubble button {
+  color: #64748b !important;
+  transition: all 150ms ease !important;
+}
+[data-theme='light'] .hero-greeting-bubble button:hover {
+  color: #0f172a !important;
+  background: rgba(15, 23, 42, 0.08) !important;
 }
 
 

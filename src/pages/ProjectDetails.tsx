@@ -108,7 +108,7 @@ export default function ProjectDetails() {
       }
     }
     return list
-  }, [project?.imageUrl, project?.galleryImages])
+  }, [project])
 
   const galleryImages = (project?.galleryImages ?? [])
     .filter((img): img is string => typeof img === 'string' && img.trim().length > 0)

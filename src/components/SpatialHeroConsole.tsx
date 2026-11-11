@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { motion, useMotionValue, useSpring, useTransform } from 'motion/react'
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'motion/react'
 import * as THREE from 'three'
-import { SiReact, SiTypescript, SiNodedotjs } from 'react-icons/si'
-import { Code2, Sparkles } from 'lucide-react'
+import { X } from 'lucide-react'
 import type { PublicProfile } from '../lib/profile'
 
 export interface SpatialHeroConsoleProps {
@@ -89,7 +88,6 @@ function initMascotConstellation(
   const particleGeo = new THREE.BufferGeometry()
   particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
 
-  // Restrained opacity so the mascot remains the visual hero
   const particleMat = new THREE.PointsMaterial({
     size: 1.6,
     map: particleTexture,
@@ -103,7 +101,7 @@ function initMascotConstellation(
   const pointsMesh = new THREE.Points(particleGeo, particleMat)
   scene.add(pointsMesh)
 
-  // Subtle ambient cyan dust
+  // Ambient cyan dust
   const dustCount = 24
   const dustPositions = new Float32Array(dustCount * 3)
   for (let i = 0; i < dustCount; i++) {
@@ -147,7 +145,6 @@ function initMascotConstellation(
   let camTargetY = 0
 
   const renderLoop = () => {
-    // Pause rendering entirely when outside viewport or reduced motion
     if (!isInViewRef.current) {
       animationFrameId = requestAnimationFrame(renderLoop)
       return
@@ -156,7 +153,6 @@ function initMascotConstellation(
     clock += 0.01
 
     if (!prefersReducedMotion && mouseRef.current.active) {
-      // Very restrained subtle camera shift
       camTargetX = mouseRef.current.x * 1.2
       camTargetY = mouseRef.current.y * 0.9
     } else {
@@ -239,6 +235,91 @@ function initMascotConstellation(
   }
 }
 
+/* ─── 4-Point Golden Star Sparkle SVG Matching Artwork ─── */
+function StarSparkle({ className = '', size = 16 }: { className?: string; size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M12 0C12 6.627 6.627 12 0 12C6.627 12 12 17.373 12 24C12 17.373 17.373 12 24 12C17.373 12 12 6.627 12 0Z" />
+    </svg>
+  )
+}
+
+/* ─── Neon Holographic Mini-Laptop SVG Matching Artwork ─── */
+function NeonHoloLaptop() {
+  return (
+    <svg
+      width="44"
+      height="38"
+      viewBox="0 0 44 38"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="drop-shadow-[0_0_12px_rgba(168,85,247,0.7)]"
+      aria-hidden="true"
+    >
+      {/* Laptop Screen (tilted perspective) */}
+      <path
+        d="M8 6C8 4.89543 8.89543 4 10 4H34C35.1046 4 36 4.89543 36 6V23H8V6Z"
+        fill="#120d2c"
+        fillOpacity="0.88"
+        stroke="#c084fc"
+        strokeWidth="1.6"
+      />
+      {/* Inner Screen Glow */}
+      <rect x="10.5" y="6.5" width="23" height="14" rx="1.5" fill="#1e103f" fillOpacity="0.9" />
+      {/* Code </> Symbol on Screen */}
+      <path
+        d="M17 11L14 13.5L17 16"
+        stroke="#38bdf8"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M27 11L30 13.5L27 16"
+        stroke="#38bdf8"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M23 10L21 17"
+        stroke="#c084fc"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      {/* Laptop Base (Perspective Keyboard deck) */}
+      <path
+        d="M4 25C4 23.8954 4.89543 23 6 23H38C39.1046 23 40 23.8954 40 25L42 30C42.4 31 41.6 32 40.5 32H3.5C2.4 32 1.6 31 2 30L4 25Z"
+        fill="#1a113a"
+        stroke="#a855f7"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      {/* Trackpad */}
+      <rect x="18" y="27" width="8" height="3" rx="0.75" fill="#a855f7" fillOpacity="0.5" />
+    </svg>
+  )
+}
+
+/* ─── Neon Code Badge Matching Artwork ─── */
+function NeonCodeBadge() {
+  return (
+    <div className="flex items-center justify-center w-10 h-8 sm:w-11 sm:h-9 rounded-xl bg-purple-950/75 border border-violet-400/40 backdrop-blur-md shadow-[0_4px_16px_rgba(0,0,0,0.5),0_0_12px_rgba(168,85,247,0.4)] text-violet-300">
+      <span className="font-mono text-xs sm:text-sm font-bold tracking-tight text-violet-200 drop-shadow-[0_0_6px_rgba(192,132,252,0.9)]">
+        &lt;/&gt;
+      </span>
+    </div>
+  )
+}
+
 export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
   prefersReducedMotion = false,
 }) => {
@@ -249,29 +330,36 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
 
   const [isHovered, setIsHovered] = useState(false)
   const [isInView, setIsInView] = useState(true)
-  const [isTouchDevice, setIsTouchDevice] = useState(false)
-  const [systemReducedMotion, setSystemReducedMotion] = useState(false)
+  const [isTouchDevice] = useState(() =>
+    typeof window !== 'undefined'
+      ? 'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        window.matchMedia('(pointer: coarse)').matches
+      : false
+  )
+  const [systemReducedMotion, setSystemReducedMotion] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      : false
+  )
 
-  // Detect touch device & system reduced motion preferences
+  // Character interactive animation states
+  const [isBlinking, setIsBlinking] = useState(false)
+  const [isWaving, setIsWaving] = useState(false)
+  const [showSpeechBubble, setShowSpeechBubble] = useState(false)
+  const [greetingDismissed, setGreetingDismissed] = useState(false)
+  const speechTimerRef = useRef<number | null>(null)
+
+  // Listen for system reduced motion and touch changes
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const checkTouch = () => {
-      const hasTouch =
-        'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0 ||
-        window.matchMedia('(pointer: coarse)').matches
-      setIsTouchDevice(hasTouch)
-    }
-
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setSystemReducedMotion(mediaQuery.matches)
 
     const handleMotionChange = (e: MediaQueryListEvent) => {
       setSystemReducedMotion(e.matches)
     }
 
-    checkTouch()
     mediaQuery.addEventListener('change', handleMotionChange)
     return () => mediaQuery.removeEventListener('change', handleMotionChange)
   }, [])
@@ -295,8 +383,91 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
   }, [])
 
   const motionDisabled = prefersReducedMotion || systemReducedMotion
+  const isAnimating = isInView && !motionDisabled
 
-  // Physics-based spring config: High damping + velvet softness (no sudden snaps or cartoonish bounce)
+  // 1. Natural Synchronized Blinking Loop (every 3.2s to 6.0s, lasts 150ms)
+  useEffect(() => {
+    if (!isAnimating) return
+
+    let timeoutId: number
+    let isMounted = true
+
+    const scheduleNextBlink = () => {
+      const interval = 3200 + Math.random() * 2800
+      timeoutId = window.setTimeout(() => {
+        if (!isMounted) return
+        setIsBlinking(true)
+        timeoutId = window.setTimeout(() => {
+          if (!isMounted) return
+          setIsBlinking(false)
+          scheduleNextBlink()
+        }, 150)
+      }, interval)
+    }
+
+    scheduleNextBlink()
+
+    return () => {
+      isMounted = false
+      clearTimeout(timeoutId)
+    }
+  }, [isAnimating])
+
+  // 2. Waving Trigger & Control
+  const triggerWave = useCallback(() => {
+    if (motionDisabled) return
+    setIsWaving(true)
+    window.setTimeout(() => {
+      setIsWaving(false)
+    }, 1450)
+  }, [motionDisabled])
+
+  // Initial greeting wave shortly after page load
+  useEffect(() => {
+    if (motionDisabled) return
+    const timer = window.setTimeout(() => {
+      triggerWave()
+    }, 650)
+    return () => clearTimeout(timer)
+  }, [motionDisabled, triggerWave])
+
+  // Periodic gentle wave while idle (every 9 to 13.5 seconds)
+  useEffect(() => {
+    if (!isAnimating) return
+
+    let timer: number
+    let isMounted = true
+
+    const scheduleNextWave = () => {
+      const delay = 9000 + Math.random() * 4500
+      timer = window.setTimeout(() => {
+        if (!isMounted) return
+        triggerWave()
+        scheduleNextWave()
+      }, delay)
+    }
+
+    scheduleNextWave()
+
+    return () => {
+      isMounted = false
+      clearTimeout(timer)
+    }
+  }, [isAnimating, triggerWave])
+
+  // Click interaction: Mascot waves and displays temporary speech bubble
+  const handleMascotClick = useCallback(() => {
+    triggerWave()
+    setShowSpeechBubble(true)
+    if (speechTimerRef.current) {
+      clearTimeout(speechTimerRef.current)
+    }
+    speechTimerRef.current = window.setTimeout(() => {
+      setShowSpeechBubble(false)
+    }, 4200)
+  }, [triggerWave])
+
+  // Physics-based spring config: High damping + velvet softness
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
 
@@ -310,7 +481,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
   const mascotX = useTransform(smoothMouseX, [-0.5, 0.5], [-5, 5])
   const mascotY = useTransform(smoothMouseY, [-0.5, 0.5], [-4, 4])
 
-  // Very subtle parallax for floating badges
+  // Subtle parallax for floating satellite accents
   const chipParallaxX1 = useTransform(smoothMouseX, [-0.5, 0.5], [6, -6])
   const chipParallaxY1 = useTransform(smoothMouseY, [-0.5, 0.5], [5, -5])
   const chipParallaxX2 = useTransform(smoothMouseX, [-0.5, 0.5], [-8, 8])
@@ -330,7 +501,6 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // Disable cursor tracking completely on touch devices, reduced motion, or when not in view
       if (motionDisabled || isTouchDevice || !isInView || !containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
       const nx = (e.clientX - rect.left) / rect.width - 0.5
@@ -356,9 +526,6 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
     }
   }, [isTouchDevice])
 
-  // Active animation state: pauses whenever outside viewport or when motion is reduced
-  const isAnimating = isInView && !motionDisabled
-
   return (
     <div
       ref={containerRef}
@@ -371,15 +538,14 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
       {/* 1. Subtle Three.js Ambient Constellation & Neural Canvas (Behind mascot) */}
       <canvas
         ref={canvasRef}
-        className="absolute -inset-10 sm:-inset-16 w-[calc(100%+5rem)] sm:w-[calc(100%+8rem)] h-[calc(100%+5rem)] sm:h-[calc(100%+8rem)] pointer-events-none z-0 opacity-55"
+        className="absolute -inset-4 sm:-inset-16 w-[calc(100%+2rem)] sm:w-[calc(100%+8rem)] h-[calc(100%+2rem)] sm:h-[calc(100%+8rem)] pointer-events-none z-0 opacity-55"
         aria-hidden="true"
       />
 
       {/* 2. Soft Ambient Halo & Subtle Orbital Accent */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-1">
-        {/* Restrained radial aura: soft framing that doesn't distract */}
         <div
-          className={`absolute w-72 h-72 sm:w-96 sm:h-96 md:w-116 md:h-116 rounded-full blur-3xl transition-opacity duration-1000 ${
+          className={`absolute w-36 h-36 xs:w-44 xs:h-44 sm:w-80 sm:h-80 md:w-116 md:h-116 rounded-full blur-2xl sm:blur-3xl transition-opacity duration-1000 ${
             isHovered ? 'opacity-55 scale-102' : 'opacity-40'
           }`}
           style={{
@@ -388,18 +554,16 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
           }}
         />
 
-        {/* Delicate Celestial Orbital Ring matching reference artwork */}
         <div
-          className="hero-mascot-orbital-ring absolute w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full border border-cyan-400/20 pointer-events-none transition-transform duration-1000"
+          className="hero-mascot-orbital-ring absolute w-32 h-32 xs:w-40 xs:h-40 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full border border-cyan-400/20 pointer-events-none transition-transform duration-1000"
           style={{
             boxShadow: '0 0 28px rgba(6, 182, 212, 0.14), inset 0 0 20px rgba(139, 92, 246, 0.10)',
             transform: 'rotate(-10deg)',
           }}
         />
 
-        {/* Secondary subtle violet ring */}
         <div
-          className="absolute w-56 h-56 sm:w-72 sm:h-72 md:w-88 md:h-88 rounded-full border border-violet-400/15 pointer-events-none"
+          className="absolute w-28 h-28 xs:w-36 xs:h-36 sm:w-60 sm:h-60 md:w-88 md:h-88 rounded-full border border-violet-400/15 pointer-events-none"
           style={{
             boxShadow: '0 0 20px rgba(139, 92, 246, 0.12)',
             transform: 'rotate(16deg)',
@@ -421,144 +585,196 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
         }}
         className="relative z-10 flex flex-col items-center justify-center cursor-default"
       >
-        {/* Floating Developer Satellite Badges - Restrained & Small */}
+        {/* Interactive Speech Bubble on Click */}
+        <AnimatePresence>
+          {showSpeechBubble && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 8 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+              className="hero-speech-bubble absolute -top-6 sm:top-2 md:top-3 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 z-40 flex items-center gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-2xl backdrop-blur-xl select-none cursor-pointer transition-colors duration-200 text-[11px] sm:text-sm whitespace-nowrap shadow-lg"
+              onClick={() => setShowSpeechBubble(false)}
+            >
+              <span className="text-xs sm:text-base shrink-0">👋</span>
+              <span className="text-[10.5px] sm:text-sm font-medium tracking-wide whitespace-nowrap">Hey! Welcome to my portfolio.</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowSpeechBubble(false)
+                }}
+                className="ml-0.5 sm:ml-1 p-0.5 rounded-md transition-colors shrink-0"
+                aria-label="Close speech bubble"
+              >
+                <X size={11} className="sm:w-3 sm:h-3" />
+              </button>
+              {/* Pointer triangle */}
+              <div className="bubble-pointer absolute -bottom-1.5 right-8 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Top-Left: Code Bracket Chip */}
+        {/* Dismissible / Interactive Greeting Bubble: "Hey, welcome! 👋" */}
+        <AnimatePresence>
+          {!greetingDismissed && !showSpeechBubble && (
+            <motion.div
+              initial={motionDisabled ? false : { opacity: 0, scale: 0.85, y: -6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: -6 }}
+              transition={{ duration: 0.45, delay: 0.2 }}
+              style={{
+                transform: 'translateZ(44px)',
+                x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
+                y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
+              }}
+              className="hero-greeting-bubble absolute -top-4 sm:top-2 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:-left-4 md:-left-5 z-30 flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-md cursor-pointer transition-transform hover:scale-104 active:scale-96 text-[10px] sm:text-xs whitespace-nowrap shadow-md"
+              onClick={handleMascotClick}
+              role="button"
+              tabIndex={0}
+              aria-label="Click to interact with mascot"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleMascotClick()
+                }
+              }}
+            >
+              <span className="text-[10px] sm:text-xs font-medium">Hey, welcome! 👋</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setGreetingDismissed(true)
+                }}
+                aria-label="Dismiss greeting"
+                className="ml-0.5 p-0.5 rounded-md transition-colors"
+              >
+                <X size={11} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Floating Neon Holographic Mini-Laptop Illustration (Matching Reference Art) */}
         <motion.div
           animate={
             isAnimating
               ? {
-                  y: [-3, 3, -3],
+                  y: [-4, 4, -4],
+                  rotate: [-3, 2, -3],
                 }
-              : { y: 0 }
-          }
-          transition={{
-            repeat: Infinity,
-            duration: 5.0,
-            ease: 'easeInOut',
-          }}
-          style={{
-            transform: 'translateZ(36px)',
-            x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
-            y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
-          }}
-          className="hero-tech-badge absolute top-8 sm:top-10 -left-3 sm:-left-10 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 border border-violet-400/30 backdrop-blur-md shadow-[0_8px_20px_rgba(0,0,0,0.45),0_0_15px_rgba(139,92,246,0.18)] text-violet-300 font-mono text-xs tracking-wider transition-all duration-300"
-        >
-          <Code2 size={14} className="text-violet-400 drop-shadow-[0_0_6px_rgba(168,85,247,0.7)]" />
-          <span className="font-semibold text-[11px] text-white/90">code</span>
-        </motion.div>
-
-        {/* Top-Right: React Chip */}
-        <motion.div
-          animate={
-            isAnimating
-              ? {
-                  y: [3.5, -3.5, 3.5],
-                }
-              : { y: 0 }
-          }
-          transition={{
-            repeat: Infinity,
-            duration: 5.4,
-            ease: 'easeInOut',
-            delay: 0.3,
-          }}
-          style={{
-            transform: 'translateZ(42px)',
-            x: motionDisabled || isTouchDevice ? 0 : chipParallaxX2,
-            y: motionDisabled || isTouchDevice ? 0 : chipParallaxY2,
-          }}
-          className="hero-tech-badge absolute top-10 sm:top-12 -right-3 sm:-right-10 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 border border-cyan-400/30 backdrop-blur-md shadow-[0_8px_20px_rgba(0,0,0,0.45),0_0_15px_rgba(6,182,212,0.18)] text-cyan-300 font-mono text-xs transition-all duration-300"
-        >
-          <SiReact
-            size={13}
-            className={`text-[#61dafb] drop-shadow-[0_0_6px_rgba(97,218,251,0.7)] ${
-              isAnimating ? 'animate-[spin_16s_linear_infinite]' : ''
-            }`}
-          />
-          <span className="font-semibold text-[11px] text-white/90">React</span>
-        </motion.div>
-
-        {/* Bottom-Left: Node.js Chip */}
-        <motion.div
-          animate={
-            isAnimating
-              ? {
-                  y: [3, -3, 3],
-                }
-              : { y: 0 }
+              : { y: 0, rotate: 0 }
           }
           transition={{
             repeat: Infinity,
             duration: 5.2,
             ease: 'easeInOut',
-            delay: 0.6,
           }}
           style={{
-            transform: 'translateZ(34px)',
+            transform: 'translateZ(38px)',
             x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
             y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
           }}
-          className="hero-tech-badge absolute bottom-4 sm:bottom-6 -left-3 sm:-left-9 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 border border-emerald-400/30 backdrop-blur-md shadow-[0_8px_20px_rgba(0,0,0,0.45),0_0_15px_rgba(16,185,129,0.18)] text-emerald-300 font-mono text-xs transition-all duration-300"
+          className="absolute top-5 sm:top-12 md:top-14 -left-2 sm:-left-3 md:-left-6 lg:-left-8 z-20 pointer-events-none select-none transition-transform duration-300 scale-65 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-right"
         >
-          <SiNodedotjs size={13} className="text-[#5fa04e] drop-shadow-[0_0_6px_rgba(95,160,78,0.7)]" />
-          <span className="font-semibold text-[11px] text-white/90">Node.js</span>
+          <NeonHoloLaptop />
         </motion.div>
 
-        {/* Bottom-Right: TypeScript Chip */}
+        {/* Floating Neon Code Badge (Matching Reference Art) */}
         <motion.div
           animate={
             isAnimating
               ? {
-                  y: [-3, 3, -3],
+                  y: [3.5, -3.5, 3.5],
+                  rotate: [2, -2, 2],
                 }
-              : { y: 0 }
+              : { y: 0, rotate: 0 }
           }
           transition={{
             repeat: Infinity,
             duration: 5.6,
             ease: 'easeInOut',
-            delay: 0.9,
+            delay: 0.4,
           }}
           style={{
-            transform: 'translateZ(38px)',
+            transform: 'translateZ(40px)',
             x: motionDisabled || isTouchDevice ? 0 : chipParallaxX2,
             y: motionDisabled || isTouchDevice ? 0 : chipParallaxY2,
           }}
-          className="hero-tech-badge absolute bottom-4 sm:bottom-6 -right-3 sm:-right-8 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 border border-blue-400/30 backdrop-blur-md shadow-[0_8px_20px_rgba(0,0,0,0.45),0_0_15px_rgba(59,130,246,0.18)] text-blue-300 font-mono text-xs transition-all duration-300"
+          className="absolute top-7 sm:top-14 md:top-16 -right-1 sm:right-0 md:right-1 lg:-right-3 z-20 pointer-events-none select-none transition-transform duration-300 scale-65 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-left"
         >
-          <SiTypescript size={12} className="text-[#3178c6] rounded-xs drop-shadow-[0_0_6px_rgba(49,120,198,0.7)]" />
-          <span className="font-semibold text-[11px] text-white/90">TypeScript</span>
+          <NeonCodeBadge />
         </motion.div>
 
-        {/* Decorative Golden Sparkle Accent */}
+        {/* Golden Sparkle 1: Top Right */}
         <motion.div
           animate={
             isAnimating
               ? {
-                  scale: [0.92, 1.08, 0.92],
-                  opacity: [0.65, 0.95, 0.65],
+                  scale: [0.85, 1.25, 0.85],
+                  opacity: [0.65, 1, 0.65],
                 }
               : { scale: 1, opacity: 0.8 }
           }
           transition={{
             repeat: Infinity,
-            duration: 3.5,
+            duration: 3.2,
             ease: 'easeInOut',
           }}
-          className="absolute -top-2 right-10 sm:right-14 z-20 pointer-events-none text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.7)]"
+          className="absolute -top-1 sm:-top-2 right-3 sm:right-6 md:right-10 z-20 pointer-events-none text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.85)] scale-75 sm:scale-90 md:scale-100"
         >
-          <Sparkles size={15} />
+          <StarSparkle size={18} />
         </motion.div>
 
-        {/* 4. Mascot Image: Calm 5.2s Floating Cycle, Subtle 10px Vertical Travel, Rigid Undistorted Face */}
+        {/* Golden Sparkle 2: Top Left */}
         <motion.div
           animate={
             isAnimating
               ? {
-                  // Exactly 10px total vertical travel [-5px to +5px], gentle 5.2s sine cycle
+                  scale: [1.15, 0.8, 1.15],
+                  opacity: [0.9, 0.5, 0.9],
+                }
+              : { scale: 1, opacity: 0.7 }
+          }
+          transition={{
+            repeat: Infinity,
+            duration: 3.8,
+            ease: 'easeInOut',
+            delay: 0.7,
+          }}
+          className="absolute top-4 sm:top-8 left-1 sm:left-4 md:left-6 z-20 pointer-events-none text-amber-300 drop-shadow-[0_0_6px_rgba(252,211,77,0.7)] scale-75 sm:scale-90 md:scale-100"
+        >
+          <StarSparkle size={12} />
+        </motion.div>
+
+        {/* Cyan Sparkle 3: Bottom Right */}
+        <motion.div
+          animate={
+            isAnimating
+              ? {
+                  scale: [0.9, 1.2, 0.9],
+                  opacity: [0.6, 0.95, 0.6],
+                }
+              : { scale: 1, opacity: 0.7 }
+          }
+          transition={{
+            repeat: Infinity,
+            duration: 4.2,
+            ease: 'easeInOut',
+            delay: 1.2,
+          }}
+          className="absolute bottom-8 sm:bottom-16 right-0 sm:right-1 md:right-2 lg:-right-2 z-20 pointer-events-none text-cyan-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)] scale-75 sm:scale-90 md:scale-100"
+        >
+          <StarSparkle size={14} />
+        </motion.div>
+
+        {/* 4. Mascot Composition: Calm Floating Cycle, Rigid Undistorted Face, Natural Waving Hand & Blinking Eyes */}
+        <motion.div
+          animate={
+            isAnimating
+              ? {
                   y: [-5, 5, -5],
-                  // Micro breathing pulse (strictly uniform scaling, perfectly preserving facial proportions)
                   scale: [1, 1.008, 1],
                 }
               : { y: 0, scale: 1 }
@@ -568,26 +784,143 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
             duration: 5.2,
             ease: 'easeInOut',
           }}
-          className="relative z-10 flex flex-col items-center justify-center"
+          className="relative z-10 flex flex-col items-center justify-center cursor-pointer group"
           style={{ transform: 'translateZ(18px)' }}
+          onClick={handleMascotClick}
+          role="button"
+          tabIndex={0}
+          aria-label="Say hello to Richard's chibi mascot"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleMascotClick()
+            }
+          }}
         >
-          <picture className="block">
-            <source srcSet="/images/chibi-richard-waving.webp" type="image/webp" />
-            <img
-              src="/images/chibi-richard-waving.png"
-              alt="Richard - 3D Chibi Developer Mascot"
-              className="hero-mascot-img w-70 sm:w-85 md:w-95 lg:w-102.5 h-auto object-contain select-none pointer-events-none transition-transform duration-300"
-              loading="eager"
-              decoding="async"
-              width={721}
-              height={1018}
-            />
-          </picture>
+          {/* Mascot Frame: Unified drop-shadow across body, waving hand, and sleeve cuff */}
+          <div className="hero-mascot-frame relative w-34.5 xs:w-39.5 sm:w-62.5 md:w-77.5 lg:w-97.5 xl:w-102.5 h-auto transition-transform duration-300 group-hover:scale-101">
+            {/* Base Body - Open Eyes */}
+            <picture className="block w-full h-auto">
+              <source srcSet="/images/chibi-body.webp" type="image/webp" />
+              <img
+                src="/images/chibi-body.png"
+                alt="Richard - 3D Chibi Developer Mascot"
+                className="w-full h-auto object-contain select-none pointer-events-none"
+                loading="eager"
+                decoding="async"
+                width={721}
+                height={1018}
+              />
+            </picture>
+
+            {/* Closed Eyelids Overlay (Blink): Isolated 236x81px patch over eyes (7KB) - zero full-body reload, zero character flash */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '29.820%',
+                top: '31.631%',
+                width: '32.732%',
+                height: '7.957%',
+                zIndex: 22,
+                pointerEvents: 'none',
+                opacity: isBlinking ? 1 : 0,
+                transition: 'opacity 40ms ease-out',
+              }}
+              aria-hidden="true"
+              className="select-none"
+            >
+              <picture className="w-full h-full block">
+                <source srcSet="/images/chibi-eyes-blink.webp" type="image/webp" />
+                <img
+                  src="/images/chibi-eyes-blink.png"
+                  alt=""
+                  className="w-full h-full object-contain pointer-events-none select-none"
+                  draggable={false}
+                  loading="eager"
+                  decoding="async"
+                  width={236}
+                  height={81}
+                />
+              </picture>
+            </div>
+
+            {/* Hand Layer: Natural Hand Wave from the Wrist */}
+            <motion.div
+              style={{
+                position: 'absolute',
+                left: '1.664%',
+                top: '48.919%',
+                width: '26.491%',
+                height: '18.369%',
+                transformOrigin: '50.3% 99.5%',
+                zIndex: 20,
+              }}
+              animate={
+                isWaving && !motionDisabled
+                  ? {
+                      rotate: [0, -7, 6, -6, 5, -3, 0],
+                    }
+                  : {
+                      rotate: isHovered && !motionDisabled ? -3 : 0,
+                    }
+              }
+              transition={
+                isWaving && !motionDisabled
+                  ? {
+                      duration: 1.35,
+                      ease: 'easeInOut',
+                    }
+                  : {
+                      duration: 0.35,
+                      ease: 'easeOut',
+                    }
+              }
+              className="pointer-events-none select-none"
+            >
+              <picture className="w-full h-full block">
+                <source srcSet="/images/chibi-hand.webp" type="image/webp" />
+                <img
+                  src="/images/chibi-hand.png"
+                  alt=""
+                  className="w-full h-full object-contain pointer-events-none select-none"
+                  draggable={false}
+                  width={191}
+                  height={187}
+                />
+              </picture>
+            </motion.div>
+
+            {/* Sleeve Collar Overlay: Covers wrist pivot so rotation looks 100% inside sleeve */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '6.241%',
+                top: '66.012%',
+                width: '20.804%',
+                height: '5.697%',
+                zIndex: 25,
+                pointerEvents: 'none',
+              }}
+              className="select-none"
+            >
+              <picture className="w-full h-full block">
+                <source srcSet="/images/chibi-cuff.webp" type="image/webp" />
+                <img
+                  src="/images/chibi-cuff.png"
+                  alt=""
+                  className="w-full h-full object-contain pointer-events-none select-none"
+                  draggable={false}
+                  width={150}
+                  height={58}
+                />
+              </picture>
+            </div>
+          </div>
         </motion.div>
 
         {/* 5. Ambient Floor Shadow & Pedestal Glow */}
         <div
-          className="hero-mascot-pedestal w-56 sm:w-72 md:w-80 h-10 -mt-6 rounded-full blur-lg pointer-events-none relative z-5 transition-opacity duration-700"
+          className="hero-mascot-pedestal w-28 xs:w-34 sm:w-60 md:w-80 h-5 sm:h-10 -mt-2.5 sm:-mt-6 rounded-full blur-md sm:blur-lg pointer-events-none relative z-5 transition-opacity duration-700"
           style={{
             background:
               'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.38) 0%, rgba(139, 92, 246, 0.22) 45%, transparent 75%)',

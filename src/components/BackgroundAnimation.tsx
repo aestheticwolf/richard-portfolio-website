@@ -98,7 +98,7 @@ export default function BackgroundAnimation() {
 
     // Particles setup
     let particles: Particle[] = []
-    let pulses: Pulse[] = []
+    const pulses: Pulse[] = []
 
     const initParticles = () => {
       // Scale particle density with screen area (capped for optimal 60fps)

@@ -158,7 +158,7 @@ export async function getPublishedProfile(): Promise<PublicProfile | null> {
     updated_at: string
   }
 
-  let record: RawRecord | null = null
+  let record: RawRecord | null
 
   const { data, error } = await supabase
     .from('portfolio_profile')

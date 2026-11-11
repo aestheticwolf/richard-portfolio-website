@@ -27,7 +27,7 @@ export const CinematicSection: React.FC<CinematicSectionProps> = ({
   // --------------------------------------------------------------------------
   const { scrollYProgress: heroExitScroll } = useScroll({
     target: containerRef,
-    offset: ['start start', 'end start'] as any,
+    offset: ['start start', 'end start'],
   })
   const heroExitSmooth = useSpring(heroExitScroll, springConfig)
 
@@ -44,7 +44,7 @@ export const CinematicSection: React.FC<CinematicSectionProps> = ({
   // --------------------------------------------------------------------------
   const { scrollYProgress: footerEnterScroll } = useScroll({
     target: containerRef,
-    offset: ['start end', 'end end'] as any,
+    offset: ['start end', 'end end'],
   })
   const footerEnterSmooth = useSpring(footerEnterScroll, springConfig)
 
@@ -62,14 +62,14 @@ export const CinematicSection: React.FC<CinematicSectionProps> = ({
   // Entry tracking: triggers as top of section enters viewport until well into reading area
   const { scrollYProgress: sectionEnterScroll } = useScroll({
     target: containerRef,
-    offset: ['start end', 'start 20%'] as any,
+    offset: ['start end', 'start 20%'] as const,
   })
   const sectionEnterSmooth = useSpring(sectionEnterScroll, springConfig)
 
   // Exit tracking: triggers as bottom of section leaves viewport
   const { scrollYProgress: sectionExitScroll } = useScroll({
     target: containerRef,
-    offset: ['end 70%', 'end start'] as any,
+    offset: ['end 70%', 'end start'] as const,
   })
   const sectionExitSmooth = useSpring(sectionExitScroll, springConfig)
 
@@ -143,7 +143,7 @@ export const CinematicSection: React.FC<CinematicSectionProps> = ({
         filter: activeFilter,
         scale: activeScale,
         y: activeY,
-        pointerEvents: activePointerEvents as any,
+        pointerEvents: activePointerEvents as unknown as React.CSSProperties['pointerEvents'],
         willChange: 'transform, opacity, filter',
         transformOrigin: '50% 50%',
       }}

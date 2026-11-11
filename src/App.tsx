@@ -603,10 +603,11 @@ function Home() {
 
   const [contactStatusMessage, setContactStatusMessage] = useState('')
   const contactStatusTimerRef = useRef<number | null>(null)
-  const contactFormMountTimeRef = useRef<number>(Date.now())
+  const contactFormMountTimeRef = useRef<number>(0)
   const contactFormInteractTimeRef = useRef<number | null>(null)
 
   useEffect(() => {
+    contactFormMountTimeRef.current = Date.now()
     return () => {
       if (contactStatusTimerRef.current) {
         window.clearTimeout(contactStatusTimerRef.current)
@@ -650,7 +651,7 @@ function Home() {
         if (navEntries.length > 0) {
           return (navEntries[0] as PerformanceNavigationTiming).type === 'reload'
         }
-        return (performance as any)?.navigation?.type === 1
+        return (performance as unknown as { navigation?: { type?: number } })?.navigation?.type === 1
       } catch {
         return false
       }
@@ -759,6 +760,26 @@ function Home() {
     return rawSlides.map((slide) => {
       const accentIdx = slide.text.toLowerCase().indexOf(slide.accentWord.toLowerCase())
       const tokens: { char: string; isAccent: boolean }[] = []
+      const words = slide.text.split(' ')
+      let charCounter = 0
+
+      const wordTokens = words.map((word) => {
+        const wTokens: { char: string; isAccent: boolean }[] = []
+        for (let i = 0; i < word.length; i++) {
+          const char = word[i]
+          if (char === "'" && i + 1 < word.length && /[a-zA-Z]/.test(word[i + 1])) {
+            const combined = char + word[i + 1]
+            const isAccent = accentIdx !== -1 && (charCounter + i) >= accentIdx && (charCounter + i) < accentIdx + slide.accentWord.length
+            wTokens.push({ char: combined, isAccent })
+            i++
+            continue
+          }
+          const isAccent = accentIdx !== -1 && (charCounter + i) >= accentIdx && (charCounter + i) < accentIdx + slide.accentWord.length
+          wTokens.push({ char, isAccent })
+        }
+        charCounter += word.length + 1
+        return wTokens
+      })
 
       for (let i = 0; i < slide.text.length; i++) {
         const char = slide.text[i]
@@ -777,6 +798,7 @@ function Home() {
       return {
         ...slide,
         tokens,
+        wordTokens,
         fullText: slide.text,
       }
     })
@@ -836,12 +858,6 @@ function Home() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [projects.length])
-
-  useEffect(() => {
-    if (projects.length > 0 && activeProjectIndex >= projects.length) {
-      setActiveProjectIndex(0)
-    }
-  }, [projects.length, activeProjectIndex])
 
   const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -968,7 +984,7 @@ function Home() {
       category: string
       categoryTag: string
       accent: string
-      icon: any
+      icon: React.ElementType
       tone: string
       brandColor: string
       description?: string
@@ -1008,6 +1024,7 @@ function Home() {
 
         if (active) {
           setProjects(publishedProjects)
+          setActiveProjectIndex((prev) => (publishedProjects.length > 0 && prev >= publishedProjects.length ? 0 : prev))
         }
       } catch (error) {
         if (active) {
@@ -1204,7 +1221,7 @@ function Home() {
           type="hero"
           className="hero-section relative flex scroll-mt-20 items-center"
         >
-          <div className="portfolio-container relative grid w-full items-center gap-10 pb-10 pt-20 sm:pt-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+          <div className="portfolio-container hero-grid-layout relative grid w-full items-center gap-3 sm:gap-6 md:gap-10 lg:gap-14 pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-12">
             <motion.div
               className="hero-copy"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
@@ -1225,10 +1242,36 @@ function Home() {
                 >
                   <span
                     key={`title-typing-${heroSlideIndex}`}
-                    className="hero-title-typing"
+                    className="hero-title-typing flex flex-wrap items-baseline"
                     aria-hidden="true"
                   >
-                    {heroSlides[heroSlideIndex].tokens.map((token, index, arr) => (
+                    {heroSlides[heroSlideIndex].wordTokens?.map((wordTokens, wordIdx) => {
+                      let globalOffset = 0
+                      for (let w = 0; w < wordIdx; w++) {
+                        globalOffset += heroSlides[heroSlideIndex].wordTokens[w].length + 1
+                      }
+                      const totalTokens = heroSlides[heroSlideIndex].tokens.length
+                      return (
+                        <span key={`word-${heroSlideIndex}-${wordIdx}`} className="inline-flex whitespace-nowrap mr-[0.26em] last:mr-0">
+                          {wordTokens.map((token, tokenIdx) => {
+                            const absIndex = globalOffset + tokenIdx
+                            return (
+                              <span
+                                key={`char-${heroSlideIndex}-${absIndex}`}
+                                className={`hero-title-letter ${token.isAccent ? `hero-title-accent ${heroSlides[heroSlideIndex].accentClass}` : ''} ${heroSlideExiting ? 'hero-title-letter-exiting' : ''}`}
+                                style={{
+                                  animationDelay: heroSlideExiting
+                                    ? `${(totalTokens - 1 - absIndex) * 16}ms`
+                                    : `${absIndex * 52}ms`,
+                                }}
+                              >
+                                {token.char}
+                              </span>
+                            )
+                          })}
+                        </span>
+                      )
+                    }) || heroSlides[heroSlideIndex].tokens.map((token, index, arr) => (
                       <span
                         key={`char-${heroSlideIndex}-${index}`}
                         className={`hero-title-letter ${token.isAccent ? `hero-title-accent ${heroSlides[heroSlideIndex].accentClass}` : ''} ${heroSlideExiting ? 'hero-title-letter-exiting' : ''}`}

@@ -42,6 +42,11 @@ export const TiltCard3D: React.FC<TiltCard3DProps> = ({
     [-0.5, 0, 0.5],
     [0.6, 0.25, 0.6]
   )
+  const glintBackground = useTransform(
+    [glintX, glintY],
+    ([x, y]) =>
+      `radial-gradient(circle 380px at ${x} ${y}, rgba(255, 255, 255, 0.12), transparent 70%)`
+  )
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion) return
@@ -90,11 +95,7 @@ export const TiltCard3D: React.FC<TiltCard3DProps> = ({
           aria-hidden="true"
           style={{
             opacity: glintOpacity,
-            background: useTransform(
-              [glintX, glintY],
-              ([x, y]) =>
-                `radial-gradient(circle 380px at ${x} ${y}, rgba(255, 255, 255, 0.12), transparent 70%)`
-            ),
+            background: glintBackground,
           }}
         />
       )}
