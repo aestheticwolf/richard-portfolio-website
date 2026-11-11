@@ -22,6 +22,7 @@ import { FaGithub, FaLinkedinIn } from 'react-icons/fa'
 import ThemeToggle from '../components/ThemeToggle'
 import BackgroundAnimation from '../components/BackgroundAnimation'
 import CosmicHorizonDivider from '../components/CosmicHorizonDivider'
+import CinematicSection from '../components/CinematicSection'
 import { smoothScrollToTop } from '../lib/smoothScroll'
 
 import {
@@ -68,14 +69,6 @@ function getVideoEmbedUrl(url: string): string | null {
   }
 }
 
-const FOOTER_NAV = [
-  { label: 'Home', href: '/#home' },
-  { label: 'About', href: '/#about' },
-  { label: 'Skills', href: '/#skills' },
-  { label: 'Projects', href: '/#projects' },
-  { label: 'Contact', href: '/#contact' },
-]
-
 export default function ProjectDetails() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
@@ -83,11 +76,7 @@ export default function ProjectDetails() {
 
   function handleBackToProjects(e?: React.MouseEvent) {
     if (e) e.preventDefault()
-    if (window.history.length > 1) {
-      navigate(-1)
-    } else {
-      navigate('/#projects')
-    }
+    navigate('/#projects')
   }
 
   const [project, setProject] = useState<PortfolioProject | null>(null)
@@ -517,7 +506,7 @@ export default function ProjectDetails() {
         {galleryImages.length > 0 && (
           <>
             <CosmicHorizonDivider theme="skills" className="my-8 sm:my-14" />
-            <section className="project-gallery mt-6 sm:mt-10">
+            <CinematicSection type="section" className="project-gallery mt-6 sm:mt-10">
               <div className="section-heading">
                 <p className="section-label">PROJECT GALLERY</p>
                 <h2 className="project-gallery-title font-semibold mt-1">
@@ -573,14 +562,14 @@ export default function ProjectDetails() {
                 )
               })}
               </div>
-            </section>
+            </CinematicSection>
           </>
         )}
 
         <CosmicHorizonDivider theme="projects" className="my-8 sm:my-14" />
 
         {/* Overview & Sidebar Bento Grid */}
-        <div className="project-detail-layout mt-8 sm:mt-12">
+        <CinematicSection type="section" className="project-detail-layout mt-8 sm:mt-12">
           <div className="project-detail-main-column">
             {/* Overview Card */}
             <div className="project-bento-card project-overview-card group">
@@ -748,13 +737,13 @@ export default function ProjectDetails() {
               </div>
             </div>
           </aside>
-        </div>
+        </CinematicSection>
 
         {/* More Selected Work (Interactive 3D Carousel matching SELECTED WORK) */}
         {otherProjects.length > 0 && (
           <>
             <CosmicHorizonDivider theme="about" className="my-10 sm:my-16" />
-            <section className="project-related mt-8 sm:mt-12">
+            <CinematicSection type="section" className="project-related mt-8 sm:mt-12">
               <div className="project-related-header-wrap">
                 <div className="section-heading">
                   <p className="section-label">EXPLORE MORE</p>
@@ -1060,101 +1049,85 @@ export default function ProjectDetails() {
                 </div>
               )}
             </div>
-          </section>
+          </CinematicSection>
         </>
       )}
       </main>
 
       {/* Signature Full-Tier Portfolio Footer */}
-      <CosmicHorizonDivider theme="footer" />
-      <footer className="portfolio-footer">
-        <div className="footer-glow-bar" aria-hidden="true" />
-
+      <CinematicSection type="footer" className="portfolio-footer">
         <div className="portfolio-container footer-body-wrapper">
-          {/* Top Row: Brand on Left, Connect on Right */}
-          <div className="footer-top-row">
+          {/* Main Tier: Brand & Role on Left, Refined Link Pills on Right */}
+          <div className="footer-main-row">
             {/* Brand Block */}
             <div className="footer-brand-block">
-              <div className="footer-brand-header">
-                <Link to="/" className="footer-brand-title group">
-                  <span className="footer-brand-monogram">RD</span>
-                  <span className="footer-brand-name">{profile?.full_name || "Richard D'Souza"}</span>
-                  <span className="footer-brand-dot" aria-hidden="true" />
-                </Link>
-              </div>
+              <Link to="/" className="footer-brand-title group">
+                <span className="footer-brand-monogram">RD</span>
+                <span className="footer-brand-name">{profile?.full_name || "Richard D'Souza"}</span>
+                <span className="footer-brand-dot" aria-hidden="true" />
+              </Link>
 
               <p className="footer-brand-tagline">
                 <span className="footer-tagline-role">{profile?.professional_title || 'Software Developer'}</span>
                 <span className="footer-tagline-bullet" aria-hidden="true">•</span>
-                Focused on building reliable web applications with{' '}
-                <span className="footer-tagline-accent">clean code and modern architecture.</span>
+                Crafting dependable digital products with clean architecture.
               </p>
             </div>
 
-            {/* Connect Block */}
-            <div className="footer-connect-block">
-              <p className="footer-section-heading">Connect &amp; Opportunities</p>
+            {/* Direct Connect & Action Links */}
+            <div className="footer-links-group" aria-label="Social and professional links">
+              <button
+                type="button"
+                onClick={handleBackToProjects}
+                className="footer-social-pill cursor-pointer"
+                title="Browse All Projects"
+              >
+                <ArrowLeft size={13} aria-hidden="true" />
+                <span>All Projects</span>
+              </button>
 
-              <div className="footer-action-stack">
-                <Link to="/request-resume" className="footer-resume-btn group">
-                  <span>Request Resume</span>
-                  <ArrowUpRight size={14} className="footer-resume-icon" aria-hidden="true" />
-                </Link>
+              <a
+                href={profile?.github_url || 'https://github.com/aestheticwolf'}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="GitHub Profile"
+                className="footer-social-pill"
+                title="GitHub"
+              >
+                <FaGithub size={15} aria-hidden="true" />
+                <span>GitHub</span>
+              </a>
 
-                <div className="footer-social-row">
-                  <a
-                    href={profile?.github_url || 'https://github.com/aestheticwolf'}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="GitHub Profile"
-                    className="footer-social-pill"
-                    title="GitHub"
-                  >
-                    <FaGithub size={15} aria-hidden="true" />
-                    <span>GitHub</span>
-                  </a>
+              <a
+                href={profile?.linkedin_url || 'https://www.linkedin.com/'}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="LinkedIn Profile"
+                className="footer-social-pill"
+                title="LinkedIn"
+              >
+                <FaLinkedinIn size={14} aria-hidden="true" />
+                <span>LinkedIn</span>
+              </a>
 
-                  <a
-                    href={profile?.linkedin_url || 'https://www.linkedin.com/'}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="LinkedIn Profile"
-                    className="footer-social-pill"
-                    title="LinkedIn"
-                  >
-                    <FaLinkedinIn size={14} aria-hidden="true" />
-                    <span>LinkedIn</span>
-                  </a>
+              <a
+                href="mailto:rich.dsz1997@gmail.com"
+                className="footer-social-pill"
+                title="Send direct email"
+                aria-label="Send direct email"
+              >
+                <Send size={13} aria-hidden="true" />
+                <span>Email</span>
+              </a>
 
-                  <a
-                    href="mailto:rich.dsz1997@gmail.com"
-                    className="footer-social-pill"
-                    title="Send Email"
-                    aria-label="Send direct email"
-                  >
-                    <Send size={13} aria-hidden="true" />
-                    <span>Email</span>
-                  </a>
-                </div>
-              </div>
+              <Link to="/request-resume" className="footer-resume-pill group" title="Request Resume">
+                <span>Resume</span>
+                <ArrowUpRight size={13} className="footer-resume-icon" aria-hidden="true" />
+              </Link>
             </div>
           </div>
 
-          {/* Navigation Rail: Horizontal Glass Pills */}
-          <div className="footer-nav-rail">
-            <div className="footer-nav-label-group">
-              <span className="footer-nav-label">Navigation</span>
-            </div>
-            <nav className="footer-nav-links-row" aria-label="Footer navigation">
-              {FOOTER_NAV.map((item) => (
-                <a key={item.label} href={item.href} className="footer-nav-pill">
-                  <span>{item.label}</span>
-                </a>
-              ))}
-            </nav>
-          </div>
-
-          {/* Footer Bottom Colophon */}
+          {/* Clean Bottom Colophon */}
           <div className="footer-bottom-divider" aria-hidden="true" />
           <div className="footer-bottom-content">
             <p className="footer-copyright">
@@ -1178,7 +1151,7 @@ export default function ProjectDetails() {
             </button>
           </div>
         </div>
-      </footer>
+      </CinematicSection>
 
       {/* Lightbox inspection dialog mounted directly to body to avoid container transforms */}
       {isLightboxOpen && activeImageIndex !== null && inspectionImages.length > 0 && typeof document !== 'undefined' &&

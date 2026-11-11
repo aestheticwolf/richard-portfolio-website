@@ -8,10 +8,6 @@ import {
   Loader2,
   User,
   Mail,
-  ShieldCheck,
-  Sparkles,
-  Lock,
-  FileText,
 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
@@ -100,32 +96,11 @@ export default function RequestResume() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: prefersReducedMotion ? 0 : 0.38, ease: [0.16, 1, 0.3, 1] }}
       >
-        {/* Luminous accent beam on top */}
-        <div className="resume-card-glow-bar" aria-hidden="true" />
-
         <div className="resume-card-content">
-          <div className="resume-badge">
-            <span className="resume-badge-dot" aria-hidden="true" />
-            <ShieldCheck size={13} className="text-violet-400 shrink-0" />
-            <span>Secure Access</span>
-          </div>
-
           <h1 className="resume-title">Request Resume</h1>
           <p className="resume-subtitle">
-            Interested in reviewing my detailed software engineering experience, architecture work, and credentials? Submit your details to receive verified access.
+            Interested in reviewing my detailed software engineering experience, architecture work, and credentials? Submit your details below to receive access.
           </p>
-
-          <div className="resume-feature-chips" aria-label="Access features">
-            <span className="resume-chip">
-              <Sparkles size={12} className="text-violet-400" /> Instant verification
-            </span>
-            <span className="resume-chip">
-              <Lock size={12} className="text-sky-400" /> Secure token
-            </span>
-            <span className="resume-chip">
-              <FileText size={12} className="text-emerald-400" /> PDF document
-            </span>
-          </div>
 
           <AnimatePresence mode="wait">
             {status === 'success' ? (
@@ -143,11 +118,11 @@ export default function RequestResume() {
                 </div>
                 <h2 className="resume-success-title">Request Submitted!</h2>
                 <p className="resume-success-desc">
-                  Thank you, <strong className="font-semibold text-white">{name}</strong>. A secure, time-limited access link has been dispatched to <strong className="font-semibold text-white">{email}</strong>.
+                  Thank you, <strong className="font-semibold text-white">{name}</strong>. An access link will be delivered to <strong className="font-semibold text-white">{email}</strong>.
                 </p>
                 <div className="resume-success-note">
-                  <ShieldCheck size={16} className="text-violet-400 shrink-0" />
-                  <span>Please check your inbox (and spam folder) for access instructions.</span>
+                  <Mail size={16} className="text-sky-400 shrink-0" />
+                  <span>Please check your inbox (and spam folder) for the access link.</span>
                 </div>
                 <div className="resume-success-actions">
                   <button

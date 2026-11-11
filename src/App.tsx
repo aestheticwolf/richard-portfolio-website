@@ -74,6 +74,8 @@ import ProjectDetails from './pages/ProjectDetails'
 import ThemeToggle from './components/ThemeToggle'
 import BackgroundAnimation from './components/BackgroundAnimation'
 import CosmicHorizonDivider from './components/CosmicHorizonDivider'
+import TiltCard3D from './components/TiltCard3D'
+import CinematicSection from './components/CinematicSection'
 import { smoothScrollToTop } from './lib/smoothScroll'
 import {
   getPublishedProjects,
@@ -411,12 +413,17 @@ const educationJourney = [
 
 
 
-const reveal = {
+// Bidirectional Crossfade Heading Reveal (Reversible down & up)
+const spatialHeadingReveal = {
   hidden: {
     opacity: 0,
-    y: 30,
+    y: 0,
     scale: 0.985,
-    filter: 'blur(5px)',
+    filter: 'blur(4px)',
+    transition: {
+      duration: 0.35,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
   },
   visible: {
     opacity: 1,
@@ -424,30 +431,61 @@ const reveal = {
     scale: 1,
     filter: 'blur(0px)',
     transition: {
-      duration: 0.72,
-      ease: [0.22, 1, 0.36, 1] as const,
+      duration: 0.6,
+      ease: [0.16, 1, 0.3, 1] as const,
     },
   },
-};
+}
 
-const stagger = {
+// Bidirectional Crossfade Bento Card Reveal (Reversible down & up)
+const spatialCardReveal = {
+  hidden: {
+    opacity: 0,
+    y: 0,
+    scale: 0.985,
+    filter: 'blur(4px)',
+    transition: {
+      duration: 0.35,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: {
+      duration: 0.65,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  },
+}
+
+const spatialStagger = {
   hidden: {},
   visible: {
     transition: {
       staggerChildren: 0.14,
+      delayChildren: 0.08,
     },
   },
-};
-
-const reducedReveal = {
-  hidden: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' },
-  visible: { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', transition: { duration: 0 } },
 }
 
-const reducedStagger = {
+const reducedSpatialHeading = {
+  hidden: { opacity: 0, y: 0 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+}
+
+const reducedSpatialCard = {
+  hidden: { opacity: 0, y: 0 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+}
+
+const reducedSpatialStagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0 } },
 }
+
 
 function ScrollProgress() {
   const prefersReducedMotion = useReducedMotion() ?? false
@@ -496,7 +534,7 @@ function GlobalBackToTop() {
       const isNearFooter = innerHeight + scrollY >= scrollHeight - 460
       const isFooterInView = footerRect ? footerRect.top < innerHeight + 60 : isNearFooter
 
-      setShowBackToTop(scrollY > 420 && !isNearFooter && !isFooterInView)
+      setShowBackToTop(scrollY > 680 && !isNearFooter && !isFooterInView)
     }
 
     window.addEventListener('scroll', checkVisibility, { passive: true })
@@ -547,8 +585,9 @@ function GlobalBackToTop() {
 function Home() {
   const location = useLocation()
   const prefersReducedMotion = useReducedMotion() ?? false
-  const sectionReveal = prefersReducedMotion ? reducedReveal : reveal
-  const sectionStagger = prefersReducedMotion ? reducedStagger : stagger
+  const sectionHeadingReveal = prefersReducedMotion ? reducedSpatialHeading : spatialHeadingReveal
+  const sectionCardReveal = prefersReducedMotion ? reducedSpatialCard : spatialCardReveal
+  const sectionStagger = prefersReducedMotion ? reducedSpatialStagger : spatialStagger
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
   const [projects, setProjects] = useState<PortfolioProject[]>([])
@@ -559,6 +598,7 @@ function Home() {
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [profileError, setProfileError] = useState('')
   const [aboutActiveTab, setAboutActiveTab] = useState<'overview' | 'mindset' | 'vision'>('overview')
+  const [aboutJourneyView, setAboutJourneyView] = useState<'engineer' | 'education'>('engineer')
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [selectedSkillCategory, setSelectedSkillCategory] = useState<string>('all')
   const [hoveredTool, setHoveredTool] = useState<string | null>(null)
@@ -712,16 +752,20 @@ function Home() {
     sessionStorage.setItem('portfolio_home_scroll', window.scrollY.toString())
   }
 
-  // Continuously record home scroll position and set flag on unmount
+  // Continuously record home scroll position (throttled) and set flag on unmount
   useEffect(() => {
+    let scrollTimeout = 0
     const handleScroll = () => {
-      sessionStorage.setItem('portfolio_home_scroll', window.scrollY.toString())
+      if (scrollTimeout) return
+      scrollTimeout = window.setTimeout(() => {
+        scrollTimeout = 0
+        sessionStorage.setItem('portfolio_home_scroll', window.scrollY.toString())
+      }, 150)
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => {
-      sessionStorage.setItem('portfolio_restore_pending', 'true')
-      sessionStorage.setItem('portfolio_home_scroll', window.scrollY.toString())
+      if (scrollTimeout) window.clearTimeout(scrollTimeout)
       window.removeEventListener('scroll', handleScroll)
     }
   }, [])
@@ -730,6 +774,59 @@ function Home() {
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual'
+    }
+
+    // Detect if this page load is a browser refresh / reload
+    const isReload = (() => {
+      try {
+        const navEntries = performance.getEntriesByType('navigation')
+        if (navEntries.length > 0) {
+          return (navEntries[0] as PerformanceNavigationTiming).type === 'reload'
+        }
+        return (performance as any)?.navigation?.type === 1
+      } catch {
+        return false
+      }
+    })()
+
+    // On browser refresh: Always reset to top start page (hero) and strip any stale anchor hash
+    if (isReload) {
+      sessionStorage.removeItem('portfolio_restore_pending')
+      sessionStorage.setItem('portfolio_home_scroll', '0')
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      window.dispatchEvent(new Event('scroll'))
+      return
+    }
+
+    // Explicit scroll reset (e.g. user clicked RD logo in header)
+    if (location.state && typeof location.state === 'object' && 'resetScroll' in location.state) {
+      sessionStorage.removeItem('portfolio_restore_pending')
+      sessionStorage.setItem('portfolio_home_scroll', '0')
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      window.dispatchEvent(new Event('scroll'))
+      return
+    }
+
+    // Explicit in-page hash navigation (e.g. user clicked #projects in nav or 'All projects')
+    if (location.hash) {
+      sessionStorage.removeItem('portfolio_restore_pending')
+      const targetId = location.hash.replace('#', '')
+      let attempts = 0
+      const scrollToHash = () => {
+        const el = document.getElementById(targetId)
+        if (el) {
+          el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' })
+          window.dispatchEvent(new Event('scroll'))
+        } else if (attempts < 20) {
+          attempts++
+          window.setTimeout(scrollToHash, 40)
+        }
+      }
+      const timer = window.setTimeout(scrollToHash, 40)
+      return () => window.clearTimeout(timer)
     }
 
     const isRestorePending = sessionStorage.getItem('portfolio_restore_pending') === 'true'
@@ -755,33 +852,6 @@ function Home() {
         requestAnimationFrame(performRestore)
         return
       }
-    }
-
-    // Explicit scroll reset (e.g. user clicked RD logo in header)
-    if (location.state && typeof location.state === 'object' && 'resetScroll' in location.state) {
-      sessionStorage.removeItem('portfolio_restore_pending')
-      sessionStorage.setItem('portfolio_home_scroll', '0')
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-      window.dispatchEvent(new Event('scroll'))
-      return
-    }
-
-    // Explicit in-page hash navigation (e.g. user clicked #projects or #contact in nav)
-    if (location.hash) {
-      const targetId = location.hash.replace('#', '')
-      let attempts = 0
-      const scrollToHash = () => {
-        const el = document.getElementById(targetId)
-        if (el) {
-          el.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' })
-          window.dispatchEvent(new Event('scroll'))
-        } else if (attempts < 20) {
-          attempts++
-          window.setTimeout(scrollToHash, 40)
-        }
-      }
-      const timer = window.setTimeout(scrollToHash, 40)
-      return () => window.clearTimeout(timer)
     }
   }, [projectsLoading, location.hash, location.state, prefersReducedMotion])
 
@@ -1099,6 +1169,7 @@ function Home() {
       .map(({ href }) => document.querySelector(href))
       .filter((section): section is HTMLElement => section instanceof HTMLElement)
 
+    let lastSectionId = ''
     const updateActiveSection = () => {
       const navbarHeight =
         document.querySelector<HTMLElement>('.portfolio-nav')
@@ -1109,7 +1180,10 @@ function Home() {
           (section) => section.getBoundingClientRect().bottom > readingLine,
         ) ?? sections.at(-1)
 
-      if (currentSection) setActiveSection(currentSection.id)
+      if (currentSection && currentSection.id !== lastSectionId) {
+        lastSectionId = currentSection.id
+        setActiveSection(currentSection.id)
+      }
     }
 
     let animationFrame = 0
@@ -1258,8 +1332,9 @@ function Home() {
       </header>
 
       <main>
-        <section
+        <CinematicSection
           id="home"
+          type="hero"
           className="hero-section relative flex scroll-mt-20 items-center"
         >
           <div className="portfolio-container relative grid w-full items-center gap-10 pb-10 pt-20 sm:pt-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
@@ -1314,13 +1389,6 @@ function Home() {
                   className="hero-primary-action"
                 >
                   Explore my work <ArrowUpRight size={17} />
-                </a>
-
-                <a
-                  href="#contact"
-                  className="hero-secondary-action"
-                >
-                  Get in touch
                 </a>
               </div>
 
@@ -1379,66 +1447,88 @@ function Home() {
                 </div>
               )}
 
-              <motion.div
-                className="hero-profile-card group"
-                whileHover={prefersReducedMotion ? undefined : { y: -3 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-              >
-                <div className="hero-card-top-beam" />
-                <div className="hero-card-ambient-aura" />
-                {/* Window Titlebar */}
-                <div className="hero-profile-heading">
-                  <div className="hero-profile-markers" aria-hidden="true">
-                    <span className="marker-dot marker-red" />
-                    <span className="marker-dot marker-yellow" />
-                    <span className="marker-dot marker-green" />
-                  </div>
+              <TiltCard3D maxTilt={5}>
+                <motion.div
+                  className="hero-profile-card group"
+                  whileHover={prefersReducedMotion ? undefined : { y: -3 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                >
+                  <div className="hero-card-top-beam" />
+                  <div className="hero-card-ambient-aura" />
+                  {/* Window Titlebar */}
+                  <div className="hero-profile-heading">
+                    <div className="hero-profile-markers" aria-hidden="true">
+                      <span className="marker-dot marker-red" />
+                      <span className="marker-dot marker-yellow" />
+                      <span className="marker-dot marker-green" />
+                    </div>
 
-                  {/* Sleek Segmented Console Tabs with Centered Alignment */}
-                  <div className="hero-console-tabs-wrap">
-                    <div className="hero-console-tabs" role="tablist" aria-label="Console tabs">
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={heroConsoleTab === 'developer'}
-                        className={`hero-console-tab ${heroConsoleTab === 'developer' ? 'is-active' : ''}`}
-                        onClick={() => setHeroConsoleTab('developer')}
-                      >
-                        <FileCode size={12} className="hero-tab-icon text-violet-400 shrink-0" />
-                        <span className="hero-tab-label">
-                          <span className="hero-tab-name">developer</span>
-                          <span className="hero-tab-ext">.ts</span>
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={heroConsoleTab === 'stack'}
-                        className={`hero-console-tab ${heroConsoleTab === 'stack' ? 'is-active' : ''}`}
-                        onClick={() => setHeroConsoleTab('stack')}
-                      >
-                        <Layers size={12} className="hero-tab-icon text-cyan-400 shrink-0" />
-                        <span className="hero-tab-label">
-                          <span className="hero-tab-name">stack</span>
-                          <span className="hero-tab-ext">.json</span>
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={heroConsoleTab === 'terminal'}
-                        className={`hero-console-tab ${heroConsoleTab === 'terminal' ? 'is-active' : ''}`}
-                        onClick={() => setHeroConsoleTab('terminal')}
-                      >
-                        <Terminal size={12} className="hero-tab-icon text-emerald-400 shrink-0" />
-                        <span className="hero-tab-label">
-                          <span className="hero-tab-name">terminal</span>
-                          <span className="hero-tab-ext">.sh</span>
-                        </span>
-                      </button>
+                    {/* Sleek Segmented Console Tabs with Centered Alignment */}
+                    <div className="hero-console-tabs-wrap">
+                      <div className="hero-console-tabs" role="tablist" aria-label="Console tabs">
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={heroConsoleTab === 'developer'}
+                          className={`hero-console-tab ${heroConsoleTab === 'developer' ? 'is-active' : ''}`}
+                          onClick={() => setHeroConsoleTab('developer')}
+                        >
+                          {heroConsoleTab === 'developer' && (
+                            <motion.span
+                              layoutId="heroTabGlider"
+                              className="hero-tab-active-indicator"
+                              transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                            />
+                          )}
+                          <FileCode size={12} className="hero-tab-icon text-violet-400 shrink-0 relative z-1" />
+                          <span className="hero-tab-label relative z-1">
+                            <span className="hero-tab-name">developer</span>
+                            <span className="hero-tab-ext">.ts</span>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={heroConsoleTab === 'stack'}
+                          className={`hero-console-tab ${heroConsoleTab === 'stack' ? 'is-active' : ''}`}
+                          onClick={() => setHeroConsoleTab('stack')}
+                        >
+                          {heroConsoleTab === 'stack' && (
+                            <motion.span
+                              layoutId="heroTabGlider"
+                              className="hero-tab-active-indicator"
+                              transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                            />
+                          )}
+                          <Layers size={12} className="hero-tab-icon text-cyan-400 shrink-0 relative z-1" />
+                          <span className="hero-tab-label relative z-1">
+                            <span className="hero-tab-name">stack</span>
+                            <span className="hero-tab-ext">.json</span>
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={heroConsoleTab === 'terminal'}
+                          className={`hero-console-tab ${heroConsoleTab === 'terminal' ? 'is-active' : ''}`}
+                          onClick={() => setHeroConsoleTab('terminal')}
+                        >
+                          {heroConsoleTab === 'terminal' && (
+                            <motion.span
+                              layoutId="heroTabGlider"
+                              className="hero-tab-active-indicator"
+                              transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                            />
+                          )}
+                          <Terminal size={12} className="hero-tab-icon text-emerald-400 shrink-0 relative z-1" />
+                          <span className="hero-tab-label relative z-1">
+                            <span className="hero-tab-name">terminal</span>
+                            <span className="hero-tab-ext">.sh</span>
+                          </span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
 
                 {/* Sub-Header Breadcrumb */}
                 <div className="hero-editor-breadcrumb" aria-hidden="true">
@@ -1727,7 +1817,8 @@ function Home() {
                   {heroConsoleTab === 'terminal' && <Terminal className="hero-profile-footer-icon transition-colors" size={20} />}
                 </div>
               </motion.div>
-            </motion.div>
+            </TiltCard3D>
+          </motion.div>
 
             <a
               href="#about"
@@ -1739,49 +1830,106 @@ function Home() {
               </span>
             </a>
           </div>
-        </section>
+        </CinematicSection>
 
         <CosmicHorizonDivider theme="about" />
 
-        <section
+        <CinematicSection
           id="about"
+          type="section"
           className="about-section scroll-mt-24 py-20 sm:py-28"
         >
-  <motion.div
-    className="portfolio-container"
-    variants={sectionReveal}
-    initial={false}
-    whileInView="visible"
-    viewport={{ once: true, amount: 0.15 }}
-  >
-    <div className="section-heading about-heading">
-      <p className="section-label">01 / ABOUT</p>
-      <h2>
-        Thoughtful software,{' '}
-        <span className="about-headline-accent">built with purpose.</span>
-      </h2>
-      <p className="section-summary">
-        I value practical solutions, clear experiences, and the steady craft behind reliable digital products.
-      </p>
-    </div>
+          <div className="portfolio-container">
+            <motion.div
+              className="section-heading about-heading"
+              variants={sectionHeadingReveal}
+              initial={prefersReducedMotion ? false : "hidden"}
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.15 }}
+            >
+              <p className="section-label">01 / ABOUT</p>
+              <h2>
+                Thoughtful software,{' '}
+                <span className="about-headline-accent">built with purpose.</span>
+              </h2>
+              <p className="section-summary">
+                I value practical solutions, clear experiences, and the steady craft behind reliable digital products.
+              </p>
+            </motion.div>
 
-    <motion.div
-      className="about-layout"
-      variants={sectionStagger}
-      initial={false}
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
-    >
+            {/* Unified Journey Master Switcher (visible on desktop and mobile) */}
+            <div className="about-journey-switcher" role="tablist" aria-label="Journey view selection">
+              <button
+                type="button"
+                role="tab"
+                id="tab-engineer-journey"
+                aria-selected={aboutJourneyView === 'engineer'}
+                aria-controls="panel-engineer-journey"
+                onClick={() => setAboutJourneyView('engineer')}
+                className={`about-journey-switcher-btn relative ${aboutJourneyView === 'engineer' ? 'is-active' : ''}`}
+              >
+                {aboutJourneyView === 'engineer' && (
+                  <motion.span
+                    layoutId="aboutJourneyMasterGlider"
+                    className="about-journey-switcher-glider"
+                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                  />
+                )}
+                <Terminal size={14} className="relative z-1 shrink-0 text-violet-400" />
+                <span className="relative z-1 font-semibold">Engineer Journey</span>
+                <span className="about-journey-switcher-count relative z-1">3</span>
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                id="tab-education-journey"
+                aria-selected={aboutJourneyView === 'education'}
+                aria-controls="panel-education-journey"
+                onClick={() => setAboutJourneyView('education')}
+                className={`about-journey-switcher-btn relative ${aboutJourneyView === 'education' ? 'is-active' : ''}`}
+              >
+                {aboutJourneyView === 'education' && (
+                  <motion.span
+                    layoutId="aboutJourneyMasterGlider"
+                    className="about-journey-switcher-glider"
+                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                  />
+                )}
+                <GraduationCap size={14} className="relative z-1 shrink-0 text-cyan-400" />
+                <span className="relative z-1 font-semibold">Education Journey</span>
+                <span className="about-journey-switcher-count relative z-1">3</span>
+              </button>
+            </div>
+
+            <motion.div
+              className="about-layout"
+              variants={sectionCardReveal}
+              initial={prefersReducedMotion ? false : "hidden"}
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.08 }}
+            >
       {profileError && (
         <p role="alert" className="text-sm text-red-400">
           {profileError}
         </p>
       )}
 
-      {profile ? (
-        <motion.div className="about-story" variants={sectionReveal}>
-          <div className="about-card-top-shine" />
-          {/* Card Top Header & Status */}
+      <AnimatePresence mode="wait">
+        {aboutJourneyView === 'engineer' ? (
+          profile ? (
+            <motion.div
+              key="engineer-journey"
+              id="panel-engineer-journey"
+              role="tabpanel"
+              aria-labelledby="tab-engineer-journey"
+              className="about-story"
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -14 }}
+              transition={{ duration: 0.28, ease: [0.25, 1, 0.5, 1] }}
+            >
+          {/* Card Top Header */}
           <div className="about-story-header">
             <div className="about-story-badge">
               <div className="about-terminal-dots" aria-hidden="true">
@@ -1792,10 +1940,6 @@ function Home() {
               <Terminal size={14} className="text-violet-400" />
               <span>Engineer Journey</span>
             </div>
-            <div className="about-live-status">
-              <span className="about-status-pulse" />
-              <span>Available for opportunities</span>
-            </div>
           </div>
 
           {/* Interactive Multi-Deck Navigation Tabs */}
@@ -1805,30 +1949,51 @@ function Home() {
               role="tab"
               aria-selected={aboutActiveTab === 'overview'}
               onClick={() => setAboutActiveTab('overview')}
-              className={`about-deck-tab-btn ${aboutActiveTab === 'overview' ? 'is-active' : ''}`}
+              className={`about-deck-tab-btn relative ${aboutActiveTab === 'overview' ? 'is-active' : ''}`}
             >
-              <Sparkles size={13} className="shrink-0" />
-              <span>Overview</span>
+              {aboutActiveTab === 'overview' && (
+                <motion.span
+                  layoutId="aboutDeckGlider"
+                  className="about-deck-active-indicator"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
+              <Sparkles size={13} className="shrink-0 relative z-1" />
+              <span className="relative z-1">Overview</span>
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={aboutActiveTab === 'mindset'}
               onClick={() => setAboutActiveTab('mindset')}
-              className={`about-deck-tab-btn ${aboutActiveTab === 'mindset' ? 'is-active' : ''}`}
+              className={`about-deck-tab-btn relative ${aboutActiveTab === 'mindset' ? 'is-active' : ''}`}
             >
-              <Code2 size={13} className="shrink-0" />
-              <span>Mindset &amp; Craft</span>
+              {aboutActiveTab === 'mindset' && (
+                <motion.span
+                  layoutId="aboutDeckGlider"
+                  className="about-deck-active-indicator"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
+              <Code2 size={13} className="shrink-0 relative z-1" />
+              <span className="relative z-1">Mindset &amp; Craft</span>
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={aboutActiveTab === 'vision'}
               onClick={() => setAboutActiveTab('vision')}
-              className={`about-deck-tab-btn ${aboutActiveTab === 'vision' ? 'is-active' : ''}`}
+              className={`about-deck-tab-btn relative ${aboutActiveTab === 'vision' ? 'is-active' : ''}`}
             >
-              <Compass size={13} className="shrink-0" />
-              <span>Vision &amp; Projects</span>
+              {aboutActiveTab === 'vision' && (
+                <motion.span
+                  layoutId="aboutDeckGlider"
+                  className="about-deck-active-indicator"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
+              )}
+              <Compass size={13} className="shrink-0 relative z-1" />
+              <span className="relative z-1">Vision &amp; Projects</span>
             </button>
           </div>
 
@@ -1985,140 +2150,204 @@ function Home() {
               <ArrowUpRight size={15} aria-hidden="true" />
             </Link>
           </div>
+
+          {/* Quick-Jump to Education Journey */}
+          <div className="about-journey-toggle-footer">
+            <button
+              type="button"
+              onClick={() => {
+                setAboutJourneyView('education')
+                const el = document.getElementById('about')
+                if (el) {
+                  const yOffset = -70
+                  const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset
+                  window.scrollTo({ top: y, behavior: 'smooth' })
+                }
+              }}
+              className="about-journey-toggle-btn"
+            >
+              <GraduationCap size={15} className="text-cyan-400 shrink-0" />
+              <span>Explore Education Journey</span>
+              <ChevronRight size={15} className="opacity-70 shrink-0" />
+            </button>
+          </div>
         </motion.div>
-      ) : (
-        !profileError && (
-          <p className="text-lg leading-8 text-zinc-500">
-            Profile information will be available soon.
-          </p>
-        )
+      ) : !profileError ? (
+        <p className="text-lg leading-8 text-zinc-500">
+          Profile information will be available soon.
+        </p>
+      ) : null
+    ) : (
+        /* Unified Education Journey Stream */
+        <motion.aside
+          key="education-journey"
+          id="panel-education-journey"
+          role="tabpanel"
+          aria-labelledby="tab-education-journey"
+          className="about-facts"
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, y: -14 }}
+          transition={{ duration: 0.28, ease: [0.25, 1, 0.5, 1] }}
+          aria-label="Education journey and qualifications"
+        >
+          <div className="about-edu-stream-card group">
+            {/* Top Border Beam Shine */}
+            <div className="about-card-top-shine" aria-hidden="true" />
+            <div className="about-edu-ambient-aura" aria-hidden="true" />
+
+            {/* Education Header */}
+            <div className="about-story-header">
+              <div className="about-story-badge">
+                <div className="about-terminal-dots" aria-hidden="true">
+                  <span className="about-dot dot-red" />
+                  <span className="about-dot dot-yellow" />
+                  <span className="about-dot dot-green" />
+                </div>
+                <GraduationCap size={14} className="text-cyan-400" />
+                <span>Education Journey</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="about-card-pill-badge edu-badge">
+                  <span className="about-badge-dot edu-dot" />
+                  Academic Progression
+                </span>
+                <span className="about-card-status-indicator font-mono">
+                  <Clock size={11} className="inline mr-1 text-violet-400" />
+                  2016 – 2026
+                </span>
+              </div>
+            </div>
+
+            {/* Integrated Timeline Stream */}
+            <div className="about-edu-stream-timeline">
+              {/* Embedded Gradient Rail Line */}
+              <div className="about-edu-stream-rail" aria-hidden="true">
+                <div className="about-edu-stream-rail-beam" />
+              </div>
+
+              <div className="about-edu-stream-list">
+                {educationJourney.map((item, idx) => {
+                  const IconComp = item.icon
+                  const isLatest = idx === 0
+                  return (
+                    <motion.div
+                      key={item.id}
+                      className={`about-edu-stream-item about-edu-theme-${item.theme} ${isLatest ? 'is-active' : ''}`}
+                      initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.32, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                      {/* Integrated Timeline Node */}
+                      <div className="about-edu-stream-node" aria-hidden="true">
+                        {isLatest && <span className="about-edu-stream-ping" />}
+                        <span className="about-edu-stream-dot" />
+                      </div>
+
+                      {/* Milestone Content */}
+                      <div className="about-edu-stream-body">
+                        {/* Level Tag & Period / Score Row */}
+                        <div className="about-edu-stream-row">
+                          <div className="about-edu-stream-level">
+                            <span className="about-edu-stream-level-tag">{item.levelTag}</span>
+                            {isLatest && (
+                              <span className="about-edu-stream-status-pill">
+                                <span className="about-edu-stream-pulse-dot" />
+                                Active
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="about-edu-stream-meta-right">
+                            {item.score && (
+                              <span className="about-edu-stream-score-badge">
+                                {item.score}
+                              </span>
+                            )}
+                            <span className="about-edu-stream-period">
+                              <Clock size={11} className="inline mr-1 opacity-70" />
+                              {item.period}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Degree Title & Institution */}
+                        <div className="about-edu-stream-degree-row">
+                          <div className="about-edu-stream-icon-wrap" aria-hidden="true">
+                            <IconComp size={16} />
+                          </div>
+                          <div className="about-edu-stream-title-box">
+                            <h4 className="about-edu-stream-degree">{item.degree}</h4>
+                            <p className="about-edu-stream-inst">
+                              <span>{item.institution}</span>
+                              <span className="about-edu-stream-sep" aria-hidden="true">•</span>
+                              <span className="about-edu-stream-loc">
+                                <MapPin size={11} className="inline mr-0.5 opacity-60" aria-hidden="true" />
+                                {item.location}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Coursework Tags */}
+                        {item.highlights && item.highlights.length > 0 && (
+                          <div className="about-edu-stream-tags">
+                            {item.highlights.map((tag) => (
+                              <span key={tag} className="about-edu-stream-tag">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Quick-Jump to Engineer Journey */}
+            <div className="about-journey-toggle-footer">
+              <button
+                type="button"
+                onClick={() => {
+                  setAboutJourneyView('engineer')
+                  const el = document.getElementById('about')
+                  if (el) {
+                    const yOffset = -70
+                    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset
+                    window.scrollTo({ top: y, behavior: 'smooth' })
+                  }
+                }}
+                className="about-journey-toggle-btn"
+              >
+                <Terminal size={15} className="text-violet-400 shrink-0" />
+                <span>Explore Engineer Journey</span>
+                <ChevronRight size={15} className="opacity-70 shrink-0" />
+              </button>
+            </div>
+          </div>
+        </motion.aside>
       )}
-
-      {/* Right Column: Unified Education Journey Stream */}
-      <motion.aside className="about-facts" variants={sectionStagger} aria-label="Education journey and qualifications">
-        <div className="about-edu-stream-card group">
-          {/* Top Border Beam Shine */}
-          <div className="about-card-top-shine" aria-hidden="true" />
-          <div className="about-edu-ambient-aura" aria-hidden="true" />
-
-          {/* Education Header */}
-          <div className="about-edu-stream-head">
-            <div className="about-edu-title-wrap">
-              <span className="about-card-pill-badge edu-badge">
-                <span className="about-badge-dot edu-dot" />
-                Academic Progression
-              </span>
-              <h3 className="about-edu-main-title">Education Journey</h3>
-            </div>
-            <span className="about-card-status-indicator font-mono">
-              <GraduationCap size={13} className="inline mr-1 text-violet-400" />
-              2016 – 2026
-            </span>
-          </div>
-
-          {/* Integrated Timeline Stream */}
-          <div className="about-edu-stream-timeline">
-            {/* Embedded Gradient Rail Line */}
-            <div className="about-edu-stream-rail" aria-hidden="true">
-              <div className="about-edu-stream-rail-beam" />
-            </div>
-
-            <div className="about-edu-stream-list">
-              {educationJourney.map((item, idx) => {
-                const IconComp = item.icon
-                const isLatest = idx === 0
-                return (
-                  <motion.div
-                    key={item.id}
-                    className={`about-edu-stream-item about-edu-theme-${item.theme} ${isLatest ? 'is-active' : ''}`}
-                    variants={sectionReveal}
-                  >
-                    {/* Integrated Timeline Node */}
-                    <div className="about-edu-stream-node" aria-hidden="true">
-                      {isLatest && <span className="about-edu-stream-ping" />}
-                      <span className="about-edu-stream-dot" />
-                    </div>
-
-                    {/* Milestone Content */}
-                    <div className="about-edu-stream-body">
-                      {/* Level Tag & Period / Score Row */}
-                      <div className="about-edu-stream-row">
-                        <div className="about-edu-stream-level">
-                          <span className="about-edu-stream-level-tag">{item.levelTag}</span>
-                          {isLatest && (
-                            <span className="about-edu-stream-status-pill">
-                              <span className="about-edu-stream-pulse-dot" />
-                              Active
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="about-edu-stream-meta-right">
-                          {item.score && (
-                            <span className="about-edu-stream-score-badge">
-                              {item.score}
-                            </span>
-                          )}
-                          <span className="about-edu-stream-period">
-                            <Clock size={11} className="inline mr-1 opacity-70" />
-                            {item.period}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Degree Title & Institution */}
-                      <div className="about-edu-stream-degree-row">
-                        <div className="about-edu-stream-icon-wrap" aria-hidden="true">
-                          <IconComp size={16} />
-                        </div>
-                        <div className="about-edu-stream-title-box">
-                          <h4 className="about-edu-stream-degree">{item.degree}</h4>
-                          <p className="about-edu-stream-inst">
-                            <span>{item.institution}</span>
-                            <span className="about-edu-stream-sep" aria-hidden="true">•</span>
-                            <span className="about-edu-stream-loc">
-                              <MapPin size={11} className="inline mr-0.5 opacity-60" aria-hidden="true" />
-                              {item.location}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Coursework Tags */}
-                      {item.highlights && item.highlights.length > 0 && (
-                        <div className="about-edu-stream-tags">
-                          {item.highlights.map((tag) => (
-                            <span key={tag} className="about-edu-stream-tag">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </motion.aside>
+      </AnimatePresence>
     </motion.div>
-  </motion.div>
-        </section>
+  </div>
+        </CinematicSection>
 
         <CosmicHorizonDivider theme="skills" />
 
-        <section
+        <CinematicSection
           id="skills"
+          type="section"
           className="skills-section scroll-mt-24 py-20 sm:py-24"
         >
   <div className="portfolio-container">
     <motion.div
       className="section-heading skills-heading"
-      variants={sectionReveal}
-      initial={false}
+      variants={sectionHeadingReveal}
+      initial={prefersReducedMotion ? false : "hidden"}
       whileInView="visible"
-      viewport={{ once: true, amount: 0.25 }}
+      viewport={{ once: false, amount: 0.15 }}
     >
       <p className="section-label">02 / SKILLS</p>
       <h2>
@@ -2137,10 +2366,17 @@ function Home() {
         role="tab"
         aria-selected={selectedSkillCategory === 'all'}
         onClick={() => setSelectedSkillCategory('all')}
-        className={`skills-filter-btn ${selectedSkillCategory === 'all' ? 'is-active' : ''}`}
+        className={`skills-filter-btn relative ${selectedSkillCategory === 'all' ? 'is-active' : ''}`}
       >
-        <Sparkles size={12} className="shrink-0" />
-        <span>All Stack ({totalSkillTools})</span>
+        {selectedSkillCategory === 'all' && (
+          <motion.span
+            layoutId="skillsCategoryGlider"
+            className="skills-filter-active-indicator"
+            transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+          />
+        )}
+        <Sparkles size={12} className="shrink-0 relative z-1" />
+        <span className="relative z-1">All Stack ({totalSkillTools})</span>
       </button>
       {displayedSkills.map((skill) => {
         const isSelected = selectedSkillCategory === skill.name
@@ -2151,9 +2387,16 @@ function Home() {
             role="tab"
             aria-selected={isSelected}
             onClick={() => setSelectedSkillCategory(isSelected ? 'all' : skill.name)}
-            className={`skills-filter-btn ${isSelected ? 'is-active' : ''}`}
+            className={`skills-filter-btn relative ${isSelected ? 'is-active' : ''}`}
           >
-            <span>{skill.categoryTag || skill.name}</span>
+            {isSelected && (
+              <motion.span
+                layoutId="skillsCategoryGlider"
+                className="skills-filter-active-indicator"
+                transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+              />
+            )}
+            <span className="relative z-1">{skill.categoryTag || skill.name}</span>
           </button>
         )
       })}
@@ -2162,10 +2405,10 @@ function Home() {
     {/* Clean Scannable Technology Pills Stage */}
     <motion.div
       className="tech-pills-stage"
-      variants={sectionReveal}
-      initial={false}
+      variants={sectionCardReveal}
+      initial={prefersReducedMotion ? false : "hidden"}
       whileInView="visible"
-      viewport={{ once: true, amount: 0.2 }}
+      viewport={{ once: true, amount: 0.18 }}
     >
       {/* Ambient Radial Lights */}
       <div className="tech-pills-radial-glow" aria-hidden="true" />
@@ -2180,7 +2423,7 @@ function Home() {
           const activeColor = tech.brandColor || '#00d8ff'
 
           return (
-            <button
+            <motion.button
               key={tech.name}
               type="button"
               className={`tech-pill-btn ${isSelected ? 'is-selected' : 'is-dimmed'} ${isHovered ? 'is-hovered' : ''}`}
@@ -2188,6 +2431,9 @@ function Home() {
                 '--pill-color': activeColor,
                 '--pill-glow': `${activeColor}40`,
               } as React.CSSProperties}
+              whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.04 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 25 }}
               onMouseEnter={() => setHoveredTool(tech.name)}
               onMouseLeave={() => setHoveredTool(null)}
               onClick={() => setSelectedSkillCategory(selectedSkillCategory === tech.category ? 'all' : tech.category)}
@@ -2197,7 +2443,7 @@ function Home() {
                 <ToolIcon size={16} aria-hidden="true" />
               </span>
               <span className="tech-pill-name">{tech.name}</span>
-            </button>
+            </motion.button>
           )
         })}
       </div>
@@ -2243,21 +2489,22 @@ function Home() {
       </div>
     </motion.div>
   </div>
-        </section>
+        </CinematicSection>
 
         <CosmicHorizonDivider theme="projects" />
 
-        <section
+        <CinematicSection
           id="projects"
+          type="section"
           className="projects-section scroll-mt-24 py-20 sm:py-24"
         >
           <div className="portfolio-container">
             <motion.div
               className="projects-heading-row"
-              variants={sectionReveal}
-              initial={false}
+              variants={sectionHeadingReveal}
+              initial={prefersReducedMotion ? false : "hidden"}
               whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
+              viewport={{ once: false, amount: 0.15 }}
             >
               <div className="section-heading">
                 <p className="section-label">03 / SELECTED WORK</p>
@@ -2277,10 +2524,10 @@ function Home() {
             {!projectsLoading && !projectsError && projects.length > 0 && (
               <motion.div
                 className="projects-carousel-wrapper"
-                variants={sectionReveal}
-                initial={false}
+                variants={sectionCardReveal}
+                initial={prefersReducedMotion ? false : "hidden"}
                 whileInView="visible"
-                viewport={{ once: true, amount: 0.1 }}
+                viewport={{ once: true, amount: 0.12 }}
               >
                 {/* Floating Left Navigation Arrow */}
                 {projects.length > 1 && (
@@ -2320,7 +2567,7 @@ function Home() {
 
                     // Horizontal-first then Move-Up levitation animation
                     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
-                    const cardStepX = isMobile ? 190 : 250
+                    const cardStepX = isMobile ? 285 : 260
 
                     const animationProps = prefersReducedMotion
                       ? {
@@ -2334,7 +2581,7 @@ function Home() {
                       : offset === 0
                       ? {
                           x: 0,
-                          y: -20, // Clean, steady elevation
+                          y: isMobile ? -10 : -20, // Clean, steady elevation
                           scale: 1, // Steady scale - zero zoom glitch
                           rotateY: 0,
                           opacity: 1,
@@ -2344,24 +2591,24 @@ function Home() {
                       ? {
                           x: -cardStepX,
                           y: 8,
-                          scale: 0.94,
-                          rotateY: 5,
-                          opacity: isMobile ? 0.3 : 0.55,
+                          scale: isMobile ? 0.88 : 0.94,
+                          rotateY: isMobile ? 8 : 5,
+                          opacity: isMobile ? 0.2 : 0.55,
                           zIndex: 10,
                         }
                       : offset === 1
                       ? {
                           x: cardStepX,
                           y: 8,
-                          scale: 0.94,
-                          rotateY: -5,
-                          opacity: isMobile ? 0.3 : 0.55,
+                          scale: isMobile ? 0.88 : 0.94,
+                          rotateY: isMobile ? -8 : -5,
+                          opacity: isMobile ? 0.2 : 0.55,
                           zIndex: 10,
                         }
                       : {
-                          x: offset < 0 ? -cardStepX * 1.8 : cardStepX * 1.8,
+                          x: offset < 0 ? -cardStepX * 1.6 : cardStepX * 1.6,
                           y: 12,
-                          scale: 0.9,
+                          scale: 0.8,
                           rotateY: offset < 0 ? 10 : -10,
                           opacity: 0,
                           zIndex: 1,
@@ -2595,12 +2842,13 @@ function Home() {
               )}
 
           </div>
-        </section>
+        </CinematicSection>
 
         <CosmicHorizonDivider theme="contact" />
 
-        <section
+        <CinematicSection
           id="contact"
+          type="section"
           className="contact-section scroll-mt-24 py-20 sm:py-28"
         >
           <div className="portfolio-container">
@@ -2609,10 +2857,10 @@ function Home() {
               variants={sectionStagger}
               initial={false}
               whileInView="visible"
-              viewport={{ once: true, amount: 0.15 }}
+              viewport={{ once: false, amount: 0.1 }}
             >
               {/* Left Column: Heading & Description */}
-              <motion.div className="contact-editorial-col" variants={sectionReveal}>
+              <motion.div className="contact-editorial-col" variants={sectionHeadingReveal}>
                 <p className="section-label">04 / CONTACT</p>
                 <h2 className="contact-editorial-title">
                   Let&apos;s build something{' '}
@@ -2624,7 +2872,7 @@ function Home() {
               </motion.div>
 
               {/* Right Column: Send a Message Form Card Only */}
-              <motion.div className="contact-form-col" variants={sectionReveal}>
+              <motion.div className="contact-form-col" variants={sectionCardReveal}>
                 <div className="contact-form-card">
                   <div className="contact-form-header">
                     <div className="contact-badge">
@@ -2684,15 +2932,18 @@ function Home() {
                     <input className="contact-honeypot" name="botcheck" type="checkbox" tabIndex={-1} aria-hidden="true" />
 
                     <div className="contact-form-footer">
-                      <button
+                      <motion.button
                         className="contact-submit-btn"
                         type="submit"
                         disabled={contactStatus === 'sending'}
+                        whileHover={prefersReducedMotion ? undefined : { scale: 1.02, y: -2 }}
+                        whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                        transition={{ type: 'spring', stiffness: 450, damping: 25 }}
                       >
                         <Send size={15} className={contactStatus === 'sending' ? 'animate-pulse' : ''} />
                         <span>{contactStatus === 'sending' ? 'Sending Message…' : 'Send Message'}</span>
                         <ArrowUpRight size={14} />
-                      </button>
+                      </motion.button>
 
                       <div className="contact-direct-link">
                         <span>Or email directly:</span>
@@ -2721,99 +2972,72 @@ function Home() {
               </motion.div>
             </motion.div>
           </div>
-        </section>
+        </CinematicSection>
       </main>
 
-      <CosmicHorizonDivider theme="footer" />
-
-      <footer className="portfolio-footer">
-        <div className="footer-glow-bar" aria-hidden="true" />
-        
+      <CinematicSection type="footer" className="portfolio-footer">
         <div className="portfolio-container footer-body-wrapper">
-          {/* Top Row: Brand on Left, Connect on Right */}
-          <div className="footer-top-row">
-            {/* Brand Block */}
+          {/* Main Tier: Brand & Role on Left, Refined Link Pills on Right */}
+          <div className="footer-main-row">
+            {/* Brand & Identity */}
             <div className="footer-brand-block">
-              <div className="footer-brand-header">
-                <a href="#home" className="footer-brand-title group">
-                  <span className="footer-brand-monogram">RD</span>
-                  <span className="footer-brand-name">{profile?.full_name || "Richard D'Souza"}</span>
-                  <span className="footer-brand-dot" aria-hidden="true" />
-                </a>
-              </div>
+              <a href="#home" className="footer-brand-title group">
+                <span className="footer-brand-monogram">RD</span>
+                <span className="footer-brand-name">{profile?.full_name || "Richard D'Souza"}</span>
+                <span className="footer-brand-dot" aria-hidden="true" />
+              </a>
 
               <p className="footer-brand-tagline">
                 <span className="footer-tagline-role">{profile?.professional_title || 'Software Developer'}</span>
                 <span className="footer-tagline-bullet" aria-hidden="true">•</span>
-                Focused on building reliable web applications with{' '}
-                <span className="footer-tagline-accent">clean code and modern architecture.</span>
+                Crafting dependable digital products with clean architecture.
               </p>
             </div>
 
-            {/* Connect Block */}
-            <div className="footer-connect-block">
-              <p className="footer-section-heading">Connect & Opportunities</p>
+            {/* Direct Connect & Action Links */}
+            <div className="footer-links-group" aria-label="Social and professional links">
+              <a
+                href={profile?.github_url || 'https://github.com/aestheticwolf'}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="GitHub Profile"
+                className="footer-social-pill"
+                title="GitHub"
+              >
+                <FaGithub size={15} aria-hidden="true" />
+                <span>GitHub</span>
+              </a>
 
-              <div className="footer-action-stack">
-                <Link to="/request-resume" onClick={saveScrollPosition} className="footer-resume-btn group">
-                  <span>Request Resume</span>
-                  <ArrowUpRight size={14} className="footer-resume-icon" aria-hidden="true" />
-                </Link>
+              <a
+                href={profile?.linkedin_url || 'https://www.linkedin.com/'}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="LinkedIn Profile"
+                className="footer-social-pill"
+                title="LinkedIn"
+              >
+                <FaLinkedinIn size={14} aria-hidden="true" />
+                <span>LinkedIn</span>
+              </a>
 
-                <div className="footer-social-row">
-                  <a
-                    href={profile?.github_url || 'https://github.com/aestheticwolf'}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="GitHub Profile"
-                    className="footer-social-pill"
-                    title="GitHub"
-                  >
-                    <FaGithub size={15} aria-hidden="true" />
-                    <span>GitHub</span>
-                  </a>
+              <a
+                href="mailto:rich.dsz1997@gmail.com"
+                className="footer-social-pill"
+                title="Send direct email"
+                aria-label="Send direct email"
+              >
+                <Send size={13} aria-hidden="true" />
+                <span>Email</span>
+              </a>
 
-                  <a
-                    href={profile?.linkedin_url || 'https://www.linkedin.com/'}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="LinkedIn Profile"
-                    className="footer-social-pill"
-                    title="LinkedIn"
-                  >
-                    <FaLinkedinIn size={14} aria-hidden="true" />
-                    <span>LinkedIn</span>
-                  </a>
-
-                  <a
-                    href="mailto:rich.dsz1997@gmail.com"
-                    className="footer-social-pill"
-                    title="Send Email"
-                    aria-label="Send direct email"
-                  >
-                    <Send size={13} aria-hidden="true" />
-                    <span>Email</span>
-                  </a>
-                </div>
-              </div>
+              <Link to="/request-resume" onClick={saveScrollPosition} className="footer-resume-pill group" title="Request Resume">
+                <span>Resume</span>
+                <ArrowUpRight size={13} className="footer-resume-icon" aria-hidden="true" />
+              </Link>
             </div>
           </div>
 
-          {/* Navigation Rail: Sleek Horizontal Interactive Glass Pills */}
-          <div className="footer-nav-rail">
-            <div className="footer-nav-label-group">
-              <span className="footer-nav-label">Navigation</span>
-            </div>
-            <nav className="footer-nav-links-row" aria-label="Footer navigation">
-              {navigation.map((item) => (
-                <a key={item.label} href={item.href} className="footer-nav-pill">
-                  <span>{item.label}</span>
-                </a>
-              ))}
-            </nav>
-          </div>
-
-          {/* Footer Bottom Colophon */}
+          {/* Clean Bottom Colophon */}
           <div className="footer-bottom-divider" aria-hidden="true" />
           <div className="footer-bottom-content">
             <p className="footer-copyright">
@@ -2838,7 +3062,7 @@ function Home() {
             </a>
           </div>
         </div>
-      </footer>
+      </CinematicSection>
     </div>
   )
 }

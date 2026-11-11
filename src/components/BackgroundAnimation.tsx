@@ -62,6 +62,16 @@ export default function BackgroundAnimation() {
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
     document.addEventListener('mouseleave', handleMouseLeave)
 
+    // 3D Celestial Parallax Scroll tracking
+    let lastScrollY = window.scrollY
+    let targetScrollY = window.scrollY
+    let scrollVelocity = 0
+
+    const handleScroll = () => {
+      targetScrollY = window.scrollY
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
     // Handle high DPI and window resize
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
@@ -130,6 +140,13 @@ export default function BackgroundAnimation() {
       } else {
         mouse.x = -1000
         mouse.y = -1000
+      }
+
+      // Smooth scroll parallax decay
+      if (!prefersReducedMotion) {
+        const delta = targetScrollY - lastScrollY
+        lastScrollY += delta * 0.1
+        scrollVelocity = delta * 0.035
       }
 
       ctx.clearRect(0, 0, width, height)
@@ -259,7 +276,7 @@ export default function BackgroundAnimation() {
 
         if (!prefersReducedMotion) {
           p.x += p.vx
-          p.y += p.vy
+          p.y += p.vy - scrollVelocity * (p.radius * 0.35)
 
           // Wrap edges smoothly
           if (p.x < -10) p.x = width + 10
@@ -295,6 +312,7 @@ export default function BackgroundAnimation() {
       window.removeEventListener('orientationchange', resize)
       window.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseleave', handleMouseLeave)
+      window.removeEventListener('scroll', handleScroll)
       resizeObserver.disconnect()
       observer.disconnect()
     }

@@ -14,9 +14,10 @@ export const CosmicHorizonDivider: React.FC<CosmicHorizonDividerProps> = ({
       className={`cosmic-horizon-divider cosmic-horizon-${theme} ${className}`}
       aria-hidden="true"
     >
-      <div className="cosmic-horizon-glow" />
       <div className="cosmic-horizon-line" />
-      <div className="cosmic-horizon-beam" />
+      <div className="cosmic-horizon-beacon-node">
+        <span className="cosmic-horizon-beacon-glow" />
+      </div>
     </div>
   )
 }
