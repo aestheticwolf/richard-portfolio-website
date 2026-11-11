@@ -10638,3 +10638,72 @@ textarea {
   }
 }
 
+/* ==========================================================================
+   PREMIUM FLOATING PROFILE CARD — HERO RIGHT SIDE (THEME-ISOLATED)
+   ========================================================================== */
+.hero-floating-card-wrapper {
+  isolation: isolate;
+}
+
+/* Keep the card always dark — code editors look wrong on white */
+.hero-premium-card {
+  background: linear-gradient(165deg, rgba(15, 20, 38, 0.88) 0%, rgba(8, 11, 22, 0.96) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 25px 60px -12px rgba(0, 0, 0, 0.65),
+    0 0 40px -8px rgba(99, 102, 241, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+[data-theme='light'] .hero-premium-card {
+  background: linear-gradient(165deg, rgba(15, 20, 38, 0.95) 0%, rgba(8, 11, 22, 0.98) 100%) !important;
+  border: 1px solid rgba(15, 23, 42, 0.18) !important;
+  box-shadow:
+    0 25px 50px -12px rgba(15, 23, 42, 0.18),
+    0 0 30px -8px rgba(99, 102, 241, 0.12),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Preserve all text colors inside the card in light mode — 
+   the card background is always dark so we must NOT override its text to theme colors */
+[data-theme='light'] .hero-floating-card-wrapper .hero-premium-card [class*='text-white'] {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+[data-theme='light'] .hero-floating-card-wrapper .hero-premium-card .text-white\/55,
+[data-theme='light'] .hero-floating-card-wrapper .hero-premium-card .text-white\/50 {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+[data-theme='light'] .hero-floating-card-wrapper .hero-premium-card .text-white\/40,
+[data-theme='light'] .hero-floating-card-wrapper .hero-premium-card .text-white\/35 {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+[data-theme='light'] .hero-floating-card-wrapper .hero-premium-card .text-white\/30,
+[data-theme='light'] .hero-floating-card-wrapper .hero-premium-card .text-white\/25 {
+  color: rgba(255, 255, 255, 0.28) !important;
+}
+
+.hero-premium-card:hover {
+  border-color: rgba(99, 102, 241, 0.2) !important;
+  box-shadow:
+    0 28px 65px -12px rgba(0, 0, 0, 0.7),
+    0 0 50px -8px rgba(99, 102, 241, 0.14),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Sheen hover */
+.hero-premium-card:hover .hover-sheen {
+  opacity: 1 !important;
+}
+
+/* Copy email button - immune to light theme button background resets */
+.hero-floating-card-wrapper .hero-action-copy-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+.hero-floating-card-wrapper .hero-action-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(0, 240, 255, 0.45) !important;
+  color: #ffffff !important;
+}
+
