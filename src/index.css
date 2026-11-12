@@ -9319,79 +9319,156 @@ main,
 
 @media (max-width: 639px) {
   .hero-section > div {
-    grid-template-columns: minmax(0, 1.16fr) minmax(0, 0.84fr) !important;
-    column-gap: 0.65rem !important;
-    padding-top: 4.75rem !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr) !important;
+    column-gap: clamp(0.45rem, 1.8vw, 0.75rem) !important;
+    padding-top: clamp(4.5rem, 12vw, 5.25rem) !important;
     padding-bottom: 2rem !important;
     align-items: center !important;
   }
   .hero-copy {
+    width: 100% !important;
     max-width: 100% !important;
     padding-right: 0.15rem !important;
+  }
+  .hero-morph-wrapper {
+    margin-top: 0 !important;
+    margin-bottom: 0.25rem !important;
+    min-height: auto !important;
+  }
+  .hero-kicker {
+    font-size: clamp(0.6rem, 2vw, 0.72rem) !important;
+    letter-spacing: 0.14em !important;
+    margin-bottom: 0.2rem !important;
+    color: var(--accent) !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+  }
+  .hero-title {
+    width: 100% !important;
+    font-size: clamp(0.96rem, 3.8vw, 1.32rem) !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.15 !important;
+    margin-top: 0.1rem !important;
+    margin-bottom: 0.35rem !important;
+    word-break: normal !important;
+    overflow-x: visible !important;
+  }
+  .hero-title-typing {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    align-items: baseline !important;
+    width: fit-content !important;
   }
   .hero-visual {
     width: 100% !important;
     max-width: 100% !important;
-    padding-top: 0 !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
-  .hero-morph-wrapper {
-    margin-top: 0 !important;
-    min-height: auto !important;
-  }
-  .hero-kicker {
-    font-size: 0.62rem !important;
-    letter-spacing: 0.14em !important;
-    margin-bottom: 0.15rem !important;
-  }
-  .hero-title {
-    font-size: clamp(1.08rem, 4.3vw, 1.38rem) !important;
-    letter-spacing: -0.03em !important;
-    line-height: 1.16 !important;
-    margin-top: 0.1rem !important;
-    margin-bottom: 0.25rem !important;
-    word-break: normal !important;
-  }
-  .hero-title-typing {
-    white-space: normal !important;
+  .hero-mascot-frame {
+    width: clamp(110px, 32vw, 148px) !important;
+    max-width: 100% !important;
   }
   .hero-intro {
-    font-size: clamp(0.66rem, 2.25vw, 0.74rem) !important;
-    line-height: 1.38 !important;
+    font-size: clamp(0.68rem, 2.2vw, 0.8rem) !important;
+    line-height: 1.48 !important;
     margin-top: 0.35rem !important;
-    margin-bottom: 0.55rem !important;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    opacity: 0.85;
+    margin-bottom: 0.65rem !important;
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: unset !important;
+    overflow: visible !important;
+    opacity: 0.88 !important;
+    color: var(--text-secondary) !important;
   }
   .hero-actions {
-    gap: 0.4rem !important;
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
+    gap: 0.45rem !important;
+    margin-top: 0.45rem !important;
+    margin-bottom: 0.55rem !important;
   }
   .hero-primary-action {
-    padding: 0.38rem 0.8rem !important;
-    font-size: 0.72rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.35rem !important;
+    padding: 0.45rem 0.95rem !important;
+    font-size: clamp(0.72rem, 2.2vw, 0.78rem) !important;
+    font-weight: 500 !important;
     border-radius: 9999px !important;
+    white-space: nowrap !important;
+    min-height: auto !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25) !important;
   }
   .hero-meta {
-    margin-top: 0.5rem !important;
+    margin-top: 0.45rem !important;
     gap: 0.45rem !important;
     flex-wrap: wrap !important;
+    display: flex !important;
+    align-items: center !important;
   }
   .hero-social-link {
-    width: 1.75rem !important;
-    height: 1.75rem !important;
+    width: 1.85rem !important;
+    height: 1.85rem !important;
+    min-width: 1.85rem !important;
+    min-height: 1.85rem !important;
+    border-radius: 9999px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .hero-social-link svg {
+    width: 0.88rem !important;
+    height: 0.88rem !important;
   }
   .hero-location {
-    font-size: 0.65rem !important;
+    font-size: 0.68rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
   }
   .hero-scroll-cue {
     display: none !important;
+  }
+}
+
+@media (max-width: 350px) {
+  .hero-section > div {
+    grid-template-columns: minmax(0, 1.28fr) minmax(0, 0.72fr) !important;
+    column-gap: 0.35rem !important;
+    padding-top: 4.25rem !important;
+  }
+  .hero-title {
+    font-size: clamp(0.84rem, 3.6vw, 0.94rem) !important;
+    letter-spacing: -0.02em !important;
+  }
+  .hero-mascot-frame {
+    width: clamp(98px, 29vw, 115px) !important;
+  }
+  .hero-intro {
+    font-size: 0.68rem !important;
+    line-height: 1.42 !important;
+  }
+  .hero-primary-action {
+    padding: 0.38rem 0.8rem !important;
+    font-size: 0.7rem !important;
+  }
+  .hero-social-link {
+    width: 1.7rem !important;
+    height: 1.7rem !important;
+    min-width: 1.7rem !important;
+    min-height: 1.7rem !important;
+  }
+  .hero-social-link svg {
+    width: 0.8rem !important;
+    height: 0.8rem !important;
+  }
+  .hero-location {
+    font-size: 0.62rem !important;
   }
 }
 
@@ -9407,14 +9484,20 @@ main,
     max-width: 32rem !important;
   }
   .hero-title {
-    font-size: clamp(1.85rem, 4vw, 2.5rem) !important;
+    font-size: clamp(1.75rem, 3.8vw, 2.4rem) !important;
     line-height: 1.15 !important;
+  }
+  .hero-title-typing {
+    white-space: nowrap !important;
   }
   .hero-intro {
     font-size: 0.88rem !important;
     line-height: 1.55 !important;
     margin-top: 0.65rem !important;
     margin-bottom: 0.85rem !important;
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    overflow: visible !important;
   }
   .hero-visual {
     width: 100% !important;
@@ -9539,38 +9622,6 @@ html, body {
   }
   .portfolio-nav .theme-toggle {
     flex-shrink: 0 !important;
-  }
-
-  /* Compact Hero on Mobile */
-  .hero-morph-wrapper {
-    margin-top: 1.25rem !important;
-    min-height: 4.8rem !important;
-  }
-  .hero-kicker {
-    margin-top: 0 !important;
-    font-size: 0.75rem !important;
-  }
-  .hero-title {
-    font-size: clamp(1.4rem, 6vw, 2rem) !important;
-    letter-spacing: -0.035em !important;
-    line-height: 1.12 !important;
-  }
-  .hero-title-typing {
-    white-space: normal !important;
-  }
-  .hero-intro {
-    font-size: 0.825rem !important;
-    line-height: 1.55 !important;
-    margin-top: 0.75rem !important;
-  }
-  .hero-actions {
-    gap: 0.55rem !important;
-    margin-top: 1.25rem !important;
-  }
-  .hero-cta,
-  .hero-secondary {
-    padding: 0.6rem 1.1rem !important;
-    font-size: 0.8125rem !important;
   }
 
   /* Section Headings on Mobile */
@@ -9708,8 +9759,8 @@ html, body {
 }
 
 /* ==========================================================================
-   MINIMALIST COUNTER & LASER SHIMMER PRELOADER (LINEAR / VERCEL STYLE)
-   Tailored for Richard D'Souza
+   PREMIUM CINEMATIC PRELOADER (GSAP + THREE.JS DEPTH)
+   Tailored for Richard D'souza
    ========================================================================== */
 
 .minimal-preloader-overlay {
@@ -9726,45 +9777,81 @@ html, body {
   user-select: none;
 }
 
-/* Mechanical shutter curtains for aperture exit */
+/* Three.js Subtle Depth Field Canvas */
+.minimal-preloader-canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  opacity: 0.82 !important;
+}
+
+/* Cinematic Atmospheric Edge Vignette */
+.minimal-preloader-vignette {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
+  background: radial-gradient(
+    circle at center,
+    transparent 42%,
+    rgba(7, 8, 12, 0.65) 75%,
+    rgba(5, 6, 9, 0.95) 100%
+  ) !important;
+}
+
+/* Ambient Radial Center Lighting */
+.minimal-preloader-ambient {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(34rem, 85vw) !important;
+  height: min(34rem, 85vw) !important;
+  border-radius: 50% !important;
+  background: radial-gradient(
+    circle,
+    rgba(167, 139, 250, 0.16) 0%,
+    rgba(99, 102, 241, 0.08) 38%,
+    rgba(6, 182, 212, 0.03) 60%,
+    transparent 75%
+  ) !important;
+  pointer-events: none !important;
+  z-index: 4 !important;
+  filter: blur(65px) !important;
+  will-change: transform, opacity;
+}
+
+/* Mechanical shutter curtains for cinematic aperture reveal */
 .preloader-shutter {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 50.5%;
-  background: #07080c;
-  z-index: 1;
-  pointer-events: none;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 50.5% !important;
+  background: #07080c !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+  will-change: transform;
 }
 
 .preloader-shutter-top {
   top: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.95);
 }
 
 .preloader-shutter-bottom {
   bottom: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.9);
-}
-
-/* Ambient Center Glow */
-.minimal-preloader-ambient {
-  position: absolute;
-  width: min(32rem, 80vw);
-  height: min(32rem, 80vw);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.12) 0%, rgba(99, 102, 241, 0.06) 40%, transparent 70%);
-  pointer-events: none;
-  z-index: 2;
-  filter: blur(55px);
+  box-shadow: 0 -14px 44px rgba(0, 0, 0, 0.95);
 }
 
 /* Central Minimal Stage */
 .minimal-preloader-stage {
   position: relative;
-  z-index: 10;
+  z-index: 20;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9773,28 +9860,54 @@ html, body {
   will-change: transform, opacity;
 }
 
-/* Monogram Badge */
+/* Full Name Branding: Richard D'souza */
 .minimal-preloader-brand {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 1.15rem;
-  letter-spacing: 0.04em;
-  margin-bottom: 1rem;
+  justify-content: center;
+  font-family: var(--font-display, 'Cabinet Grotesk', -apple-system, sans-serif);
+  font-size: clamp(1.22rem, 3.4vw, 1.55rem);
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  margin-bottom: 1.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 0.25rem 0.65rem;
+  will-change: transform, opacity;
 }
 
-.minimal-preloader-bracket {
-  color: #64748b;
-  font-size: 1.25rem;
+.preloader-brand-first {
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 0 22px rgba(255, 255, 255, 0.32);
 }
 
-.minimal-preloader-logo {
-  background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 60%, #818cf8 100%);
+.preloader-brand-space {
+  font-size: 0.9em;
+}
+
+.preloader-brand-last {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c4b5fd 40%, #a78bfa 75%, #818cf8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 16px rgba(196, 181, 253, 0.4));
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  filter: drop-shadow(0 0 16px rgba(167, 139, 250, 0.45));
+  font-weight: 600;
+}
+
+/* Subtle Specular Sheen Sweep */
+.preloader-brand-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 100%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+  will-change: transform;
 }
 
 /* Large Clean Kinetic Numerical Counter */
@@ -9803,39 +9916,40 @@ html, body {
   align-items: baseline;
   justify-content: center;
   line-height: 0.9;
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.35rem;
+  will-change: transform, opacity;
 }
 
 .minimal-counter-number {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: clamp(3.2rem, 8vw, 4.8rem);
+  font-size: clamp(3.4rem, 8.5vw, 5rem);
   font-weight: 800;
   letter-spacing: -0.06em;
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(180deg, #ffffff 30%, #94a3b8 100%);
+  background: linear-gradient(180deg, #ffffff 32%, #cbd5e1 75%, #94a3b8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 20px rgba(255, 255, 255, 0.15));
+  filter: drop-shadow(0 2px 24px rgba(255, 255, 255, 0.22));
 }
 
 .minimal-counter-pct {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  font-size: clamp(1.25rem, 3.2vw, 1.75rem);
   font-weight: 600;
   color: #64748b;
-  margin-left: 0.35rem;
+  margin-left: 0.4rem;
 }
 
 /* Hairline Laser Progress Line */
 .minimal-preloader-track-wrap {
-  width: min(200px, 60vw);
-  margin-bottom: 1.25rem;
+  width: min(220px, 62vw);
+  margin-bottom: 1.35rem;
 }
 
 .minimal-preloader-track {
   width: 100%;
   height: 2px;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
   position: relative;
   overflow: visible;
@@ -9844,58 +9958,61 @@ html, body {
 .minimal-preloader-fill {
   height: 100%;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #818cf8 0%, #c4b5fd 50%, #34d399 100%);
+  background: linear-gradient(90deg, #818cf8 0%, #c4b5fd 55%, #34d399 100%);
   position: relative;
-  transition: width 30ms linear;
-  box-shadow: 0 0 10px rgba(129, 140, 248, 0.5);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.55);
+  will-change: width;
 }
 
 .minimal-preloader-bead {
   position: absolute;
-  right: -2px;
+  right: -3px;
   top: 50%;
   transform: translateY(-50%);
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 10px #ffffff, 0 0 16px #34d399;
+  box-shadow:
+    0 0 8px #ffffff,
+    0 0 16px #a78bfa,
+    0 0 24px #34d399;
+  will-change: transform;
 }
 
 /* Subtle Status Telemetry */
 .minimal-preloader-status {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .minimal-status-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #38bdf8;
   box-shadow: 0 0 8px #38bdf8;
-  animation: minimal-dot-pulse 1.2s ease-in-out infinite;
+  transition: background-color 300ms ease, box-shadow 300ms ease;
 }
 
 .minimal-status-dot.is-ready {
   background: #34d399;
-  box-shadow: 0 0 10px #34d399;
-  animation: none;
-}
-
-@keyframes minimal-dot-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
+  box-shadow: 0 0 12px #34d399, 0 0 22px rgba(52, 211, 153, 0.6);
 }
 
 .minimal-status-text {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.6875rem;
-  font-weight: 650;
-  letter-spacing: 0.22em;
-  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  color: #94a3b8;
+  transition: color 300ms ease;
+}
+
+.minimal-status-text.is-ready {
+  color: #e2e8f0;
 }
 
 /* ==========================================================================
@@ -10895,14 +11012,32 @@ textarea {
 
 @media (max-width: 639px) {
   .hero-speech-bubble {
-    font-size: 0.68rem !important;
-    padding: 0.26rem 0.52rem !important;
-    gap: 0.3rem !important;
+    font-size: 0.62rem !important;
+    padding: 0.22rem 0.45rem !important;
+    gap: 0.25rem !important;
     white-space: nowrap !important;
+    top: -1.1rem !important;
+    left: 56% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    max-width: calc(100vw - 1.5rem) !important;
   }
   .hero-speech-bubble span {
-    font-size: 0.68rem !important;
+    font-size: 0.62rem !important;
     white-space: nowrap !important;
+  }
+  .hero-speech-bubble .bubble-pointer {
+    left: 45% !important;
+    right: auto !important;
+    transform: translateX(-50%) rotate(45deg) !important;
+  }
+  .hero-greeting-bubble {
+    top: -0.9rem !important;
+    left: 54% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    font-size: 0.62rem !important;
+    padding: 0.2rem 0.45rem !important;
   }
 }
 

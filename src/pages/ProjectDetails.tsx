@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { FaGithub, FaLinkedinIn } from 'react-icons/fa'
 import ThemeToggle from '../components/ThemeToggle'
+import { MusicButton } from '../components/music'
 import BackgroundAnimation from '../components/BackgroundAnimation'
 import CosmicHorizonDivider from '../components/CosmicHorizonDivider'
 import CinematicSection from '../components/CinematicSection'
@@ -372,6 +373,7 @@ export default function ProjectDetails() {
           </Link>
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <ThemeToggle />
+            <MusicButton />
             <Link
               to="/#projects"
               onClick={handleBackToProjects}

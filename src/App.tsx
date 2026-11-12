@@ -71,6 +71,7 @@ import {
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import ProjectDetails from './pages/ProjectDetails'
 import ThemeToggle from './components/ThemeToggle'
+import { MusicButton, MusicPlayer, MusicProvider } from './components/music'
 import BackgroundAnimation from './components/BackgroundAnimation'
 import CosmicHorizonDivider from './components/CosmicHorizonDivider'
 import SpatialHeroConsole from './components/SpatialHeroConsole'
@@ -1179,6 +1180,7 @@ function Home() {
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <ThemeToggle />
+            <MusicButton />
             <a
               href="#contact"
               className="portfolio-nav-cta hidden sm:inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-white/15 px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition hover:border-violet-400 hover:bg-violet-400/10 shrink-0"
@@ -2603,6 +2605,7 @@ function AnimatedRoutes() {
     <>
       <ScrollProgress />
       <GlobalBackToTop />
+      <MusicPlayer />
       <Routes location={location}>
         <Route path="/" element={<Home />} />
         <Route path="/request-resume" element={<RequestResume />} />
@@ -2633,7 +2636,7 @@ export default function App() {
   const [preloaderActive, setPreloaderActive] = useState(true)
 
   return (
-    <>
+    <MusicProvider>
       <AnimatePresence mode="wait">
         {preloaderActive && (
           <PortfolioPreloader onComplete={() => setPreloaderActive(false)} />
@@ -2642,6 +2645,6 @@ export default function App() {
       <BrowserRouter>
         <AnimatedRoutes />
       </BrowserRouter>
-    </>
+    </MusicProvider>
   )
 }

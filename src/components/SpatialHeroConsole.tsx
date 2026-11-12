@@ -593,7 +593,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.85, y: 8 }}
               transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-              className="hero-speech-bubble absolute -top-6 sm:top-2 md:top-3 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 z-40 flex items-center gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-2xl backdrop-blur-xl select-none cursor-pointer transition-colors duration-200 text-[11px] sm:text-sm whitespace-nowrap shadow-lg"
+              className="hero-speech-bubble absolute -top-6 sm:top-2 md:top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-2xl backdrop-blur-xl select-none cursor-pointer transition-colors duration-200 text-[11px] sm:text-sm whitespace-nowrap shadow-lg"
               onClick={() => setShowSpeechBubble(false)}
             >
               <span className="text-xs sm:text-base shrink-0">👋</span>
@@ -610,7 +610,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 <X size={11} className="sm:w-3 sm:h-3" />
               </button>
               {/* Pointer triangle */}
-              <div className="bubble-pointer absolute -bottom-1.5 right-8 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
+              <div className="bubble-pointer absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
             </motion.div>
           )}
         </AnimatePresence>

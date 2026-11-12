@@ -1,0 +1,271 @@
+/* ==========================================================================
+   Premium Spotify Music Experience (Midnight Aurora & Light Mode)
+   ========================================================================== */
+
+/* Navbar Trigger Button */
+.music-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  background: rgba(17, 21, 38, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), 0 1px 0 0 rgba(255, 255, 255, 0.08) inset;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Tablet & Desktop: Pill sizing matching .theme-toggle */
+@media (min-width: 640px) {
+  .music-nav-btn {
+    width: auto !important;
+    min-width: max-content !important;
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    padding: 0 0.85rem !important;
+    gap: 0.45rem !important;
+    border-radius: 9999px !important;
+  }
+}
+
+/* Mobile: Compact icon-only button matching mobile .theme-toggle */
+@media (max-width: 639px) {
+  .music-nav-btn {
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+    min-height: 2.35rem !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 0.58rem !important;
+  }
+}
+
+.music-nav-btn:hover {
+  color: #ffffff;
+  border-color: rgba(52, 211, 153, 0.45);
+  background: rgba(52, 211, 153, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 14px rgba(52, 211, 153, 0.22);
+}
+
+.music-nav-btn.is-open {
+  border-color: rgba(167, 139, 250, 0.5);
+  background: rgba(167, 139, 250, 0.16);
+  box-shadow: 0 0 14px rgba(167, 139, 250, 0.28);
+}
+
+.music-nav-btn.is-playing {
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.25);
+}
+
+/* Floating Player Popover Shell */
+.music-player-popover {
+  background: rgba(10, 13, 24, 0.94);
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  box-shadow:
+    0 24px 60px -8px rgba(0, 0, 0, 0.85),
+    0 0 32px -4px rgba(167, 139, 250, 0.18),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.music-player-header {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.music-preset-pill:hover {
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Stop Music Button
+   ========================================================================== */
+.music-stop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Responsive Layout — Mobile bottom sheet / Tablet / Desktop floating panel
+   ========================================================================== */
+
+/* Mobile (< 640px): compact floating bottom-sheet widget (55-65% dvh) */
+@media (max-width: 639px) {
+  .music-player-popover {
+    top: auto !important;
+    bottom: 0.65rem !important;
+    right: 0.65rem !important;
+    left: 0.65rem !important;
+    width: auto !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
+    min-width: 0 !important;
+    max-height: min(62dvh, 410px) !important;
+    border-radius: 1.15rem !important;
+    overflow: hidden !important;
+    box-shadow:
+      0 20px 60px -8px rgba(0, 0, 0, 0.9),
+      0 0 28px -4px rgba(167, 139, 250, 0.28),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .music-player-body {
+    max-height: calc(min(62dvh, 410px) - 2.75rem) !important;
+    padding: 0.6rem 0.75rem max(0.6rem, env(safe-area-inset-bottom, 0.6rem)) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .spotify-embed-container {
+    height: 80px !important;
+    min-height: 80px !important;
+  }
+
+  .spotify-embed-container iframe {
+    height: 80px !important;
+  }
+}
+
+/* Utility to hide scrollbars for horizontal presets */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Tablet (640px–1023px): floating panel, slightly wider */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .music-player-popover {
+    width: 380px !important;
+  }
+}
+
+/* Desktop (≥ 1024px): floating panel */
+@media (min-width: 1024px) {
+  .music-player-popover {
+    width: 400px !important;
+  }
+}
+
+/* Preset grid: 2 cols on mobile, 3 cols on sm+ (also handled inline via Tailwind classes) */
+@media (max-width: 639px) {
+  .music-preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 640px) {
+  .music-preset-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Prevent horizontal overflow at 320px */
+@media (max-width: 359px) {
+  .music-player-popover {
+    min-width: 0 !important;
+  }
+
+  .music-player-body {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
+
+/* Reduced-motion CSS fallback (React already guards animations, belt-and-suspenders) */
+@media (prefers-reduced-motion: reduce) {
+  .music-player-popover,
+  .music-player-backdrop,
+  .music-preset-pill,
+  .music-nav-btn {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   Light Mode Overrides
+   ========================================================================== */
+[data-theme='light'] .music-nav-btn {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme='light'] .music-nav-btn:hover {
+  background: #f8fafc !important;
+  border-color: #059669 !important;
+  color: #059669 !important;
+}
+
+[data-theme='light'] .music-nav-btn.is-open {
+  border-color: #6366f1 !important;
+  background: #f5f3ff !important;
+  color: #4f46e5 !important;
+}
+
+[data-theme='light'] .music-player-popover {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  box-shadow:
+    0 24px 50px -8px rgba(15, 23, 42, 0.18),
+    0 4px 14px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+[data-theme='light'] .music-player-header {
+  border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+  background: rgba(248, 250, 252, 0.6) !important;
+}
+
+[data-theme='light'] .music-player-header span.text-white {
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .music-player-close-btn {
+  color: #64748b !important;
+}
+
+[data-theme='light'] .music-player-close-btn:hover {
+  color: #0f172a !important;
+  background: rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-theme='light'] .music-track-card {
+  background: rgba(248, 250, 252, 0.85) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+[data-theme='light'] .music-track-card h4.text-white {
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .music-preset-pill {
+  background: rgba(248, 250, 252, 0.75) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  color: #334155 !important;
+}
+
+[data-theme='light'] .music-preset-pill:hover {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+[data-theme='light'] .music-preset-pill.is-selected {
+  background: #ede9fe !important;
+  border-color: #8b5cf6 !important;
+  color: #5b21b6 !important;
+}
