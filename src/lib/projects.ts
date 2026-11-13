@@ -43,6 +43,20 @@ const projectColors = [
   'from-fuchsia-500/15 to-purple-500/5',
 ]
 
+function sanitizeWebUrl(url: string | null): string {
+  if (!url) return ''
+  const trimmed = url.trim()
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return trimmed
+    }
+    return ''
+  } catch {
+    return ''
+  }
+}
+
 function mapProject(
   project: SupabaseProject,
   index: number,
@@ -59,9 +73,9 @@ function mapProject(
     galleryImages: project.gallery_images ?? [],
     stack: project.tech_stack ?? [],
     color: projectColors[index % projectColors.length],
-    github: project.github_url ?? '',
-    liveUrl: project.live_url ?? '',
-    demoVideo: project.demo_video_url ?? '',
+    github: sanitizeWebUrl(project.github_url),
+    liveUrl: sanitizeWebUrl(project.live_url),
+    demoVideo: sanitizeWebUrl(project.demo_video_url),
     features: project.features ?? [],
   }
 }

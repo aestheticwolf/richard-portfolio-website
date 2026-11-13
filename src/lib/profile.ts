@@ -221,8 +221,25 @@ export async function getPublishedProfile(): Promise<PublicProfile | null> {
 
   const cleanSecondaryBio = stripHeroConsoleFromText(record.secondary_biography)
 
+  function sanitizeWebUrl(url: string | null): string | null {
+    if (!url) return null
+    const trimmed = url.trim()
+    try {
+      const parsed = new URL(trimmed)
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        return trimmed
+      }
+      return null
+    } catch {
+      return null
+    }
+  }
+
   return {
     ...record,
+    github_url: sanitizeWebUrl(record.github_url),
+    linkedin_url: sanitizeWebUrl(record.linkedin_url),
+    profile_image_url: sanitizeWebUrl(record.profile_image_url),
     skills: record.skills ?? defaultSkills,
     secondary_biography: cleanSecondaryBio,
     hero_console: resolvedHeroConsole,
