@@ -31,6 +31,7 @@ function createParticleTexture(): THREE.Texture {
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, size, size)
   const texture = new THREE.CanvasTexture(canvas)
+  texture.flipY = false
   texture.needsUpdate = true
   return texture
 }
@@ -42,9 +43,10 @@ function initMascotConstellation(
   mouseRef: React.MutableRefObject<{ x: number; y: number; active: boolean }>,
   isInViewRef: React.MutableRefObject<boolean>
 ) {
+  const fallbackW = typeof window !== 'undefined' ? Math.min(window.innerWidth, 550) : 375
   const rect = canvas.getBoundingClientRect()
-  const width = rect.width || canvas.clientWidth || 550
-  const height = rect.height || canvas.clientHeight || 550
+  const width = rect.width || canvas.clientWidth || fallbackW
+  const height = rect.height || canvas.clientHeight || fallbackW
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -143,10 +145,47 @@ function initMascotConstellation(
   let clock = 0
   let camTargetX = 0
   let camTargetY = 0
+  let isRunning = false
+
+  const startLoop = () => {
+    if (!isRunning && isInViewRef.current && !document.hidden) {
+      isRunning = true
+      animationFrameId = requestAnimationFrame(renderLoop)
+    }
+  }
+
+  const stopLoop = () => {
+    isRunning = false
+    cancelAnimationFrame(animationFrameId)
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        isInViewRef.current = entry.isIntersecting
+        if (entry.isIntersecting) {
+          startLoop()
+        } else {
+          stopLoop()
+        }
+      })
+    },
+    { threshold: 0.05 }
+  )
+  observer.observe(canvas)
+
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      stopLoop()
+    } else if (isInViewRef.current) {
+      startLoop()
+    }
+  }
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 
   const renderLoop = () => {
-    if (!isInViewRef.current) {
-      animationFrameId = requestAnimationFrame(renderLoop)
+    if (!isInViewRef.current || document.hidden) {
+      isRunning = false
       return
     }
 
@@ -208,12 +247,13 @@ function initMascotConstellation(
     animationFrameId = requestAnimationFrame(renderLoop)
   }
 
-  animationFrameId = requestAnimationFrame(renderLoop)
+  startLoop()
 
   const handleResize = () => {
+    const fallbackW = typeof window !== 'undefined' ? Math.min(window.innerWidth, 550) : 375
     const newRect = canvas.getBoundingClientRect()
-    const w = newRect.width || canvas.clientWidth || 550
-    const h = newRect.height || canvas.clientHeight || 550
+    const w = newRect.width || canvas.clientWidth || fallbackW
+    const h = newRect.height || canvas.clientHeight || fallbackW
     camera.aspect = w / h
     camera.updateProjectionMatrix()
     renderer.setSize(w, h, false)
@@ -222,7 +262,9 @@ function initMascotConstellation(
   window.addEventListener('resize', handleResize)
 
   return () => {
-    cancelAnimationFrame(animationFrameId)
+    stopLoop()
+    observer.disconnect()
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
     window.removeEventListener('resize', handleResize)
     particleGeo.dispose()
     particleMat.dispose()
@@ -538,7 +580,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
       {/* 1. Subtle Three.js Ambient Constellation & Neural Canvas (Behind mascot) */}
       <canvas
         ref={canvasRef}
-        className="absolute -inset-4 sm:-inset-16 w-[calc(100%+2rem)] sm:w-[calc(100%+8rem)] h-[calc(100%+2rem)] sm:h-[calc(100%+8rem)] pointer-events-none z-0 opacity-55"
+        className="absolute inset-0 sm:-inset-16 w-full sm:w-[calc(100%+8rem)] h-full sm:h-[calc(100%+8rem)] pointer-events-none z-0 opacity-55"
         aria-hidden="true"
       />
 
@@ -628,7 +670,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
                 y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
               }}
-              className="hero-greeting-bubble absolute -top-4 sm:top-2 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:-left-4 md:-left-5 z-30 flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-md cursor-pointer transition-transform hover:scale-104 active:scale-96 text-[10px] sm:text-xs whitespace-nowrap shadow-md"
+              className="hero-greeting-bubble absolute -top-4 sm:top-2 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:-left-4 md:-left-5 z-30 flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-md cursor-pointer transition-transform hover:scale-104 active:scale-96 text-[10px] sm:text-xs whitespace-nowrap shadow-md max-w-[calc(100vw-3rem)]"
               onClick={handleMascotClick}
               role="button"
               tabIndex={0}
@@ -640,7 +682,10 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 }
               }}
             >
-              <span className="text-[10px] sm:text-xs font-medium">Hey, welcome! 👋</span>
+              <span className="text-[10px] sm:text-xs font-medium">
+                <span className="hidden sm:inline">Hey, welcome! 👋</span>
+                <span className="sm:hidden">Hey! 👋</span>
+              </span>
               <button
                 type="button"
                 onClick={(e) => {
@@ -676,7 +721,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
             x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
             y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
           }}
-          className="absolute top-5 sm:top-12 md:top-14 -left-2 sm:-left-3 md:-left-6 lg:-left-8 z-20 pointer-events-none select-none transition-transform duration-300 scale-65 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-right"
+          className="absolute top-5 sm:top-12 md:top-14 left-0 sm:-left-3 md:-left-6 lg:-left-8 z-20 pointer-events-none select-none transition-transform duration-300 scale-65 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-right"
         >
           <NeonHoloLaptop />
         </motion.div>
@@ -702,7 +747,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
             x: motionDisabled || isTouchDevice ? 0 : chipParallaxX2,
             y: motionDisabled || isTouchDevice ? 0 : chipParallaxY2,
           }}
-          className="absolute top-7 sm:top-14 md:top-16 -right-1 sm:right-0 md:right-1 lg:-right-3 z-20 pointer-events-none select-none transition-transform duration-300 scale-65 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-left"
+          className="absolute top-7 sm:top-14 md:top-16 right-0 sm:right-0 md:right-1 lg:-right-3 z-20 pointer-events-none select-none transition-transform duration-300 scale-65 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-left"
         >
           <NeonCodeBadge />
         </motion.div>
@@ -722,7 +767,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
             duration: 3.2,
             ease: 'easeInOut',
           }}
-          className="absolute -top-1 sm:-top-2 right-3 sm:right-6 md:right-10 z-20 pointer-events-none text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.85)] scale-75 sm:scale-90 md:scale-100"
+          className="absolute -top-1 sm:-top-2 right-1 sm:right-6 md:right-10 z-20 pointer-events-none text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.85)] scale-75 sm:scale-90 md:scale-100"
         >
           <StarSparkle size={18} />
         </motion.div>

@@ -123,8 +123,29 @@ export type PublicProfile = {
   updated_at: string
 }
 
-export async function getPublishedProfile(): Promise<PublicProfile | null> {
-  const queryWithHeroConsole = `
+let cachedProfile: PublicProfile | null = null
+let inFlightProfilePromise: Promise<PublicProfile | null> | null = null
+
+export async function getPublishedProfile(forceRefresh = false): Promise<PublicProfile | null> {
+  if (cachedProfile && !forceRefresh) {
+    return cachedProfile
+  }
+  if (inFlightProfilePromise && !forceRefresh) {
+    return inFlightProfilePromise
+  }
+
+  inFlightProfilePromise = fetchPublishedProfileFromSupabase()
+  try {
+    cachedProfile = await inFlightProfilePromise
+    return cachedProfile
+  } finally {
+    inFlightProfilePromise = null
+  }
+}
+
+async function fetchPublishedProfileFromSupabase(): Promise<PublicProfile | null> {
+  // Query exclusively existing columns in production database to prevent PostgREST 400 Bad Request
+  const validProfileQuery = `
     id,
     full_name,
     professional_title,
@@ -137,7 +158,6 @@ export async function getPublishedProfile(): Promise<PublicProfile | null> {
     linkedin_url,
     interests,
     skills,
-    hero_console,
     updated_at
   `
 
@@ -162,19 +182,16 @@ export async function getPublishedProfile(): Promise<PublicProfile | null> {
 
   const { data, error } = await supabase
     .from('portfolio_profile')
-    .select(queryWithHeroConsole)
+    .select(validProfileQuery)
     .eq('status', 'published')
     .maybeSingle()
 
   if (error) {
-    const missingHeroConsole =
-      error.code === '42703' ||
-      error.message.toLowerCase().includes('hero_console')
     const missingSkillsColumn =
       error.code === '42703' ||
       error.message.toLowerCase().includes('portfolio_profile.skills')
 
-    if (missingHeroConsole || missingSkillsColumn) {
+    if (missingSkillsColumn) {
       const fallbackQuery = `
         id,
         full_name,
@@ -187,7 +204,6 @@ export async function getPublishedProfile(): Promise<PublicProfile | null> {
         github_url,
         linkedin_url,
         interests,
-        ${missingSkillsColumn ? '' : 'skills,'}
         updated_at
       `
 
@@ -202,7 +218,7 @@ export async function getPublishedProfile(): Promise<PublicProfile | null> {
       }
 
       record = (retryResult.data as unknown) as RawRecord | null
-      if (record && missingSkillsColumn) {
+      if (record) {
         record.skills = defaultSkills
       }
     } else {

@@ -30,10 +30,8 @@ export default function BackgroundAnimation() {
     if (!ctx) return
 
     let animationFrameId: number
-    let width = (document.documentElement.clientWidth || window.innerWidth)
-    let height = (document.documentElement.clientHeight || window.innerHeight)
-    canvas.width = width
-    canvas.height = height
+    let width = document.documentElement.clientWidth || window.innerWidth || 375
+    let height = document.documentElement.clientHeight || window.innerHeight || 667
 
     // Check prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -124,15 +122,23 @@ export default function BackgroundAnimation() {
     window.addEventListener('resize', resize, { passive: true })
     window.addEventListener('orientationchange', resize, { passive: true })
 
-    const resizeObserver = new ResizeObserver(() => {
-      resize()
-    })
-    resizeObserver.observe(document.documentElement)
+    let isRunning = true
+    const handleVisibility = () => {
+      if (document.hidden) {
+        isRunning = false
+        cancelAnimationFrame(animationFrameId)
+      } else if (!isRunning) {
+        isRunning = true
+        animationFrameId = requestAnimationFrame(render)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
 
     // Animation Loop
     let lastPulseSpawn = 0
 
     const render = (time: number) => {
+      if (!isRunning || document.hidden) return
       // Smooth cursor lerp
       if (mouse.active) {
         mouse.x += (mouse.targetX - mouse.x) * 0.08
@@ -184,7 +190,9 @@ export default function BackgroundAnimation() {
       const maxDist = 115
       const mouseMaxDist = 145
 
-      // 2. Update and draw connection lines between close particles
+      // 2. Update and draw connection lines between close particles (Batched Path for 60-120fps)
+      ctx.beginPath()
+      ctx.lineWidth = 0.85
       for (let i = 0; i < particles.length; i++) {
         const p1 = particles[i]
 
@@ -195,13 +203,8 @@ export default function BackgroundAnimation() {
           const dist = Math.hypot(dx, dy)
 
           if (dist < maxDist) {
-            const lineAlpha = (1 - dist / maxDist) * (isLight ? 0.16 : 0.22)
-            ctx.strokeStyle = `rgba(${colorViolet}, ${lineAlpha})`
-            ctx.lineWidth = 0.85
-            ctx.beginPath()
             ctx.moveTo(p1.x, p1.y)
             ctx.lineTo(p2.x, p2.y)
-            ctx.stroke()
 
             // Randomly spawn traveling data beam pulse along connected edge
             if (!prefersReducedMotion && time - lastPulseSpawn > 1200 && Math.random() < 0.015) {
@@ -217,21 +220,24 @@ export default function BackgroundAnimation() {
             }
           }
         }
+      }
+      ctx.strokeStyle = `rgba(${colorViolet}, ${isLight ? 0.15 : 0.20})`
+      ctx.stroke()
 
-        // Connection line to mouse cursor
-        if (mouse.active) {
+      // Connection line to mouse cursor (Batched)
+      if (mouse.active) {
+        ctx.beginPath()
+        ctx.lineWidth = 1.1
+        ctx.strokeStyle = `rgba(${colorViolet}, ${isLight ? 0.32 : 0.42})`
+        for (let i = 0; i < particles.length; i++) {
+          const p1 = particles[i]
           const mdx = p1.x - mouse.x
           const mdy = p1.y - mouse.y
           const mdist = Math.hypot(mdx, mdy)
 
           if (mdist < mouseMaxDist) {
-            const mAlpha = (1 - mdist / mouseMaxDist) * (isLight ? 0.35 : 0.45)
-            ctx.strokeStyle = `rgba(${colorViolet}, ${mAlpha})`
-            ctx.lineWidth = 1.1
-            ctx.beginPath()
             ctx.moveTo(p1.x, p1.y)
             ctx.lineTo(mouse.x, mouse.y)
-            ctx.stroke()
 
             // Very subtle magnetic push/pull away from cursor
             if (!prefersReducedMotion && mdist > 30) {
@@ -241,6 +247,7 @@ export default function BackgroundAnimation() {
             }
           }
         }
+        ctx.stroke()
       }
 
       // 3. Draw Traveling Data Beam Pulses
@@ -310,10 +317,10 @@ export default function BackgroundAnimation() {
       cancelAnimationFrame(animationFrameId)
       window.removeEventListener('resize', resize)
       window.removeEventListener('orientationchange', resize)
+      document.removeEventListener('visibilitychange', handleVisibility)
       window.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseleave', handleMouseLeave)
       window.removeEventListener('scroll', handleScroll)
-      resizeObserver.disconnect()
       observer.disconnect()
     }
   }, [])

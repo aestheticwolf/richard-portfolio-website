@@ -19,7 +19,7 @@ function initPreloaderThree(canvas: HTMLCanvasElement): () => void {
     powerPreference: 'low-power',
   })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
-  renderer.setSize(window.innerWidth, window.innerHeight)
+  renderer.setSize(window.innerWidth, window.innerHeight, false)
 
   const scene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 100)
@@ -40,6 +40,7 @@ function initPreloaderThree(canvas: HTMLCanvasElement): () => void {
     ctx.fillRect(0, 0, 32, 32)
   }
   const texture = new THREE.CanvasTexture(texCanvas)
+  texture.flipY = false
 
   // Lightweight particle field (48 particles)
   const count = 48
@@ -71,7 +72,7 @@ function initPreloaderThree(canvas: HTMLCanvasElement): () => void {
     if (disposed) return
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setSize(window.innerWidth, window.innerHeight, false)
   }
   window.addEventListener('resize', onResize, { passive: true })
 

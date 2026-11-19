@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { motion, useScroll, useTransform, useSpring, useReducedMotion } from 'framer-motion'
+import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
 
 export interface CinematicSectionProps {
   id?: string
@@ -19,112 +19,84 @@ export const CinematicSection: React.FC<CinematicSectionProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
   const prefersReducedMotion = useReducedMotion() ?? false
 
-  // Fast, responsive spring physics ensures fluid 60-120fps motion without any scroll-lag
-  const springConfig = { stiffness: 260, damping: 32, mass: 0.15 }
-
   // --------------------------------------------------------------------------
-  // 1. HERO ARCHETYPE: Fully visible at top (0), crossfades out into About
+  // 1. HERO ARCHETYPE: Fully visible at top (0), smooth direct GPU glide on exit
   // --------------------------------------------------------------------------
-  const { scrollYProgress: heroExitScroll } = useScroll({
+  const { scrollYProgress: heroScroll } = useScroll({
     target: containerRef,
     offset: ['start start', 'end start'],
   })
-  const heroExitSmooth = useSpring(heroExitScroll, springConfig)
 
-  // Outgoing: Opacity 1 -> 0, Blur 0px -> 6px, Scale 1 -> 0.985, subtle linger Y 0 -> +40px
-  const heroOpacity = useTransform(heroExitSmooth, [0, 0.35, 0.95, 1], [1, 1, 0, 0])
-  const heroBlurVal = useTransform(heroExitSmooth, [0, 0.35, 0.95, 1], [0, 0, 6, 6])
-  const heroScale = useTransform(heroExitSmooth, [0, 0.35, 0.95, 1], [1, 1, 0.985, 0.985])
-  const heroY = useTransform(heroExitSmooth, [0, 0.35, 0.95, 1], [0, 0, 40, 40])
-  const heroFilter = useTransform(heroBlurVal, (b) => (b <= 0.1 ? 'none' : `blur(${b.toFixed(1)}px)`))
+  // Outgoing hero: stays 100% visible and sharp until ~40% scroll, then glides gently
+  const heroOpacity = useTransform(heroScroll, [0, 0.4, 0.95, 1], [1, 1, 0.15, 0])
+  const heroScale = useTransform(heroScroll, [0, 0.4, 1], [1, 1, 0.985])
+  const heroY = useTransform(heroScroll, [0, 0.4, 1], [0, 0, -28])
   const heroPointerEvents = useTransform(heroOpacity, (o) => (o <= 0.05 ? 'none' : 'auto'))
 
   // --------------------------------------------------------------------------
-  // 2. FOOTER ARCHETYPE: Crossfades in at bottom of page
+  // 2. FOOTER ARCHETYPE: Enters at the bottom of the page
   // --------------------------------------------------------------------------
-  const { scrollYProgress: footerEnterScroll } = useScroll({
+  const { scrollYProgress: footerScroll } = useScroll({
     target: containerRef,
     offset: ['start end', 'end end'],
   })
-  const footerEnterSmooth = useSpring(footerEnterScroll, springConfig)
 
-  // Incoming: Opacity 0 -> 1, Blur 6px -> 0px, Scale 0.985 -> 1, subtle overlap Y -30px -> 0px
-  const footerOpacity = useTransform(footerEnterSmooth, [0, 0.85], [0, 1])
-  const footerBlurVal = useTransform(footerEnterSmooth, [0, 0.85], [6, 0])
-  const footerScale = useTransform(footerEnterSmooth, [0, 0.85], [0.985, 1])
-  const footerY = useTransform(footerEnterSmooth, [0, 0.85], [-30, 0])
-  const footerFilter = useTransform(footerBlurVal, (b) => (b <= 0.1 ? 'none' : `blur(${b.toFixed(1)}px)`))
+  // Incoming footer: smooth entry
+  const footerOpacity = useTransform(footerScroll, [0, 0.4], [0.35, 1])
+  const footerScale = useTransform(footerScroll, [0, 0.5], [0.99, 1])
+  const footerY = useTransform(footerScroll, [0, 0.5], [20, 0])
   const footerPointerEvents = useTransform(footerOpacity, (o) => (o <= 0.05 ? 'none' : 'auto'))
 
   // --------------------------------------------------------------------------
-  // 3. STANDARD CONTENT SECTIONS: Bidirectional Crossfade with Overlap
+  // 3. CONTENT SECTIONS: Direct GPU-accelerated Perspective Transitions
   // --------------------------------------------------------------------------
-  // Entry tracking: triggers as top of section enters viewport until well into reading area
-  const { scrollYProgress: sectionEnterScroll } = useScroll({
+  const { scrollYProgress: enterScroll } = useScroll({
     target: containerRef,
-    offset: ['start end', 'start 20%'] as const,
+    offset: ['start end', 'start 70%'] as const,
   })
-  const sectionEnterSmooth = useSpring(sectionEnterScroll, springConfig)
 
-  // Exit tracking: triggers as bottom of section leaves viewport
-  const { scrollYProgress: sectionExitScroll } = useScroll({
+  const { scrollYProgress: exitScroll } = useScroll({
     target: containerRef,
-    offset: ['end 70%', 'end start'] as const,
+    offset: ['end 40%', 'end start'] as const,
   })
-  const sectionExitSmooth = useSpring(sectionExitScroll, springConfig)
 
-  // Entry transforms (Incoming): Opacity 0 -> 1
-  const enterOpacity = useTransform(sectionEnterSmooth, [0, 0.95], [0, 1])
-  // Exit transforms (Outgoing): Opacity 1 -> 0
-  const exitOpacity = useTransform(sectionExitSmooth, [0, 0.95], [1, 0])
+  // Quick crisp opacity ramp on entry: reaches 1.0 by 30% of entry window
+  const enterOpacity = useTransform(enterScroll, [0, 0.3, 1], [0.3, 1, 1])
+  const exitOpacity = useTransform(exitScroll, [0, 0.95, 1], [1, 0.15, 0])
 
-  // Combined Opacity: Visual overlap during handoff
   const sectionOpacity = useTransform([enterOpacity, exitOpacity], ([en, ex]) => {
     return Math.min(Number(en), Number(ex))
   })
 
-  // Combined Blur: 6px on entry, 0px in active reading zone, 6px on exit
-  const sectionBlurVal = useTransform([sectionEnterSmooth, sectionExitSmooth], ([en, ex]) => {
-    const enterBlur = (1 - Math.min(1, Math.max(0, Number(en)))) * 6
-    const exitBlur = Math.min(1, Math.max(0, Number(ex))) * 6
-    return Math.max(enterBlur, exitBlur)
-  })
-  // Performance optimization: when blur is near zero, set filter to 'none' to free GPU cycles
-  const sectionFilter = useTransform(sectionBlurVal, (b) => (b <= 0.1 ? 'none' : `blur(${b.toFixed(1)}px)`))
-
-  // Combined Scale: 0.985 on entry, 1.0 in reading zone, 0.985 on exit
-  const sectionScale = useTransform([sectionEnterSmooth, sectionExitSmooth], ([en, ex]) => {
-    const enClamped = Math.min(1, Math.max(0, Number(en)))
-    const exClamped = Math.min(1, Math.max(0, Number(ex)))
-    const enterScale = 0.985 + enClamped * (1 - 0.985)
-    const exitScale = 1 - exClamped * (1 - 0.985)
-    return Math.min(enterScale, exitScale)
+  // Subtle vertical translation: 16px -> 0px on entry, 0px -> -16px on exit
+  const enterY = useTransform(enterScroll, [0, 1], [16, 0])
+  const exitY = useTransform(exitScroll, [0, 1], [0, -16])
+  const sectionY = useTransform([enterY, exitY], ([en, ex]) => {
+    return Number(en) + Number(ex)
   })
 
-  // Subtle Overlap TranslateY: -40px on entry (emerging into outgoing space), +40px on exit (lingering in viewport)
-  // Ensures adjacent sections visually overlap during the dissolve without breaking document flow
-  const sectionY = useTransform([sectionEnterSmooth, sectionExitSmooth], ([en, ex]) => {
-    const enClamped = Math.min(1, Math.max(0, Number(en)))
-    const exClamped = Math.min(1, Math.max(0, Number(ex)))
-    const enterY = (1 - enClamped) * -40
-    const exitY = exClamped * 40
-    return enterY + exitY
+  // Subtle focal scale: 0.99 -> 1.0 on entry, 1.0 -> 0.99 on exit
+  const enterScale = useTransform(enterScroll, [0, 1], [0.99, 1])
+  const exitScale = useTransform(exitScroll, [0, 1], [1, 0.99])
+  const sectionScale = useTransform([enterScale, exitScale], ([en, ex]) => {
+    return Math.min(Number(en), Number(ex))
   })
 
   const sectionPointerEvents = useTransform(sectionOpacity, (o) => (o <= 0.05 ? 'none' : 'auto'))
 
   // Select active values based on archetype
-  const activeOpacity = type === 'hero' ? heroOpacity : type === 'footer' ? footerOpacity : sectionOpacity
-  const activeFilter = type === 'hero' ? heroFilter : type === 'footer' ? footerFilter : sectionFilter
-  const activeScale = type === 'hero' ? heroScale : type === 'footer' ? footerScale : sectionScale
-  const activeY = type === 'hero' ? heroY : type === 'footer' ? footerY : sectionY
+  const isHero = type === 'hero'
+  const isFooter = type === 'footer'
+  const activeOpacity = isHero ? heroOpacity : isFooter ? footerOpacity : sectionOpacity
+  const activeScale = isHero ? heroScale : isFooter ? footerScale : sectionScale
+  const activeY = isHero ? heroY : isFooter ? footerY : sectionY
   const activePointerEvents =
-    type === 'hero' ? heroPointerEvents : type === 'footer' ? footerPointerEvents : sectionPointerEvents
+    isHero ? heroPointerEvents : isFooter ? footerPointerEvents : sectionPointerEvents
 
   if (prefersReducedMotion) {
     const Tag = type === 'footer' ? 'footer' : 'section'
     return (
-      <Tag id={id} className={className} style={style}>
+      <Tag id={id} className={`cinematic-crossfade-section ${className}`} style={style}>
         {children}
       </Tag>
     )
@@ -140,11 +112,10 @@ export const CinematicSection: React.FC<CinematicSectionProps> = ({
       style={{
         ...style,
         opacity: activeOpacity,
-        filter: activeFilter,
         scale: activeScale,
         y: activeY,
         pointerEvents: activePointerEvents as unknown as React.CSSProperties['pointerEvents'],
-        willChange: 'transform, opacity, filter',
+        willChange: 'transform, opacity',
         transformOrigin: '50% 50%',
       }}
     >

@@ -365,11 +365,11 @@ export default function ProjectDetails() {
               sessionStorage.setItem('portfolio_home_scroll', '0')
             }}
             state={{ resetScroll: true }}
-            className="portfolio-nav-logo inline-flex items-center"
+            className="portfolio-nav-logo inline-flex items-center shrink-0"
             aria-label="Richard D'Souza Home"
           >
-            <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto object-contain" />
-            <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto object-contain" />
+            <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
+            <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
           </Link>
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <ThemeToggle />

@@ -76,6 +76,7 @@ import BackgroundAnimation from './components/BackgroundAnimation'
 import CosmicHorizonDivider from './components/CosmicHorizonDivider'
 import SpatialHeroConsole from './components/SpatialHeroConsole'
 import CinematicSection from './components/CinematicSection'
+import CertificationsSection from './components/CertificationsSection'
 import { smoothScrollToTop } from './lib/smoothScroll'
 import {
   getPublishedProjects,
@@ -96,6 +97,7 @@ const navigation = [
   { label: 'Home', href: '#home' },
   { label: 'About', href: '#about' },
   { label: 'Skills', href: '#skills' },
+  { label: 'Certifications', href: '#certifications' },
   { label: 'Projects', href: '#projects' },
   { label: 'Contact', href: '#contact' },
 ]
@@ -412,13 +414,12 @@ const educationJourney = [
 
 
 
-// Bidirectional Crossfade Heading Reveal (Reversible down & up)
+// Bidirectional Spatial Heading Reveal (Crystal Sharp, No Blur)
 const spatialHeadingReveal = {
   hidden: {
     opacity: 0,
-    y: 0,
-    scale: 0.985,
-    filter: 'blur(4px)',
+    y: 18,
+    scale: 0.99,
     transition: {
       duration: 0.35,
       ease: [0.16, 1, 0.3, 1] as const,
@@ -428,21 +429,19 @@ const spatialHeadingReveal = {
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.6,
+      duration: 0.55,
       ease: [0.16, 1, 0.3, 1] as const,
     },
   },
 }
 
-// Bidirectional Crossfade Bento Card Reveal (Reversible down & up)
+// Bidirectional Spatial Bento Card Reveal (Crystal Sharp, No Blur)
 const spatialCardReveal = {
   hidden: {
     opacity: 0,
-    y: 0,
-    scale: 0.985,
-    filter: 'blur(4px)',
+    y: 20,
+    scale: 0.99,
     transition: {
       duration: 0.35,
       ease: [0.16, 1, 0.3, 1] as const,
@@ -452,9 +451,8 @@ const spatialCardReveal = {
     opacity: 1,
     y: 0,
     scale: 1,
-    filter: 'blur(0px)',
     transition: {
-      duration: 0.65,
+      duration: 0.6,
       ease: [0.16, 1, 0.3, 1] as const,
     },
   },
@@ -522,18 +520,28 @@ function GlobalBackToTop() {
   const [isLaunching, setIsLaunching] = useState(false)
 
   useEffect(() => {
-    const checkVisibility = () => {
-      const scrollY = window.scrollY
-      const innerHeight = window.innerHeight
-      const scrollHeight = document.documentElement.scrollHeight
-      const footerEl = document.querySelector('.portfolio-footer')
-      const footerRect = footerEl ? footerEl.getBoundingClientRect() : null
-      
-      // Hide if approaching bottom or when footer enters the viewport
-      const isNearFooter = innerHeight + scrollY >= scrollHeight - 460
-      const isFooterInView = footerRect ? footerRect.top < innerHeight + 60 : isNearFooter
+    let rAF = 0
+    let footerEl: Element | null = null
 
-      setShowBackToTop(scrollY > 680 && !isNearFooter && !isFooterInView)
+    const checkVisibility = () => {
+      cancelAnimationFrame(rAF)
+      rAF = requestAnimationFrame(() => {
+        const scrollY = window.scrollY
+        if (scrollY <= 680) {
+          setShowBackToTop(false)
+          return
+        }
+        if (!footerEl) {
+          footerEl = document.querySelector('.portfolio-footer')
+        }
+        const innerHeight = window.innerHeight
+        const scrollHeight = document.documentElement.scrollHeight
+        const isNearFooter = innerHeight + scrollY >= scrollHeight - 460
+        const footerRect = footerEl ? footerEl.getBoundingClientRect() : null
+        const isFooterInView = footerRect ? footerRect.top < innerHeight + 60 : isNearFooter
+
+        setShowBackToTop(!isNearFooter && !isFooterInView)
+      })
     }
 
     window.addEventListener('scroll', checkVisibility, { passive: true })
@@ -541,6 +549,7 @@ function GlobalBackToTop() {
     checkVisibility()
 
     return () => {
+      cancelAnimationFrame(rAF)
       window.removeEventListener('scroll', checkVisibility)
       window.removeEventListener('resize', checkVisibility)
     }
@@ -601,6 +610,26 @@ function Home() {
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [selectedSkillCategory, setSelectedSkillCategory] = useState<string>('all')
   const [hoveredTool, setHoveredTool] = useState<string | null>(null)
+  const [windowWidth, setWindowWidth] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 375))
+
+  useEffect(() => {
+    let rAFId: number
+    const handleResize = () => {
+      cancelAnimationFrame(rAFId)
+      rAFId = requestAnimationFrame(() => {
+        setWindowWidth(window.innerWidth)
+      })
+    }
+    window.addEventListener('resize', handleResize, { passive: true })
+    window.addEventListener('orientationchange', handleResize, { passive: true })
+    window.visualViewport?.addEventListener('resize', handleResize, { passive: true })
+    return () => {
+      cancelAnimationFrame(rAFId)
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('orientationchange', handleResize)
+      window.visualViewport?.removeEventListener('resize', handleResize)
+    }
+  }, [])
 
   const [contactStatusMessage, setContactStatusMessage] = useState('')
   const contactStatusTimerRef = useRef<number | null>(null)
@@ -1055,10 +1084,14 @@ function Home() {
       .filter((section): section is HTMLElement => section instanceof HTMLElement)
 
     let lastSectionId = ''
+    let navbarHeight = 76
+    const updateNavbarHeight = () => {
+      const navEl = document.querySelector<HTMLElement>('.portfolio-nav')
+      if (navEl) navbarHeight = navEl.offsetHeight || 76
+    }
+    updateNavbarHeight()
+
     const updateActiveSection = () => {
-      const navbarHeight =
-        document.querySelector<HTMLElement>('.portfolio-nav')
-          ?.getBoundingClientRect().height ?? 76
       const readingLine = navbarHeight + 24
       const currentSection =
         sections.find(
@@ -1082,7 +1115,10 @@ function Home() {
 
     scheduleUpdate()
     window.addEventListener('scroll', scheduleUpdate, { passive: true })
-    window.addEventListener('resize', scheduleUpdate)
+    window.addEventListener('resize', () => {
+      updateNavbarHeight()
+      scheduleUpdate()
+    }, { passive: true })
     window.addEventListener('hashchange', scheduleUpdate)
     window.addEventListener('pageshow', scheduleUpdate)
 
@@ -1151,11 +1187,11 @@ function Home() {
               sessionStorage.removeItem('portfolio_restore_pending')
               sessionStorage.setItem('portfolio_home_scroll', '0')
             }}
-            className="portfolio-nav-logo inline-flex items-center"
+            className="portfolio-nav-logo inline-flex items-center shrink-0"
             aria-label="Richard D'Souza Home"
           >
-            <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto object-contain" />
-            <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto object-contain" />
+            <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
+            <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
           </a>
 
           <div className="hidden items-center gap-8 md:flex">
@@ -2015,6 +2051,10 @@ function Home() {
   </div>
         </CinematicSection>
 
+        <CosmicHorizonDivider theme="skills" />
+
+        <CertificationsSection prefersReducedMotion={prefersReducedMotion} />
+
         <CosmicHorizonDivider theme="projects" />
 
         <CinematicSection
@@ -2061,7 +2101,7 @@ function Home() {
                     className="projects-stage-arrow projects-stage-prev"
                     aria-label="Previous project slide"
                   >
-                    <ChevronLeft size={22} />
+                    <ChevronLeft size={22} className="stage-arrow-icon" />
                   </button>
                 )}
 
@@ -2072,9 +2112,9 @@ function Home() {
                   dragConstraints={{ left: 0, right: 0 }}
                   dragElastic={0.16}
                   onDragEnd={(_e, info) => {
-                    if (info.offset.x < -45 || info.velocity.x < -250) {
+                    if (info.offset.x < -35 || info.velocity.x < -200) {
                       handleNextProject()
-                    } else if (info.offset.x > 45 || info.velocity.x > 250) {
+                    } else if (info.offset.x > 35 || info.velocity.x > 200) {
                       handlePrevProject()
                     }
                   }}
@@ -2090,8 +2130,9 @@ function Home() {
                     const isVisible = Math.abs(offset) <= 1 || count <= 2
 
                     // Horizontal-first then Move-Up levitation animation
-                    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
-                    const cardStepX = isMobile ? 285 : 260
+                    const isMobile = windowWidth < 640
+                    const isSmallMobile = windowWidth < 360
+                    const cardStepX = isSmallMobile ? 150 : isMobile ? 180 : 260
 
                     const animationProps = prefersReducedMotion
                       ? {
@@ -2105,7 +2146,7 @@ function Home() {
                       : offset === 0
                       ? {
                           x: 0,
-                          y: isMobile ? -10 : -20, // Clean, steady elevation
+                          y: isMobile ? -6 : -20, // Clean, steady elevation
                           scale: 1, // Steady scale - zero zoom glitch
                           rotateY: 0,
                           opacity: 1,
@@ -2114,26 +2155,26 @@ function Home() {
                       : offset === -1
                       ? {
                           x: -cardStepX,
-                          y: 8,
-                          scale: isMobile ? 0.88 : 0.94,
-                          rotateY: isMobile ? 8 : 5,
-                          opacity: isMobile ? 0.2 : 0.55,
+                          y: isMobile ? 4 : 8,
+                          scale: isMobile ? 0.82 : 0.94,
+                          rotateY: isMobile ? 6 : 5,
+                          opacity: isMobile ? 0.18 : 0.55,
                           zIndex: 10,
                         }
                       : offset === 1
                       ? {
                           x: cardStepX,
-                          y: 8,
-                          scale: isMobile ? 0.88 : 0.94,
-                          rotateY: isMobile ? -8 : -5,
-                          opacity: isMobile ? 0.2 : 0.55,
+                          y: isMobile ? 4 : 8,
+                          scale: isMobile ? 0.82 : 0.94,
+                          rotateY: isMobile ? -6 : -5,
+                          opacity: isMobile ? 0.18 : 0.55,
                           zIndex: 10,
                         }
                       : {
-                          x: offset < 0 ? -cardStepX * 1.6 : cardStepX * 1.6,
+                          x: offset < 0 ? -cardStepX * 1.5 : cardStepX * 1.5,
                           y: 12,
-                          scale: 0.8,
-                          rotateY: offset < 0 ? 10 : -10,
+                          scale: 0.75,
+                          rotateY: offset < 0 ? 8 : -8,
                           opacity: 0,
                           zIndex: 1,
                         }
@@ -2298,7 +2339,7 @@ function Home() {
                     className="projects-stage-arrow projects-stage-next"
                     aria-label="Next project slide"
                   >
-                    <ChevronRight size={22} />
+                    <ChevronRight size={22} className="stage-arrow-icon" />
                   </button>
                 )}
 
