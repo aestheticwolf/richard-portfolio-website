@@ -10,6 +10,7 @@ import { musicConfig } from './music.config'
 export const MusicPlayer: React.FC = () => {
   const {
     isOpen,
+    hasBeenOpened,
     setIsOpen,
     isPlaying,
     setIsPlaying,
@@ -68,7 +69,7 @@ export const MusicPlayer: React.FC = () => {
           pointerEvents: isOpen ? 'auto' : 'none',
           visibility: isOpen ? 'visible' : 'hidden',
         }}
-        className="music-player-popover fixed z-[70] top-[4.5rem] right-3 sm:right-6 md:right-8 lg:right-12 w-[calc(100vw-1.5rem)] sm:w-[380px] md:w-[400px] rounded-2xl overflow-hidden shadow-2xl select-none"
+        className="music-player-popover fixed z-70 top-18 right-3 sm:right-6 md:right-8 lg:right-12 w-[calc(100vw-1.5rem)] sm:w-95 md:w-100 rounded-2xl overflow-hidden shadow-2xl select-none"
         role="dialog"
         aria-label="Spotify Music Player"
         aria-modal="true"
@@ -139,7 +140,7 @@ export const MusicPlayer: React.FC = () => {
         {/* 2. Main Player Body */}
         <div className="music-player-body relative z-10 p-3 sm:p-4 space-y-2 sm:space-y-3.5 overflow-y-auto">
           {/* Active Soundscape Card (Compact) */}
-          <div className="music-track-card relative flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-white/[0.04] border border-white/8">
+          <div className="music-track-card relative flex items-center gap-2.5 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-white/4 border border-white/8">
             {/* Artwork with subtle floating shine */}
             <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden shrink-0 border border-white/15 shadow-md">
               {currentPreset.artworkUrl ? (
@@ -150,7 +151,7 @@ export const MusicPlayer: React.FC = () => {
                   loading="lazy"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-900 to-indigo-950 text-violet-300">
+                <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-violet-900 to-indigo-950 text-violet-300">
                   <Radio size={16} />
                 </div>
               )}
@@ -207,7 +208,7 @@ export const MusicPlayer: React.FC = () => {
                   {[1, 2, 3].map((n) => (
                     <div
                       key={n}
-                      className="music-preset-pill shrink-0 w-24 sm:w-auto h-[2.75rem] sm:h-[3.25rem] rounded-lg sm:rounded-xl bg-white/[0.03] border border-white/6 animate-pulse"
+                      className="music-preset-pill shrink-0 w-24 sm:w-auto h-11 sm:h-13 rounded-lg sm:rounded-xl bg-white/3 border border-white/6 animate-pulse"
                     />
                   ))}
                 </div>
@@ -220,10 +221,10 @@ export const MusicPlayer: React.FC = () => {
                         key={preset.id}
                         type="button"
                         onClick={() => selectPresetById(preset.id)}
-                        className={`music-preset-pill shrink-0 sm:shrink flex flex-col items-start p-1.5 px-2.5 sm:p-2 rounded-lg sm:rounded-xl text-left transition-all min-w-[96px] max-w-[130px] sm:min-w-0 sm:max-w-none ${
+                        className={`music-preset-pill shrink-0 sm:shrink flex flex-col items-start p-1.5 px-2.5 sm:p-2 rounded-lg sm:rounded-xl text-left transition-all min-w-24 max-w-32.5 sm:min-w-0 sm:max-w-none ${
                           isSelected
                             ? 'is-selected bg-violet-500/15 border-violet-400/35 text-white shadow-[0_0_12px_rgba(167,139,250,0.18)]'
-                            : 'bg-white/[0.03] border-white/6 text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]'
+                            : 'bg-white/3 border-white/6 text-zinc-400 hover:text-zinc-200 hover:bg-white/6'
                         } border`}
                       >
                         <span className="text-[10px] sm:text-[10.5px] font-semibold leading-tight line-clamp-1">
@@ -240,14 +241,23 @@ export const MusicPlayer: React.FC = () => {
             </div>
           )}
 
-          {/* Official Spotify Interactive Embed — always mounted for persistent playback */}
+          {/* Official Spotify Interactive Embed — mounted upon first player open for persistent playback */}
           <div>
-            <SpotifyEmbed
-              spotifyUrl={currentPreset.spotifyUrl}
-              height={musicConfig.ui.defaultEmbedHeight}
-              title={currentPreset.title}
-              onPlaybackStateChange={(playing) => setIsPlaying(playing)}
-            />
+            {hasBeenOpened ? (
+              <SpotifyEmbed
+                spotifyUrl={currentPreset.spotifyUrl}
+                height={musicConfig.ui.defaultEmbedHeight}
+                title={currentPreset.title}
+                onPlaybackStateChange={(playing) => setIsPlaying(playing)}
+              />
+            ) : (
+              <div
+                className="w-full rounded-xl bg-[#121212] border border-white/8 flex items-center justify-center text-zinc-500 text-xs"
+                style={{ height: `${musicConfig.ui.defaultEmbedHeight}px` }}
+              >
+                <span>Loading Spotify soundscape…</span>
+              </div>
+            )}
           </div>
 
           {/* Quick tip / Spotify Attribution */}
@@ -277,7 +287,7 @@ export const MusicPlayer: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="music-player-backdrop fixed inset-0 z-[69] bg-black/40 backdrop-blur-[2px] md:hidden"
+            className="music-player-backdrop fixed inset-0 z-69 bg-black/40 backdrop-blur-[2px] md:hidden"
             onClick={() => setIsOpen(false)}
             aria-hidden="true"
           />

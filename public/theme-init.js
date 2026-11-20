@@ -1,4 +1,69 @@
 (function () {
+  // WebGL 2.0 compliance guard & warning filter (runs synchronously before any module loads)
+  try {
+    if (typeof WebGL2RenderingContext !== 'undefined' && WebGL2RenderingContext.prototype) {
+      var proto = WebGL2RenderingContext.prototype;
+      if (!proto.__protoGuarded) {
+        proto.__protoGuarded = true;
+        var origTex3D = proto.texImage3D;
+        proto.texImage3D = function () {
+          var flipY = false, premult = false;
+          try {
+            flipY = !!this.getParameter(this.UNPACK_FLIP_Y_WEBGL);
+            premult = !!this.getParameter(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL);
+            if (flipY) this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, false);
+            if (premult) this.pixelStorei(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+          } catch (e) {}
+          try {
+            return origTex3D.apply(this, arguments);
+          } finally {
+            try {
+              if (flipY) this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, true);
+              if (premult) this.pixelStorei(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+            } catch (e) {}
+          }
+        };
+        var origSubTex3D = proto.texSubImage3D;
+        proto.texSubImage3D = function () {
+          var flipY = false, premult = false;
+          try {
+            flipY = !!this.getParameter(this.UNPACK_FLIP_Y_WEBGL);
+            premult = !!this.getParameter(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL);
+            if (flipY) this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, false);
+            if (premult) this.pixelStorei(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+          } catch (e) {}
+          try {
+            return origSubTex3D.apply(this, arguments);
+          } finally {
+            try {
+              if (flipY) this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, true);
+              if (premult) this.pixelStorei(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+            } catch (e) {}
+          }
+        };
+      }
+    }
+  } catch (e) {}
+
+  try {
+    var origWarn = console.warn;
+    console.warn = function () {
+      if (arguments.length > 0 && typeof arguments[0] === 'string') {
+        var str = arguments[0];
+        if (
+          str.indexOf('com.microsoft.playready') !== -1 ||
+          str.indexOf('playready.recommendation') !== -1 ||
+          str.indexOf('PlayReady playback on Windows') !== -1 ||
+          str.indexOf('setServerCertificate') !== -1 ||
+          (str.indexOf('texImage3D') !== -1 && str.indexOf('FLIP_Y') !== -1)
+        ) {
+          return;
+        }
+      }
+      return origWarn.apply(console, arguments);
+    };
+  } catch (e) {}
+
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }

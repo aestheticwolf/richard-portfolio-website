@@ -635,11 +635,14 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.85, y: 8 }}
               transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-              className="hero-speech-bubble absolute -top-6 sm:top-2 md:top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 px-2.5 py-1 sm:px-4 sm:py-2 rounded-2xl backdrop-blur-xl select-none cursor-pointer transition-colors duration-200 text-[11px] sm:text-sm whitespace-nowrap shadow-lg"
+              className="hero-speech-bubble absolute -top-8 xs:-top-9 sm:top-2 md:top-3 right-0 sm:right-auto sm:left-1/2 translate-x-0 sm:-translate-x-1/2 z-40 flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-4 sm:py-2 rounded-2xl backdrop-blur-xl select-none cursor-pointer transition-colors duration-200 text-[9.5px] sm:text-sm whitespace-nowrap shadow-lg max-w-[calc(100vw-2rem)]"
               onClick={() => setShowSpeechBubble(false)}
             >
-              <span className="text-xs sm:text-base shrink-0">👋</span>
-              <span className="text-[10.5px] sm:text-sm font-medium tracking-wide whitespace-nowrap">Hey! Welcome to my portfolio.</span>
+              <span className="text-[11px] sm:text-base shrink-0">👋</span>
+              <span className="text-[9px] xs:text-[9.5px] sm:text-sm font-medium tracking-wide whitespace-nowrap">
+                <span className="hidden xs:inline">Hey! Welcome to my portfolio.</span>
+                <span className="xs:hidden">Welcome to my portfolio!</span>
+              </span>
               <button
                 type="button"
                 onClick={(e) => {
@@ -652,7 +655,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 <X size={11} className="sm:w-3 sm:h-3" />
               </button>
               {/* Pointer triangle */}
-              <div className="bubble-pointer absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
+              <div className="bubble-pointer absolute -bottom-1.5 right-8 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -670,7 +673,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
                 y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
               }}
-              className="hero-greeting-bubble absolute -top-4 sm:top-2 left-1/2 -translate-x-1/2 sm:translate-x-0 sm:-left-4 md:-left-5 z-30 flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-md cursor-pointer transition-transform hover:scale-104 active:scale-96 text-[10px] sm:text-xs whitespace-nowrap shadow-md max-w-[calc(100vw-3rem)]"
+              className="hero-greeting-bubble absolute -top-7 xs:-top-8 sm:top-2 right-1 sm:right-auto sm:-left-4 md:-left-5 translate-x-0 sm:translate-x-0 z-30 flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-md cursor-pointer transition-transform hover:scale-104 active:scale-96 text-[9.5px] sm:text-xs whitespace-nowrap shadow-md max-w-[calc(100vw-3rem)]"
               onClick={handleMascotClick}
               role="button"
               tabIndex={0}
@@ -682,7 +685,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 }
               }}
             >
-              <span className="text-[10px] sm:text-xs font-medium">
+              <span className="text-[9.5px] sm:text-xs font-medium">
                 <span className="hidden sm:inline">Hey, welcome! 👋</span>
                 <span className="sm:hidden">Hey! 👋</span>
               </span>
@@ -721,7 +724,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
             x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
             y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
           }}
-          className="absolute top-5 sm:top-12 md:top-14 left-0 sm:-left-3 md:-left-6 lg:-left-8 z-20 pointer-events-none select-none transition-transform duration-300 scale-65 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-right"
+          className="absolute top-1 sm:top-12 md:top-14 -left-9 xs:-left-10 sm:-left-3 md:-left-6 lg:-left-8 z-20 pointer-events-none select-none transition-transform duration-300 scale-50 xs:scale-55 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-right"
         >
           <NeonHoloLaptop />
         </motion.div>
@@ -747,7 +750,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
             x: motionDisabled || isTouchDevice ? 0 : chipParallaxX2,
             y: motionDisabled || isTouchDevice ? 0 : chipParallaxY2,
           }}
-          className="absolute top-7 sm:top-14 md:top-16 right-0 sm:right-0 md:right-1 lg:-right-3 z-20 pointer-events-none select-none transition-transform duration-300 scale-65 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-left"
+          className="absolute top-2.5 sm:top-14 md:top-16 -right-7 xs:-right-8 sm:right-0 md:right-1 lg:-right-3 z-20 pointer-events-none select-none transition-transform duration-300 scale-50 xs:scale-55 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-left"
         >
           <NeonCodeBadge />
         </motion.div>

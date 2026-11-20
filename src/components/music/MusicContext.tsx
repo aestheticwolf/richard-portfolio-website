@@ -10,9 +10,18 @@ function resolveDefault(presets: MusicPreset[]): MusicPreset {
 }
 
 export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpenRaw] = useState(false)
+  const [hasBeenOpened, setHasBeenOpened] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isStopped, setIsStopped] = useState(false)
+
+  const setIsOpen = useCallback((action: React.SetStateAction<boolean>) => {
+    setIsOpenRaw((prev) => {
+      const next = typeof action === 'function' ? action(prev) : action
+      if (next) setHasBeenOpened(true)
+      return next
+    })
+  }, [])
 
   const [playlists, setPlaylists] = useState<MusicPreset[]>(FALLBACK_PRESETS)
   const [loadingPlaylists, setLoadingPlaylists] = useState(true)
@@ -69,9 +78,11 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen])
+  }, [isOpen, setIsOpen])
 
-  const toggleOpen = useCallback(() => setIsOpen((prev) => !prev), [])
+  const toggleOpen = useCallback(() => {
+    setIsOpen((prev) => !prev)
+  }, [setIsOpen])
 
   const selectPresetById = useCallback(
     (id: string) => {
@@ -93,6 +104,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <MusicContext.Provider
       value={{
         isOpen,
+        hasBeenOpened,
         setIsOpen,
         toggleOpen,
         isPlaying,

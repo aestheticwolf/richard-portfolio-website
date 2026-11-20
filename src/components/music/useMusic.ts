@@ -3,6 +3,7 @@ import type { MusicPreset } from './music.config'
 
 export interface MusicContextValue {
   isOpen: boolean
+  hasBeenOpened: boolean
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
   toggleOpen: () => void
   isPlaying: boolean

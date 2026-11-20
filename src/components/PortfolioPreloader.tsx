@@ -12,112 +12,120 @@ function initPreloaderThree(canvas: HTMLCanvasElement): () => void {
   let disposed = false
   let animationFrameId: number
 
-  const renderer = new THREE.WebGLRenderer({
-    canvas,
-    alpha: true,
-    antialias: false,
-    powerPreference: 'low-power',
-  })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
-  renderer.setSize(window.innerWidth, window.innerHeight, false)
-
-  const scene = new THREE.Scene()
-  const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 100)
-  camera.position.z = 24
-
-  // Procedural soft radial particle texture (no network load)
-  const texCanvas = document.createElement('canvas')
-  texCanvas.width = 32
-  texCanvas.height = 32
-  const ctx = texCanvas.getContext('2d')
-  if (ctx) {
-    const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16)
-    grad.addColorStop(0, 'rgba(255, 255, 255, 1)')
-    grad.addColorStop(0.25, 'rgba(196, 181, 253, 0.85)')
-    grad.addColorStop(0.65, 'rgba(139, 92, 246, 0.25)')
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, 32, 32)
-  }
-  const texture = new THREE.CanvasTexture(texCanvas)
-  texture.flipY = false
-
-  // Lightweight particle field (48 particles)
-  const count = 48
-  const positions = new Float32Array(count * 3)
-
-  for (let i = 0; i < count; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 36
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 24
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 16
-  }
-
-  const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-
-  const material = new THREE.PointsMaterial({
-    size: 0.85,
-    map: texture,
-    transparent: true,
-    opacity: 0.65,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  })
-
-  const points = new THREE.Points(geometry, material)
-  scene.add(points)
-
-  // Resize handler
-  const onResize = () => {
-    if (disposed) return
-    camera.aspect = window.innerWidth / window.innerHeight
-    camera.updateProjectionMatrix()
+  try {
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: false,
+      powerPreference: 'low-power',
+    })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
     renderer.setSize(window.innerWidth, window.innerHeight, false)
-  }
-  window.addEventListener('resize', onResize, { passive: true })
 
-  // Subtle cursor parallax
-  let mouseX = 0
-  let mouseY = 0
-  const onMouseMove = (e: MouseEvent) => {
-    mouseX = (e.clientX / window.innerWidth - 0.5) * 2
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 2
-  }
-  window.addEventListener('mousemove', onMouseMove, { passive: true })
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 100)
+    camera.position.z = 24
 
-  let clock = 0
-  const animate = () => {
-    if (disposed) return
-    animationFrameId = requestAnimationFrame(animate)
+    // Procedural soft radial particle texture (no network load)
+    const texCanvas = document.createElement('canvas')
+    texCanvas.width = 32
+    texCanvas.height = 32
+    const ctx = texCanvas.getContext('2d')
+    if (ctx) {
+      const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16)
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)')
+      grad.addColorStop(0.25, 'rgba(196, 181, 253, 0.85)')
+      grad.addColorStop(0.65, 'rgba(139, 92, 246, 0.25)')
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, 32, 32)
+    }
+    const texture = new THREE.CanvasTexture(texCanvas)
+    texture.flipY = false
 
-    // Pause rendering when tab is inactive to save GPU/CPU
-    if (document.hidden) return
+    // Lightweight particle field (48 particles)
+    const count = 48
+    const positions = new Float32Array(count * 3)
 
-    clock += 0.012
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 36
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 24
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 16
+    }
 
-    // Gentle orbital drift
-    points.rotation.y = clock * 0.035
-    points.rotation.x = Math.sin(clock * 0.018) * 0.025
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
 
-    // Smooth camera perspective lerp
-    camera.position.x += (mouseX * 0.65 - camera.position.x) * 0.03
-    camera.position.y += (-mouseY * 0.65 - camera.position.y) * 0.03
-    camera.lookAt(0, 0, 0)
+    const material = new THREE.PointsMaterial({
+      size: 0.85,
+      map: texture,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
 
-    renderer.render(scene, camera)
-  }
-  animate()
+    const points = new THREE.Points(geometry, material)
+    scene.add(points)
 
-  return () => {
-    disposed = true
-    cancelAnimationFrame(animationFrameId)
-    window.removeEventListener('resize', onResize)
-    window.removeEventListener('mousemove', onMouseMove)
-    scene.remove(points)
-    geometry.dispose()
-    material.dispose()
-    texture.dispose()
-    renderer.dispose()
+    // Resize handler
+    const onResize = () => {
+      if (disposed) return
+      camera.aspect = window.innerWidth / window.innerHeight
+      camera.updateProjectionMatrix()
+      renderer.setSize(window.innerWidth, window.innerHeight, false)
+    }
+    window.addEventListener('resize', onResize, { passive: true })
+
+    // Subtle cursor parallax
+    let mouseX = 0
+    let mouseY = 0
+    const onMouseMove = (e: MouseEvent) => {
+      mouseX = (e.clientX / window.innerWidth - 0.5) * 2
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 2
+    }
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
+
+    let clock = 0
+    const animate = () => {
+      if (disposed) return
+      animationFrameId = requestAnimationFrame(animate)
+
+      // Pause rendering when tab is inactive to save GPU/CPU
+      if (document.hidden) return
+
+      clock += 0.012
+
+      // Gentle orbital drift
+      points.rotation.y = clock * 0.035
+      points.rotation.x = Math.sin(clock * 0.018) * 0.025
+
+      // Smooth camera perspective lerp
+      camera.position.x += (mouseX * 0.65 - camera.position.x) * 0.03
+      camera.position.y += (-mouseY * 0.65 - camera.position.y) * 0.03
+      camera.lookAt(0, 0, 0)
+
+      renderer.render(scene, camera)
+    }
+    animate()
+
+    return () => {
+      disposed = true
+      cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('resize', onResize)
+      window.removeEventListener('mousemove', onMouseMove)
+      try {
+        scene.remove(points)
+        geometry.dispose()
+        material.dispose()
+        texture.dispose()
+        renderer.dispose()
+      } catch {
+        // Safe disposal
+      }
+    }
+  } catch {
+    return () => {}
   }
 }
 
@@ -330,37 +338,37 @@ export default function PortfolioPreloader({ onComplete }: PortfolioPreloaderPro
   return (
     <div
       ref={overlayRef}
-      className="minimal-preloader-overlay fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-[#07080c] overflow-hidden select-none pointer-events-auto"
+      className="minimal-preloader-overlay fixed inset-0 z-999999 flex flex-col items-center justify-center bg-[#07080c] overflow-hidden select-none pointer-events-auto"
       role="status"
       aria-label="Loading portfolio"
     >
       {/* Three.js Subtle Ambient Depth Canvas */}
       <canvas
         ref={canvasRef}
-        className="minimal-preloader-canvas absolute inset-0 w-full h-full pointer-events-none z-[2]"
+        className="minimal-preloader-canvas absolute inset-0 w-full h-full pointer-events-none z-2"
         aria-hidden="true"
       />
 
       {/* Cinematic Edge Vignette */}
-      <div className="minimal-preloader-vignette absolute inset-0 pointer-events-none z-[3]" aria-hidden="true" />
+      <div className="minimal-preloader-vignette absolute inset-0 pointer-events-none z-3" aria-hidden="true" />
 
       {/* Ambient Radial Lighting */}
-      <div ref={ambientRef} className="minimal-preloader-ambient absolute pointer-events-none z-[4]" aria-hidden="true" />
+      <div ref={ambientRef} className="minimal-preloader-ambient absolute pointer-events-none z-4" aria-hidden="true" />
 
       {/* Aperture Exit Shutters */}
       <div
         ref={shutterTopRef}
-        className="preloader-shutter preloader-shutter-top absolute left-0 right-0 top-0 h-[50.5%] bg-[#07080c] pointer-events-none z-[10]"
+        className="preloader-shutter preloader-shutter-top absolute left-0 right-0 top-0 h-[50.5%] bg-[#07080c] pointer-events-none z-10"
         aria-hidden="true"
       />
       <div
         ref={shutterBottomRef}
-        className="preloader-shutter preloader-shutter-bottom absolute left-0 right-0 bottom-0 h-[50.5%] bg-[#07080c] pointer-events-none z-[10]"
+        className="preloader-shutter preloader-shutter-bottom absolute left-0 right-0 bottom-0 h-[50.5%] bg-[#07080c] pointer-events-none z-10"
         aria-hidden="true"
       />
 
       {/* Central Minimal Stage */}
-      <div ref={stageRef} className="minimal-preloader-stage relative z-[20] flex flex-col items-center justify-center text-center">
+      <div ref={stageRef} className="minimal-preloader-stage relative z-20 flex flex-col items-center justify-center text-center">
         {/* Full Name Branding */}
         <div ref={brandRef} className="minimal-preloader-brand">
           <span className="preloader-brand-first">Richard</span>
