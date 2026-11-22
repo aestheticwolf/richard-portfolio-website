@@ -13,8 +13,21 @@ function initPreloaderThree(canvas: HTMLCanvasElement): () => void {
   let animationFrameId: number
 
   try {
+    const gl =
+      canvas.getContext('webgl', {
+        alpha: true,
+        antialias: false,
+        powerPreference: 'low-power',
+      }) ||
+      canvas.getContext('experimental-webgl', {
+        alpha: true,
+        antialias: false,
+        powerPreference: 'low-power',
+      })
+
     const renderer = new THREE.WebGLRenderer({
       canvas,
+      context: (gl as WebGLRenderingContext) || undefined,
       alpha: true,
       antialias: false,
       powerPreference: 'low-power',

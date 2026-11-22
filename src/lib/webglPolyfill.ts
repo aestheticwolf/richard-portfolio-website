@@ -28,8 +28,8 @@ if (typeof window !== 'undefined') {
         try {
           flipY = Boolean(this.getParameter(this.UNPACK_FLIP_Y_WEBGL))
           premult = Boolean(this.getParameter(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL))
-          if (flipY) this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, false)
-          if (premult) this.pixelStorei(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
+          this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, false)
+          this.pixelStorei(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
         } catch {
           // ignore
         }
@@ -53,8 +53,8 @@ if (typeof window !== 'undefined') {
         try {
           flipY = Boolean(this.getParameter(this.UNPACK_FLIP_Y_WEBGL))
           premult = Boolean(this.getParameter(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL))
-          if (flipY) this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, false)
-          if (premult) this.pixelStorei(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
+          this.pixelStorei(this.UNPACK_FLIP_Y_WEBGL, false)
+          this.pixelStorei(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
         } catch {
           // ignore
         }
@@ -99,8 +99,8 @@ if (typeof window !== 'undefined') {
             try {
               flipY = Boolean(gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL))
               premult = Boolean(gl.getParameter(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL))
-              if (flipY) gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-              if (premult) gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
+              gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+              gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false)
             } catch {
               // ignore
             }
@@ -126,17 +126,28 @@ if (typeof window !== 'undefined') {
   // 3. Browser-level warning filter for non-actionable external DRM recommendations
   const origWarn = console.warn
   console.warn = function (...args: unknown[]) {
-    if (typeof args[0] === 'string') {
-      const msg = args[0]
-      if (
-        msg.includes('com.microsoft.playready') ||
-        msg.includes('playready.recommendation') ||
-        msg.includes('PlayReady playback on Windows') ||
-        msg.includes('setServerCertificate') ||
-        (msg.includes('texImage3D') && msg.includes('FLIP_Y'))
-      ) {
-        return
+    let fullStr = ''
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i]
+      if (typeof arg === 'string') {
+        fullStr += ' ' + arg
+      } else if (arg && typeof arg === 'object') {
+        try {
+          const rec = arg as Record<string, unknown>
+          fullStr += ' ' + (rec.message || rec.name || JSON.stringify(arg) || String(arg))
+        } catch {
+          fullStr += ' ' + String(arg)
+        }
       }
+    }
+    if (
+      fullStr.includes('com.microsoft.playready') ||
+      fullStr.includes('playready.recommendation') ||
+      fullStr.includes('PlayReady playback on Windows') ||
+      fullStr.includes('setServerCertificate') ||
+      (fullStr.includes('texImage3D') && fullStr.includes('FLIP_Y'))
+    ) {
+      return
     }
     return origWarn.apply(console, args)
   }

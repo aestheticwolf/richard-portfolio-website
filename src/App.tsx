@@ -2,6 +2,7 @@ import PortfolioPreloader from './components/PortfolioPreloader'
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
+import type { LucideProps } from 'lucide-react'
 import {
   ArrowDown,
   ArrowUp,
@@ -85,7 +86,9 @@ import {
 import {
   getPublishedProfile,
   type PublicProfile,
+  DEFAULT_ABOUT_DATA,
 } from './lib/profile'
+import { getColorDefinition } from './lib/colorPalette'
 import {
   validateContactSubmission,
   recordContactSubmission,
@@ -369,47 +372,28 @@ const getInterestMeta = (interest: string) => {
   }
 }
 
-const educationJourney = [
-  {
-    id: 'msc-it',
-    levelTag: 'Postgraduate',
-    degree: 'M.Sc. in Information Technology',
-    institution: 'Parvatibai Chowgule College of Arts and Science (Autonomous)',
-    location: 'Goa, India',
-    period: 'June 2024 – June 2026',
-    score: 'CGPA: 7.70 / 10',
-    theme: 'violet',
-    accentColor: '#a78bfa',
-    icon: GraduationCap,
-    highlights: ['Cloud Systems', 'Full-Stack Architecture', 'Machine Learning', 'Autonomous Tech'],
-  },
-  {
-    id: 'bca',
-    levelTag: 'Undergraduate',
-    degree: 'Bachelor of Computer Applications (B.C.A)',
-    institution: 'Fr. Agnel College of Arts and Commerce',
-    location: 'Goa, India',
-    period: 'June 2018 – August 2021',
-    score: 'Graduated',
-    theme: 'cyan',
-    accentColor: '#22d3ee',
-    icon: BookOpen,
-    highlights: ['Software Engineering', 'Data Structures', 'Database Systems', 'Web Tech'],
-  },
-  {
-    id: 'hssc',
-    levelTag: 'Higher Secondary',
-    degree: 'H.S.S.C – Vocational Stream (Computer Technology)',
-    institution: 'Fr. Agnel Higher Secondary School',
-    location: 'Goa, India',
-    period: 'June 2016 – March 2018',
-    score: 'Completed (10+2)',
-    theme: 'emerald',
-    accentColor: '#34d399',
-    icon: Cpu,
-    highlights: ['Computer Technology', 'Programming Foundations', 'Hardware & Electronics'],
-  },
-]
+const ABOUT_ICON_REGISTRY: Record<string, React.ComponentType<LucideProps>> = {
+  GraduationCap,
+  Sparkles,
+  Code2,
+  Compass,
+  ShieldCheck,
+  Layers,
+  Terminal,
+  BookOpen,
+  Clock,
+  Cpu,
+  MapPin,
+  Cloud,
+  KeyRound,
+  Smartphone,
+  Send,
+}
+
+function resolveAboutIcon(name?: string | null, fallback: React.ComponentType<LucideProps> = Sparkles): React.ComponentType<LucideProps> {
+  if (!name) return fallback
+  return ABOUT_ICON_REGISTRY[name] || fallback
+}
 
 
 
@@ -607,6 +591,8 @@ function Home() {
   const [profileError, setProfileError] = useState('')
   const [aboutActiveTab, setAboutActiveTab] = useState<'overview' | 'mindset' | 'vision'>('overview')
   const [aboutJourneyView, setAboutJourneyView] = useState<'engineer' | 'education'>('engineer')
+  const aboutData = profile?.about_data || DEFAULT_ABOUT_DATA
+  const educationList = aboutData.education_items?.length ? aboutData.education_items : DEFAULT_ABOUT_DATA.education_items
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [selectedSkillCategory, setSelectedSkillCategory] = useState<string>('all')
   const [hoveredTool, setHoveredTool] = useState<string | null>(null)
@@ -1409,11 +1395,11 @@ function Home() {
             >
               <p className="section-label">01 / ABOUT</p>
               <h2>
-                Thoughtful software,{' '}
-                <span className="about-headline-accent">built with purpose.</span>
+                {aboutData.heading}{' '}
+                <span className="about-headline-accent">{aboutData.heading_accent}</span>
               </h2>
               <p className="section-summary">
-                I value practical solutions, clear experiences, and the steady craft behind reliable digital products.
+                {aboutData.subtitle}
               </p>
             </motion.div>
 
@@ -1458,7 +1444,7 @@ function Home() {
                 )}
                 <GraduationCap size={14} className="relative z-1 shrink-0 text-cyan-400" />
                 <span className="relative z-1 font-semibold">Education Journey</span>
-                <span className="about-journey-switcher-count relative z-1">3</span>
+                <span className="about-journey-switcher-count relative z-1">{educationList.length}</span>
               </button>
             </div>
 
@@ -1572,7 +1558,7 @@ function Home() {
                   {profile.short_intro && (
                     <div className="about-lead-box">
                       <span className="about-code-prefix">
-                        // software engineering &amp; digital craft
+                        {aboutData.overview_prefix}
                       </span>
                       <p className="about-lead-text">{profile.short_intro}</p>
                     </div>
@@ -1608,15 +1594,20 @@ function Home() {
                     )}
                   </div>
 
-                  <div className="about-deck-subcard about-deck-foundations">
-                    <div className="about-deck-subcard-head">
-                      <GraduationCap size={15} className="text-violet-400 shrink-0" />
-                      <span className="about-deck-subcard-title">Academic &amp; Technical Foundations</span>
-                    </div>
-                    <p className="about-deck-subcard-text">
-                      Software Developer completing an M.Sc in Information Technology from Parvatibai Chowgule College of Arts and Science. Focused on building reliable web &amp; mobile applications, exploring modern cloud architectures, and finding practical solutions to real-world problems.
-                    </p>
-                  </div>
+                  {(() => {
+                    const FoundationsIcon = resolveAboutIcon(aboutData.foundations_icon, GraduationCap)
+                    return (
+                      <div className="about-deck-subcard about-deck-foundations">
+                        <div className="about-deck-subcard-head">
+                          <FoundationsIcon size={15} className="text-violet-400 shrink-0" />
+                          <span className="about-deck-subcard-title">{aboutData.foundations_badge}</span>
+                        </div>
+                        <p className="about-deck-subcard-text">
+                          {aboutData.foundations_text}
+                        </p>
+                      </div>
+                    )
+                  })()}
                 </motion.div>
               )}
 
@@ -1629,30 +1620,52 @@ function Home() {
                   transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
                   className="about-deck-pane"
                 >
-                  <div className="about-deck-subcard">
-                    <div className="about-deck-subcard-head">
-                      <Sparkles size={15} className="text-amber-400 shrink-0" />
-                      <span className="about-deck-subcard-title">Continuous Growth &amp; Curiosity</span>
-                    </div>
-                    <p className="about-deck-subcard-text">
-                      I&apos;m constantly looking to learn, embrace challenging engineering problems, and improve my technical craft across frontend and backend systems. Every project is an opportunity to master new paradigms and build with higher precision.
-                    </p>
-                  </div>
-
-                  <div className="about-deck-subcard">
-                    <div className="about-deck-subcard-head">
-                      <Code2 size={15} className="text-cyan-400 shrink-0" />
-                      <span className="about-deck-subcard-title">Engineering Philosophy</span>
-                    </div>
-                    <p className="about-deck-subcard-text">
-                      I believe the best software balances elegant architecture with clear, intuitive user experience. Clean, maintainable code is not just an aesthetic choice—it is the bedrock of dependable digital products.
-                    </p>
-                  </div>
+                  {aboutData.mindset_cards.map((card, idx) => {
+                    const CardIcon = resolveAboutIcon(card.icon, idx === 0 ? Sparkles : Code2)
+                    const colorDef = getColorDefinition(card.icon_color || (idx === 0 ? 'amber' : 'cyan'))
+                    return (
+                      <div
+                        key={card.title || idx}
+                        className="about-deck-subcard"
+                        style={{
+                          borderColor: colorDef.borderRgba,
+                          boxShadow: `0 4px 18px rgba(0, 0, 0, 0.22), 0 0 16px ${colorDef.glowRgba}`,
+                        }}
+                      >
+                        <div className="about-deck-subcard-head">
+                          <CardIcon size={15} style={{ color: colorDef.hex }} className="shrink-0" />
+                          <span
+                            className="about-deck-subcard-title"
+                            style={{ color: colorDef.hex }}
+                          >
+                            {card.title}
+                          </span>
+                        </div>
+                        <p className="about-deck-subcard-text">{card.description}</p>
+                      </div>
+                    )
+                  })}
 
                   <div className="about-deck-tags-row">
-                    <span className="about-deck-tag"><ShieldCheck size={12} className="text-emerald-400" /> Clean Architecture</span>
-                    <span className="about-deck-tag"><Layers size={12} className="text-cyan-400" /> End-to-End Ownership</span>
-                    <span className="about-deck-tag"><Terminal size={12} className="text-violet-400" /> Practical Solutions</span>
+                    {aboutData.mindset_tags.map((tag, idx) => {
+                      const TagIcon = resolveAboutIcon(tag.icon, idx === 0 ? ShieldCheck : idx === 1 ? Layers : Terminal)
+                      const colorDef = getColorDefinition(tag.color || (idx === 0 ? 'emerald' : idx === 1 ? 'cyan' : 'violet'))
+                      return (
+                        <span
+                          key={tag.label || idx}
+                          className="about-deck-tag"
+                          style={{
+                            color: '#e2e8f0',
+                            borderColor: colorDef.borderRgba,
+                            backgroundColor: colorDef.bgRgba,
+                            boxShadow: `0 2px 10px ${colorDef.glowRgba}`,
+                          }}
+                        >
+                          <TagIcon size={12} style={{ color: colorDef.hex }} className="shrink-0" />
+                          {tag.label}
+                        </span>
+                      )
+                    })}
                   </div>
                 </motion.div>
               )}
@@ -1666,31 +1679,29 @@ function Home() {
                   transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
                   className="about-deck-pane"
                 >
-                  <div className="about-deck-subcard">
-                    <div className="about-deck-subcard-head">
-                      <Compass size={15} className="text-violet-400 shrink-0" />
-                      <span className="about-deck-subcard-title">Focus &amp; Future Vision</span>
-                    </div>
-                    <p className="about-deck-subcard-text">
-                      Dedicated to building software that solves practical operational problems. Enthusiastic about system design, application security, cloud technologies, and the purposeful integration of artificial intelligence in everyday products.
-                    </p>
-                  </div>
+                  {(() => {
+                    const VisionIcon = resolveAboutIcon(aboutData.vision_card.icon, Compass)
+                    const colorClass = aboutData.vision_card.icon_color === 'cyan' ? 'text-cyan-400' : aboutData.vision_card.icon_color === 'amber' ? 'text-amber-400' : 'text-violet-400'
+                    return (
+                      <div className="about-deck-subcard">
+                        <div className="about-deck-subcard-head">
+                          <VisionIcon size={15} className={`${colorClass} shrink-0`} />
+                          <span className="about-deck-subcard-title">{aboutData.vision_card.title}</span>
+                        </div>
+                        <p className="about-deck-subcard-text">{aboutData.vision_card.description}</p>
+                      </div>
+                    )
+                  })()}
 
                   <div className="about-deck-projects-box">
-                    <span className="about-deck-projects-label">Featured Projects in Focus:</span>
+                    <span className="about-deck-projects-label">{aboutData.vision_projects_label || 'Featured Projects in Focus:'}</span>
                     <div className="about-deck-project-chips">
-                      <a href="#projects" className="about-project-chip">
-                        <span className="about-project-chip-name">SkillPath</span>
-                        <span className="about-project-chip-sub">Learning Companion</span>
-                      </a>
-                      <a href="#projects" className="about-project-chip">
-                        <span className="about-project-chip-name">Sentinel Grid</span>
-                        <span className="about-project-chip-sub">Security Management</span>
-                      </a>
-                      <a href="#projects" className="about-project-chip">
-                        <span className="about-project-chip-name">AI CRM Platform</span>
-                        <span className="about-project-chip-sub">Intelligent Workflows</span>
-                      </a>
+                      {aboutData.vision_projects.map((proj, idx) => (
+                        <a key={proj.name || idx} href={proj.link || '#projects'} className="about-project-chip">
+                          <span className="about-project-chip-name">{proj.name}</span>
+                          <span className="about-project-chip-sub">{proj.sub}</span>
+                        </a>
+                      ))}
                     </div>
                   </div>
                 </motion.div>
@@ -1774,7 +1785,7 @@ function Home() {
                 </span>
                 <span className="about-card-status-indicator font-mono">
                   <Clock size={11} className="inline mr-1 text-violet-400" />
-                  2016 – 2026
+                  {aboutData.education_period_badge || '2016 – 2026'}
                 </span>
               </div>
             </div>
@@ -1787,13 +1798,13 @@ function Home() {
               </div>
 
               <div className="about-edu-stream-list">
-                {educationJourney.map((item, idx) => {
-                  const IconComp = item.icon
+                {educationList.map((item, idx) => {
+                  const IconComp = resolveAboutIcon(item.icon, GraduationCap)
                   const isLatest = idx === 0
                   return (
                     <motion.div
-                      key={item.id}
-                      className={`about-edu-stream-item about-edu-theme-${item.theme} ${isLatest ? 'is-active' : ''}`}
+                      key={item.id || idx}
+                      className={`about-edu-stream-item about-edu-theme-${item.theme || 'violet'} ${isLatest ? 'is-active' : ''}`}
                       initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.32, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
