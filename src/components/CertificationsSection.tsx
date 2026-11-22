@@ -158,7 +158,7 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
     <CinematicSection
       id="certifications"
       type="section"
-      className="certifications-section relative py-14 sm:py-20 lg:py-24 overflow-hidden isolate"
+      className="certifications-section relative scroll-mt-24 py-14 sm:py-20 lg:py-24 overflow-hidden isolate"
     >
       {/* 1. Three.js Background Constellation Field */}
       <CertificationsCanvas3D className="z-0" />

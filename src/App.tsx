@@ -8,8 +8,6 @@ import {
   ArrowUp,
   ArrowUpRight,
   ExternalLink,
-  Menu,
-  X,
   Code2,
   Cloud,
   KeyRound,
@@ -95,15 +93,7 @@ import {
 } from './lib/contactSecurity'
 import RequestResume from './pages/RequestResume'
 import ResumeAccess from './pages/ResumeAccess'
-
-const navigation = [
-  { label: 'Home', href: '#home' },
-  { label: 'About', href: '#about' },
-  { label: 'Skills', href: '#skills' },
-  { label: 'Certifications', href: '#certifications' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Contact', href: '#contact' },
-]
+import FloatingNav from './components/FloatingNav'
 
 const skills = [
   {
@@ -580,7 +570,6 @@ function Home() {
   const sectionHeadingReveal = prefersReducedMotion ? reducedSpatialHeading : spatialHeadingReveal
   const sectionCardReveal = prefersReducedMotion ? reducedSpatialCard : spatialCardReveal
   const sectionStagger = prefersReducedMotion ? reducedSpatialStagger : spatialStagger
-  const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('home')
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [projectsLoading, setProjectsLoading] = useState(true)
@@ -1065,55 +1054,75 @@ function Home() {
   }, [])
 
   useEffect(() => {
-    const sections = navigation
-      .map(({ href }) => document.querySelector(href))
-      .filter((section): section is HTMLElement => section instanceof HTMLElement)
+    const sectionIds = ['home', 'about', 'skills', 'certifications', 'projects', 'contact']
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null)
 
-    let lastSectionId = ''
-    let navbarHeight = 76
-    const updateNavbarHeight = () => {
-      const navEl = document.querySelector<HTMLElement>('.portfolio-nav')
-      if (navEl) navbarHeight = navEl.offsetHeight || 76
-    }
-    updateNavbarHeight()
+    const ratioMap = new Map<string, number>()
 
-    const updateActiveSection = () => {
-      const readingLine = navbarHeight + 24
-      const currentSection =
-        sections.find(
-          (section) => section.getBoundingClientRect().bottom > readingLine,
-        ) ?? sections.at(-1)
+    const evaluateActiveSection = () => {
+      // 1. Prioritize 'home' when viewport is near top
+      if (window.scrollY < 140) {
+        setActiveSection('home')
+        return
+      }
 
-      if (currentSection && currentSection.id !== lastSectionId) {
-        lastSectionId = currentSection.id
-        setActiveSection(currentSection.id)
+      // 2. Prioritize 'contact' when viewport is near page bottom
+      const scrollBottom = window.innerHeight + window.scrollY
+      const docHeight = document.documentElement.scrollHeight
+      if (scrollBottom >= docHeight - 80) {
+        setActiveSection('contact')
+        return
+      }
+
+      // 3. Find section with largest visibility ratio in middle reading band
+      let maxRatio = 0
+      let maxId = ''
+      ratioMap.forEach((ratio, id) => {
+        if (ratio > maxRatio) {
+          maxRatio = ratio
+          maxId = id
+        }
+      })
+
+      if (maxId && maxRatio > 0.05) {
+        setActiveSection(maxId)
       }
     }
 
-    let animationFrame = 0
-    const scheduleUpdate = () => {
-      if (animationFrame) return
-      animationFrame = window.requestAnimationFrame(() => {
-        animationFrame = 0
-        updateActiveSection()
-      })
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          ratioMap.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0)
+        })
+        evaluateActiveSection()
+      },
+      {
+        rootMargin: '-15% 0px -25% 0px',
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0],
+      }
+    )
+
+    sections.forEach((section) => observer.observe(section))
+
+    const handleScroll = () => {
+      if (window.scrollY < 140) {
+        setActiveSection('home')
+      } else {
+        const scrollBottom = window.innerHeight + window.scrollY
+        const docHeight = document.documentElement.scrollHeight
+        if (scrollBottom >= docHeight - 80) {
+          setActiveSection('contact')
+        }
+      }
     }
 
-    scheduleUpdate()
-    window.addEventListener('scroll', scheduleUpdate, { passive: true })
-    window.addEventListener('resize', () => {
-      updateNavbarHeight()
-      scheduleUpdate()
-    }, { passive: true })
-    window.addEventListener('hashchange', scheduleUpdate)
-    window.addEventListener('pageshow', scheduleUpdate)
+    window.addEventListener('scroll', handleScroll, { passive: true })
 
     return () => {
-      window.cancelAnimationFrame(animationFrame)
-      window.removeEventListener('scroll', scheduleUpdate)
-      window.removeEventListener('resize', scheduleUpdate)
-      window.removeEventListener('hashchange', scheduleUpdate)
-      window.removeEventListener('pageshow', scheduleUpdate)
+      observer.disconnect()
+      window.removeEventListener('scroll', handleScroll)
     }
   }, [])
 
@@ -1165,79 +1174,60 @@ function Home() {
       </div>
       
       
-      <header className="portfolio-nav fixed inset-x-0 top-0 z-50 border-b border-white/7 bg-[#08090d]/85 backdrop-blur-xl">
-        <nav className="portfolio-container flex h-19 items-center justify-between">
+      {/* ─── Floating Top Brand & Utility Bar ─── */}
+      <header className="portfolio-top-bar portfolio-nav fixed inset-x-0 top-0 z-40 transition-all duration-300">
+        <nav className="portfolio-container flex h-16 sm:h-18 items-center justify-between">
           <a
             href="#home"
             onClick={() => {
               sessionStorage.removeItem('portfolio_restore_pending')
               sessionStorage.setItem('portfolio_home_scroll', '0')
+              window.scrollTo({
+                top: 0,
+                behavior: prefersReducedMotion ? 'auto' : 'smooth',
+              })
+              if (window.location.hash) {
+                history.replaceState(null, '', window.location.pathname)
+              }
             }}
-            className="portfolio-nav-logo inline-flex items-center shrink-0"
+            className="portfolio-brand-logo portfolio-nav-logo inline-flex items-center shrink-0"
             aria-label="Richard D'Souza Home"
           >
             <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
             <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
           </a>
 
-          <div className="hidden items-center gap-8 md:flex">
-            {navigation.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                aria-current={activeSection === item.href.slice(1) ? 'page' : undefined}
-                className={`portfolio-nav-link text-sm text-zinc-400 transition hover:text-white ${activeSection === item.href.slice(1) ? 'is-active' : ''}`}
-              >
-                {item.label}
-                {activeSection === item.href.slice(1) && (
-                  <motion.span
-                    className="portfolio-nav-active-indicator"
-                    layoutId="portfolio-nav-active-indicator"
-                    transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 34 }}
-                  />
-                )}
-              </a>
-            ))}
-          </div>
-
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <ThemeToggle />
             <MusicButton />
             <a
               href="#contact"
+              onClick={(e) => {
+                e.preventDefault()
+                const el = document.getElementById('contact')
+                if (el) {
+                  el.scrollIntoView({
+                    behavior: prefersReducedMotion ? 'auto' : 'smooth',
+                    block: 'start',
+                  })
+                  history.replaceState(null, '', '#contact')
+                  setActiveSection('contact')
+                }
+              }}
               className="portfolio-nav-cta hidden sm:inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-white/15 px-3.5 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition hover:border-violet-400 hover:bg-violet-400/10 shrink-0"
             >
               <span>Let's connect</span>
               <ArrowUpRight size={15} />
             </a>
-            <button
-              type="button"
-              aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
-              aria-expanded={menuOpen}
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="portfolio-nav-toggle rounded-lg border border-white/10 p-2 text-zinc-300 hover:text-white md:hidden inline-flex items-center justify-center shrink-0"
-            >
-              {menuOpen ? <X size={19} /> : <Menu size={19} />}
-            </button>
           </div>
         </nav>
-
-        {menuOpen && (
-          <div className="portfolio-nav-menu border-t border-white/10 bg-[#08090d] px-6 py-4 md:hidden">
-            {navigation.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={() => setMenuOpen(false)}
-                aria-current={activeSection === item.href.slice(1) ? 'page' : undefined}
-                className={`portfolio-nav-link block py-3 text-zinc-300 transition hover:text-white ${activeSection === item.href.slice(1) ? 'is-active' : ''}`}
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        )}
       </header>
+
+      {/* ─── Modern Floating Side & Mobile Bottom Navigation ─── */}
+      <FloatingNav
+        activeSection={activeSection}
+        onSectionSelect={(id) => setActiveSection(id)}
+      />
 
       <main>
         <CinematicSection
