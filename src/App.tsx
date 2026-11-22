@@ -69,6 +69,9 @@ import {
 } from 'react-icons/si'
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import ProjectDetails from './pages/ProjectDetails'
+import ErrorPage from './pages/ErrorPage'
+import ErrorBoundary from './components/error/ErrorBoundary'
+import SectionErrorFallback from './components/error/SectionErrorFallback'
 import ThemeToggle from './components/ThemeToggle'
 import { MusicButton, MusicPlayer, MusicProvider } from './components/music'
 import BackgroundAnimation from './components/BackgroundAnimation'
@@ -76,6 +79,7 @@ import CosmicHorizonDivider from './components/CosmicHorizonDivider'
 import SpatialHeroConsole from './components/SpatialHeroConsole'
 import CinematicSection from './components/CinematicSection'
 import CertificationsSection from './components/CertificationsSection'
+import Footer from './components/Footer'
 import { smoothScrollToTop } from './lib/smoothScroll'
 import {
   getPublishedProjects,
@@ -506,7 +510,7 @@ function GlobalBackToTop() {
           return
         }
         if (!footerEl) {
-          footerEl = document.querySelector('.portfolio-footer')
+          footerEl = document.querySelector('.site-footer') || document.querySelector('.portfolio-footer')
         }
         const innerHeight = window.innerHeight
         const scrollHeight = document.documentElement.scrollHeight
@@ -1020,24 +1024,33 @@ function Home() {
     )
   }
 
+  const reloadProjects = async () => {
+    setProjectsLoading(true)
+    setProjectsError('')
+    try {
+      const publishedProjects = await getPublishedProjects()
+      setProjects(publishedProjects)
+      setActiveProjectIndex((prev) => (publishedProjects.length > 0 && prev >= publishedProjects.length ? 0 : prev))
+    } catch {
+      setProjectsError('Could not load projects. Please try again.')
+    } finally {
+      setProjectsLoading(false)
+    }
+  }
+
   useEffect(() => {
     let active = true
 
     async function loadProjects() {
       try {
         const publishedProjects = await getPublishedProjects()
-
         if (active) {
           setProjects(publishedProjects)
           setActiveProjectIndex((prev) => (publishedProjects.length > 0 && prev >= publishedProjects.length ? 0 : prev))
         }
-      } catch (error) {
+      } catch {
         if (active) {
-          setProjectsError(
-            error instanceof Error
-              ? error.message
-              : 'Could not load projects.',
-          )
+          setProjectsError('Could not load projects. Please try again.')
         }
       } finally {
         if (active) {
@@ -2394,9 +2407,12 @@ function Home() {
             )}
 
             {projectsError && (
-              <p role="alert" className="mt-8 text-sm text-red-400">
-                {projectsError}
-              </p>
+              <SectionErrorFallback
+                title="Unable to Load Projects"
+                description="Failed to fetch the project catalog. Please check your connection and try again."
+                onRetry={reloadProjects}
+                className="mt-8"
+              />
             )}
 
             {!projectsLoading &&
@@ -2541,94 +2557,7 @@ function Home() {
         </CinematicSection>
       </main>
 
-      <CinematicSection type="footer" className="portfolio-footer">
-        <div className="portfolio-container footer-body-wrapper">
-          {/* Main Tier: Brand & Role on Left, Refined Link Pills on Right */}
-          <div className="footer-main-row">
-            {/* Brand & Identity */}
-            <div className="footer-brand-block">
-              <a href="#home" className="footer-brand-title group">
-                <span className="footer-brand-monogram">RD</span>
-                <span className="footer-brand-name">{profile?.full_name || "Richard D'Souza"}</span>
-                <span className="footer-brand-dot" aria-hidden="true" />
-              </a>
-
-              <p className="footer-brand-tagline">
-                <span className="footer-tagline-role">{profile?.professional_title || 'Software Developer'}</span>
-                <span className="footer-tagline-bullet" aria-hidden="true">•</span>
-                Crafting dependable digital products with clean architecture.
-              </p>
-            </div>
-
-            {/* Direct Connect & Action Links */}
-            <div className="footer-links-group" aria-label="Social and professional links">
-              <a
-                href={profile?.github_url || 'https://github.com/aestheticwolf'}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="GitHub Profile"
-                className="footer-social-pill"
-                title="GitHub"
-              >
-                <FaGithub size={15} aria-hidden="true" />
-                <span>GitHub</span>
-              </a>
-
-              <a
-                href={profile?.linkedin_url || 'https://www.linkedin.com/'}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="LinkedIn Profile"
-                className="footer-social-pill"
-                title="LinkedIn"
-              >
-                <FaLinkedinIn size={14} aria-hidden="true" />
-                <span>LinkedIn</span>
-              </a>
-
-              <a
-                href="mailto:rich.dsz1997@gmail.com"
-                className="footer-social-pill"
-                title="Send direct email"
-                aria-label="Send direct email"
-              >
-                <Send size={13} aria-hidden="true" />
-                <span>Email</span>
-              </a>
-
-              <Link to="/request-resume" onClick={saveScrollPosition} className="footer-resume-pill group" title="Request Resume">
-                <span>Resume</span>
-                <ArrowUpRight size={13} className="footer-resume-icon" aria-hidden="true" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Clean Bottom Colophon */}
-          <div className="footer-bottom-divider" aria-hidden="true" />
-          <div className="footer-bottom-content">
-            <p className="footer-copyright">
-              © {new Date().getFullYear()}{' '}
-              <span className="footer-copyright-name">{profile?.full_name || "Richard D'Souza"}</span>. All rights reserved.
-            </p>
-
-            <a
-              href="#home"
-              className="footer-back-to-top group"
-              onClick={(e) => {
-                e.preventDefault()
-                const target = e.currentTarget
-                target.classList.add('is-launching')
-                smoothScrollToTop(() => {
-                  target.classList.remove('is-launching')
-                })
-              }}
-            >
-              <span>Back to top</span>
-              <ArrowUp size={13} className="footer-back-icon" aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </CinematicSection>
+      <Footer profile={profile} saveScrollPosition={saveScrollPosition} />
     </div>
   )
 }
@@ -2653,22 +2582,9 @@ function AnimatedRoutes() {
         <Route path="/request-resume" element={<RequestResume />} />
         <Route path="/resume-access" element={<ResumeAccess />} />
         <Route path="/projects/:slug" element={<ProjectDetails />} />
-        <Route
-          path="*"
-          element={
-            <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
-              <div className="text-center">
-                <h1 className="text-4xl font-semibold">Page not found</h1>
-                <Link
-                  to="/"
-                  className="mt-6 inline-flex rounded-full bg-white px-5 py-3 text-sm font-semibold text-black"
-                >
-                  Return home
-                </Link>
-              </div>
-            </main>
-          }
-        />
+        <Route path="/error/:code" element={<ErrorPage />} />
+        <Route path="/error" element={<ErrorPage />} />
+        <Route path="*" element={<ErrorPage code={404} />} />
       </Routes>
     </>
   )
@@ -2679,14 +2595,14 @@ export default function App() {
 
   return (
     <MusicProvider>
-      <AnimatePresence mode="wait">
+      <ErrorBoundary>
         {preloaderActive && (
           <PortfolioPreloader onComplete={() => setPreloaderActive(false)} />
         )}
-      </AnimatePresence>
-      <BrowserRouter>
-        <AnimatedRoutes />
-      </BrowserRouter>
+        <BrowserRouter>
+          <AnimatedRoutes />
+        </BrowserRouter>
+      </ErrorBoundary>
     </MusicProvider>
   )
 }

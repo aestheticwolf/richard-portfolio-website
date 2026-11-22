@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -24,6 +24,35 @@ export default function RequestResume() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('richard-portfolio-theme')
+        if (saved === 'light' || saved === 'dark') return saved
+      } catch {
+        /* ignore */
+      }
+      if (document.documentElement.dataset.theme === 'light') return 'light'
+    }
+    return 'dark'
+  })
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+      setTheme(current)
+    }
+    const obs = new MutationObserver(updateTheme)
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] })
+    window.addEventListener('storage', updateTheme)
+    return () => {
+      obs.disconnect()
+      window.removeEventListener('storage', updateTheme)
+    }
+  }, [])
+
+  const isLight = theme === 'light'
 
   function handleBack() {
     if (window.history.length > 1) {
@@ -116,18 +145,18 @@ export default function RequestResume() {
                   <div className="resume-success-pulse" aria-hidden="true" />
                   <CheckCircle2 size={36} className="text-emerald-400 relative z-10" />
                 </div>
-                <h2 className="resume-success-title">Request Submitted!</h2>
-                <p className="resume-success-desc">
-                  Thank you, <strong className="font-semibold text-white">{name}</strong>. An access link will be delivered to <strong className="font-semibold text-white">{email}</strong>.
+                <h2 className={`resume-success-title ${isLight ? 'text-slate-900' : 'text-white'}`}>Request Submitted!</h2>
+                <p className={`resume-success-desc ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                  Thank you, <strong className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>{name}</strong>. An access link will be delivered to <strong className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>{email}</strong>.
                 </p>
-                <div className="resume-success-note">
-                  <Mail size={16} className="text-sky-400 shrink-0" />
+                <div className={`resume-success-note ${isLight ? 'bg-indigo-50 border-indigo-200 text-indigo-900' : ''}`}>
+                  <Mail size={16} className={isLight ? 'text-indigo-600 shrink-0' : 'text-sky-400 shrink-0'} />
                   <span>Please check your inbox (and spam folder) for the access link.</span>
                 </div>
                 <div className="resume-success-actions">
                   <button
                     type="button"
-                    className="resume-secondary-btn"
+                    className={`resume-secondary-btn cursor-pointer ${isLight ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800' : ''}`}
                     onClick={() => {
                       setName('')
                       setEmail('')

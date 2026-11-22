@@ -28,6 +28,10 @@ const NAV_ITEMS: NavItem[] = [
 
 const IDLE_TIMEOUT_MS = 5000
 
+const isPointerHoverCapable = () => {
+  return typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
+}
+
 interface FloatingNavProps {
   activeSection: string
   onSectionSelect?: (id: string) => void
@@ -79,6 +83,9 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
     startIdleTimer()
 
     const handleUserActivity = () => {
+      if (!isPointerHoverCapable()) {
+        isHoveredRef.current = false
+      }
       const now = Date.now()
       // If idle, restore normal visibility immediately; if active, throttle timer resets
       if (isIdleRef.current || now - lastActivityRef.current > 250) {
@@ -121,6 +128,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
 
   // Desktop/laptop mouse hover handlers for nav container
   const handleNavMouseEnter = () => {
+    if (!isPointerHoverCapable()) return
     isHoveredRef.current = true
     if (isIdleRef.current) {
       isIdleRef.current = false
@@ -130,18 +138,21 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
   }
 
   const handleNavMouseLeave = () => {
+    if (!isPointerHoverCapable()) return
     isHoveredRef.current = false
     startIdleTimer()
   }
 
   // Keyboard accessibility focus handlers
-  const handleNavFocus = () => {
-    isFocusedRef.current = true
-    if (isIdleRef.current) {
-      isIdleRef.current = false
-      setIsIdle(false)
+  const handleNavFocus = (e: React.FocusEvent<HTMLElement>) => {
+    if (e.target.matches?.(':focus-visible')) {
+      isFocusedRef.current = true
+      if (isIdleRef.current) {
+        isIdleRef.current = false
+        setIsIdle(false)
+      }
+      clearTimer()
     }
-    clearTimer()
   }
 
   const handleNavBlur = (e: React.FocusEvent<HTMLElement>) => {
@@ -153,6 +164,15 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault()
+
+    // Immediately remove DOM focus so mobile tap or click doesn't retain focus inside nav
+    e.currentTarget.blur()
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+
+    isHoveredRef.current = false
+    isFocusedRef.current = false
 
     wakeUpAndResetTimer()
 
@@ -290,6 +310,11 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
         onMouseLeave={handleNavMouseLeave}
         onFocus={handleNavFocus}
         onBlur={handleNavBlur}
+        onTouchStart={() => {
+          isHoveredRef.current = false
+          isFocusedRef.current = false
+          wakeUpAndResetTimer()
+        }}
         className={`floating-bottom-nav fixed bottom-4 inset-x-0 mx-auto w-fit z-50 md:hidden flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-full select-none ${
           isIdle ? 'is-idle' : ''
         }`}

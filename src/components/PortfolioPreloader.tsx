@@ -1,427 +1,398 @@
 import { useEffect, useRef, useState } from 'react'
-import { useReducedMotion } from 'framer-motion'
-import gsap from 'gsap'
-import * as THREE from 'three'
 
 type PortfolioPreloaderProps = {
   onComplete?: () => void
 }
 
-/* ─── Lightweight Procedural Three.js Ambient Depth Field ─── */
-function initPreloaderThree(canvas: HTMLCanvasElement): () => void {
-  let disposed = false
-  let animationFrameId: number
+// Dark stops: white → lavender → purple (#a78bfa) → blue (#38bdf8)
+const DARK_STOPS: [number, [number, number, number]][] = [
+  [0, [255, 255, 255]],
+  [0.45, [233, 227, 255]],
+  [0.75, [167, 139, 250]],
+  [1, [56, 189, 248]],
+]
 
-  try {
-    const gl =
-      canvas.getContext('webgl', {
-        alpha: true,
-        antialias: false,
-        powerPreference: 'low-power',
-      }) ||
-      canvas.getContext('experimental-webgl', {
-        alpha: true,
-        antialias: false,
-        powerPreference: 'low-power',
-      })
+// Light stops: dark slate (#0f172a) → deep indigo (#3730a3) → electric violet (#6366f1) → azure (#0284c7)
+const LIGHT_STOPS: [number, [number, number, number]][] = [
+  [0, [15, 23, 42]],
+  [0.45, [55, 48, 163]],
+  [0.75, [99, 102, 241]],
+  [1, [2, 132, 199]],
+]
 
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      context: (gl as WebGLRenderingContext) || undefined,
-      alpha: true,
-      antialias: false,
-      powerPreference: 'low-power',
-    })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
-    renderer.setSize(window.innerWidth, window.innerHeight, false)
-
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 100)
-    camera.position.z = 24
-
-    // Procedural soft radial particle texture (no network load)
-    const texCanvas = document.createElement('canvas')
-    texCanvas.width = 32
-    texCanvas.height = 32
-    const ctx = texCanvas.getContext('2d')
-    if (ctx) {
-      const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16)
-      grad.addColorStop(0, 'rgba(255, 255, 255, 1)')
-      grad.addColorStop(0.25, 'rgba(196, 181, 253, 0.85)')
-      grad.addColorStop(0.65, 'rgba(139, 92, 246, 0.25)')
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
-      ctx.fillStyle = grad
-      ctx.fillRect(0, 0, 32, 32)
+function interpolateStops(t: number, stops: [number, [number, number, number]][]): string {
+  for (let i = 1; i < stops.length; i++) {
+    if (t <= stops[i][0]) {
+      const a = stops[i - 1], b = stops[i]
+      const k = (t - a[0]) / (b[0] - a[0])
+      return `rgb(${Math.round(a[1][0] + (b[1][0] - a[1][0]) * k)},${Math.round(a[1][1] + (b[1][1] - a[1][1]) * k)},${Math.round(a[1][2] + (b[1][2] - a[1][2]) * k)})`
     }
-    const texture = new THREE.CanvasTexture(texCanvas)
-    texture.flipY = false
-
-    // Lightweight particle field (48 particles)
-    const count = 48
-    const positions = new Float32Array(count * 3)
-
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 36
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 24
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 16
-    }
-
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-
-    const material = new THREE.PointsMaterial({
-      size: 0.85,
-      map: texture,
-      transparent: true,
-      opacity: 0.65,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    })
-
-    const points = new THREE.Points(geometry, material)
-    scene.add(points)
-
-    // Resize handler
-    const onResize = () => {
-      if (disposed) return
-      camera.aspect = window.innerWidth / window.innerHeight
-      camera.updateProjectionMatrix()
-      renderer.setSize(window.innerWidth, window.innerHeight, false)
-    }
-    window.addEventListener('resize', onResize, { passive: true })
-
-    // Subtle cursor parallax
-    let mouseX = 0
-    let mouseY = 0
-    const onMouseMove = (e: MouseEvent) => {
-      mouseX = (e.clientX / window.innerWidth - 0.5) * 2
-      mouseY = (e.clientY / window.innerHeight - 0.5) * 2
-    }
-    window.addEventListener('mousemove', onMouseMove, { passive: true })
-
-    let clock = 0
-    const animate = () => {
-      if (disposed) return
-      animationFrameId = requestAnimationFrame(animate)
-
-      // Pause rendering when tab is inactive to save GPU/CPU
-      if (document.hidden) return
-
-      clock += 0.012
-
-      // Gentle orbital drift
-      points.rotation.y = clock * 0.035
-      points.rotation.x = Math.sin(clock * 0.018) * 0.025
-
-      // Smooth camera perspective lerp
-      camera.position.x += (mouseX * 0.65 - camera.position.x) * 0.03
-      camera.position.y += (-mouseY * 0.65 - camera.position.y) * 0.03
-      camera.lookAt(0, 0, 0)
-
-      renderer.render(scene, camera)
-    }
-    animate()
-
-    return () => {
-      disposed = true
-      cancelAnimationFrame(animationFrameId)
-      window.removeEventListener('resize', onResize)
-      window.removeEventListener('mousemove', onMouseMove)
-      try {
-        scene.remove(points)
-        geometry.dispose()
-        material.dispose()
-        texture.dispose()
-        renderer.dispose()
-      } catch {
-        // Safe disposal
-      }
-    }
-  } catch {
-    return () => {}
   }
+  const last = stops[stops.length - 1][1]
+  return `rgb(${last[0]},${last[1]},${last[2]})`
+}
+
+const STEPS: [number, string][] = [
+  [0, 'Initializing'],
+  [25, 'Loading assets'],
+  [55, 'Compiling interface'],
+  [85, 'Polishing pixels'],
+  [100, 'Ready'],
+]
+
+const NAME_LETTERS = Array.from("Richard D'souza").map((c, i, arr) => {
+  const t = i / Math.max(arr.length - 1, 1)
+  return {
+    char: c === ' ' ? '\u00a0' : c,
+    i,
+    darkColor: interpolateStops(t, DARK_STOPS),
+    lightColor: interpolateStops(t, LIGHT_STOPS),
+  }
+})
+
+function getInitialTheme(): 'light' | 'dark' {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('richard-portfolio-theme')
+      if (saved === 'light' || saved === 'dark') return saved
+    } catch {
+      /* ignore storage access errors in restricted contexts */
+    }
+    if (document.documentElement.dataset.theme === 'light') return 'light'
+    if (document.documentElement.dataset.theme === 'dark') return 'dark'
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light'
+    }
+  }
+  return 'dark'
 }
 
 export default function PortfolioPreloader({ onComplete }: PortfolioPreloaderProps) {
-  const prefersReducedMotion = useReducedMotion() ?? false
+  const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme)
+  const [isExit, setIsExit] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [isGone, setIsGone] = useState(false)
 
-  const overlayRef = useRef<HTMLDivElement | null>(null)
-  const shutterTopRef = useRef<HTMLDivElement | null>(null)
-  const shutterBottomRef = useRef<HTMLDivElement | null>(null)
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const ambientRef = useRef<HTMLDivElement | null>(null)
-  const stageRef = useRef<HTMLDivElement | null>(null)
-  const brandRef = useRef<HTMLDivElement | null>(null)
-  const shimmerRef = useRef<HTMLDivElement | null>(null)
-  const counterRef = useRef<HTMLSpanElement | null>(null)
-  const fillRef = useRef<HTMLDivElement | null>(null)
-  const beadRef = useRef<HTMLSpanElement | null>(null)
-  const statusDotRef = useRef<HTMLSpanElement | null>(null)
-  const statusTextRef = useRef<HTMLSpanElement | null>(null)
+  const loaderRef = useRef<HTMLDivElement>(null)
+  const wordRef = useRef<HTMLSpanElement>(null)
+  const hColRef = useRef<HTMLDivElement>(null)
+  const hStripRef = useRef<HTMLDivElement>(null)
+  const tStripRef = useRef<HTMLDivElement>(null)
+  const oStripRef = useRef<HTMLDivElement>(null)
 
-  const [isReady, setIsReady] = useState(prefersReducedMotion)
+  const rafRef = useRef<number>(0)
+  const doneRef = useRef(false)
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
   useEffect(() => {
-    // Failsafe timer: ensure loader NEVER gets stuck if an asset or initialization hangs
-    const safetyTimer = window.setTimeout(() => {
-      onComplete?.()
-    }, 4500)
+    const updateTheme = () => {
+      setTheme(getInitialTheme())
+    }
+    const observer = new MutationObserver(updateTheme)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] })
+    window.addEventListener('storage', updateTheme)
 
-    // Reduced motion fallback: quick, minimal fade
-    if (prefersReducedMotion) {
-      if (counterRef.current) counterRef.current.textContent = '100'
-      if (fillRef.current) fillRef.current.style.width = '100%'
-      const quickTimer = window.setTimeout(() => {
-        window.clearTimeout(safetyTimer)
-        onComplete?.()
-      }, 350)
+    const L = loaderRef.current
+    if (!L) {
       return () => {
-        window.clearTimeout(safetyTimer)
-        window.clearTimeout(quickTimer)
+        observer.disconnect()
+        window.removeEventListener('storage', updateTheme)
       }
     }
 
-    // 1. Initialize Three.js depth field
-    let cleanupThree: (() => void) | undefined
-    if (canvasRef.current) {
-      try {
-        cleanupThree = initPreloaderThree(canvasRef.current)
-      } catch (err) {
-        console.warn('Three.js preloader depth skipped:', err)
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const MIN_MS = reduce ? 350 : 2400
+
+    document.body.classList.add('is-loading')
+
+    // Cursor / touch follower glow
+    const setGlow = (x: number, y: number) => {
+      L.style.setProperty('--mx', x + 'px')
+      L.style.setProperty('--my', y + 'px')
+    }
+    const onMouseMove = (e: MouseEvent) => setGlow(e.clientX, e.clientY)
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches && e.touches[0]) {
+        setGlow(e.touches[0].clientX, e.touches[0].clientY)
+      }
+    }
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+
+    // Page loading status
+    let loaded = document.readyState === 'complete'
+    const onLoad = () => { loaded = true }
+    window.addEventListener('load', onLoad)
+
+    // Failsafe: mark loaded after 4s so mobile or slow network never gets stuck at 90%
+    const loadFailsafe = setTimeout(() => { loaded = true }, 4000)
+    timersRef.current.push(loadFailsafe)
+
+    let shown = 0
+    let currentWord = ''
+    const t0 = performance.now()
+
+    function render(v: number) {
+      const n = Math.min(100, Math.floor(v + 0.0001))
+      L?.style.setProperty('--p', v.toFixed(2) + '%')
+
+      const d = [n >= 100 ? 1 : 0, Math.floor(n / 10) % 10, n % 10]
+      if (hStripRef.current) hStripRef.current.style.transform = `translateY(${-d[0]}em)`
+      if (tStripRef.current) tStripRef.current.style.transform = `translateY(${-d[1]}em)`
+      if (oStripRef.current) oStripRef.current.style.transform = `translateY(${-d[2]}em)`
+      if (hColRef.current) hColRef.current.classList.toggle('on', n >= 100)
+
+      let w = STEPS[0][1]
+      for (const [thr, lbl] of STEPS) {
+        if (n >= thr) w = lbl
+      }
+      if (w !== currentWord && wordRef.current) {
+        currentWord = w
+        wordRef.current.textContent = w
+        wordRef.current.classList.remove('swap')
+        void wordRef.current.offsetWidth
+        wordRef.current.classList.add('swap')
       }
     }
 
-    // 2. Coordinated GSAP Timeline
-    const tl = gsap.timeline({
-      defaults: { ease: 'power2.out' },
-    })
+    function finish() {
+      if (doneRef.current) return
+      doneRef.current = true
 
-    // Ambient illumination & branding entrance
-    if (ambientRef.current) {
-      tl.fromTo(
-        ambientRef.current,
-        { opacity: 0, scale: 0.75 },
-        { opacity: 1, scale: 1, duration: 1.1, ease: 'power2.out' },
-        0
-      )
-    }
+      // Step 1: brief pause at 100% (Ready), then blur content & flash light seam
+      const t1 = setTimeout(() => {
+        setIsExit(true)
 
-    if (brandRef.current) {
-      tl.fromTo(
-        brandRef.current,
-        { opacity: 0, y: 14, scale: 0.94 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.75, ease: 'power3.out' },
-        0.1
-      )
-    }
+        // Step 2: 600ms later, split open the panels to reveal the page
+        const t2 = setTimeout(() => {
+          setIsOpen(true)
+          document.body.classList.remove('is-loading')
+          document.body.classList.add('is-ready')
+          window.dispatchEvent(new Event('loader:done'))
 
-    // Subtle light sweep across full name
-    if (shimmerRef.current) {
-      tl.fromTo(
-        shimmerRef.current,
-        { xPercent: -120 },
-        { xPercent: 150, duration: 1.15, ease: 'power1.inOut' },
-        0.3
-      )
-    }
-
-    if (counterRef.current) {
-      tl.fromTo(
-        counterRef.current,
-        { opacity: 0, scale: 0.93 },
-        { opacity: 1, scale: 1, duration: 0.6, ease: 'power2.out' },
-        0.2
-      )
-    }
-
-    // Gentle bead pulse
-    if (beadRef.current) {
-      gsap.to(beadRef.current, {
-        scale: 1.25,
-        repeat: -1,
-        yoyo: true,
-        duration: 0.55,
-        ease: 'sine.inOut',
-      })
-    }
-
-    // Progress counter & line fill (0 to 100)
-    const progressObj = { value: 0 }
-    tl.to(
-      progressObj,
-      {
-        value: 100,
-        duration: 1.25,
-        ease: 'power2.inOut',
-        onUpdate: () => {
-          const val = Math.min(100, Math.floor(progressObj.value))
-          const formatted = val < 10 ? `0${val}` : `${val}`
-          if (counterRef.current) counterRef.current.textContent = formatted
-          if (fillRef.current) fillRef.current.style.width = `${progressObj.value}%`
-        },
-        onComplete: () => {
-          setIsReady(true)
-          if (statusDotRef.current) statusDotRef.current.classList.add('is-ready')
-          if (statusTextRef.current) {
-            statusTextRef.current.textContent = 'SYSTEM READY'
-            statusTextRef.current.classList.add('is-ready')
-          }
-        },
-      },
-      0.15
-    )
-
-    // Savor the 100% / SYSTEM READY completion state
-    tl.to({}, { duration: 0.28 })
-
-    // 3. Cinematic Exit Transition: dissolve central stage, glide aperture shutters
-    if (stageRef.current) {
-      tl.to(stageRef.current, {
-        opacity: 0,
-        scale: 0.96,
-        y: -14,
-        duration: 0.38,
-        ease: 'power2.inOut',
-      })
-    }
-
-    const fadeTargets: (HTMLDivElement | HTMLCanvasElement)[] = []
-    if (ambientRef.current) fadeTargets.push(ambientRef.current)
-    if (canvasRef.current) fadeTargets.push(canvasRef.current)
-
-    if (fadeTargets.length > 0) {
-      tl.to(
-        fadeTargets,
-        {
-          opacity: 0,
-          duration: 0.3,
-          ease: 'power2.inOut',
-        },
-        '-=0.28'
-      )
-    }
-
-    if (shutterTopRef.current) {
-      tl.to(
-        shutterTopRef.current,
-        {
-          yPercent: -100,
-          duration: 0.48,
-          ease: 'power3.inOut',
-        },
-        '-=0.18'
-      )
-    }
-
-    if (shutterBottomRef.current) {
-      tl.to(
-        shutterBottomRef.current,
-        {
-          yPercent: 100,
-          duration: 0.48,
-          ease: 'power3.inOut',
-        },
-        '<'
-      )
-    }
-
-    if (overlayRef.current) {
-      tl.to(
-        overlayRef.current,
-        {
-          opacity: 0,
-          duration: 0.45,
-          ease: 'power2.inOut',
-          onComplete: () => {
-            window.clearTimeout(safetyTimer)
+          // Step 3: after panels have slid out of view (1100ms), cleanly unmount
+          const t3 = setTimeout(() => {
+            setIsGone(true)
             onComplete?.()
-          },
-        },
-        '<'
-      )
+          }, 1100)
+          timersRef.current.push(t3)
+        }, 600)
+        timersRef.current.push(t2)
+      }, 350)
+      timersRef.current.push(t1)
     }
+
+    function frame(now: number) {
+      const k = Math.min((now - t0) / MIN_MS, 1)
+      const target = Math.min((1 - Math.pow(1 - k, 3)) * 100, loaded ? 100 : 90)
+      shown += (target - shown) * 0.08
+      if (target >= 100 && 100 - shown < 0.4) shown = 100
+      render(shown)
+      if (shown >= 100) return finish()
+      rafRef.current = requestAnimationFrame(frame)
+    }
+
+    // Safety timeout: never hang more than 7.5 seconds under any circumstance
+    const safetyTimer = setTimeout(() => {
+      if (!doneRef.current) finish()
+    }, 7500)
+    timersRef.current.push(safetyTimer)
+
+    if (reduce) {
+      render(100)
+      finish()
+    } else {
+      render(0)
+      rafRef.current = requestAnimationFrame(frame)
+    }
+
+    const activeTimers = timersRef.current
 
     return () => {
-      window.clearTimeout(safetyTimer)
-      tl.kill()
-      cleanupThree?.()
+      cancelAnimationFrame(rafRef.current)
+      activeTimers.forEach((t) => clearTimeout(t))
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('load', onLoad)
+      window.removeEventListener('storage', updateTheme)
+      observer.disconnect()
+      document.body.classList.remove('is-loading')
     }
-  }, [onComplete, prefersReducedMotion])
+  }, [onComplete])
+
+  if (isGone) return null
+
+  const isLight = theme === 'light'
 
   return (
     <div
-      ref={overlayRef}
-      className="minimal-preloader-overlay fixed inset-0 z-999999 flex flex-col items-center justify-center bg-[#07080c] overflow-hidden select-none pointer-events-auto"
+      id="ld-root"
+      ref={loaderRef}
+      data-theme={theme}
+      className={`${isExit ? 'is-exit' : ''} ${isOpen ? 'is-open' : ''} ${isLight ? 'ld-light' : 'ld-dark'}`}
       role="status"
+      aria-live="polite"
       aria-label="Loading portfolio"
     >
-      {/* Three.js Subtle Ambient Depth Canvas */}
-      <canvas
-        ref={canvasRef}
-        className="minimal-preloader-canvas absolute inset-0 w-full h-full pointer-events-none z-2"
-        aria-hidden="true"
-      />
-
-      {/* Cinematic Edge Vignette */}
-      <div className="minimal-preloader-vignette absolute inset-0 pointer-events-none z-3" aria-hidden="true" />
-
-      {/* Ambient Radial Lighting */}
-      <div ref={ambientRef} className="minimal-preloader-ambient absolute pointer-events-none z-4" aria-hidden="true" />
-
-      {/* Aperture Exit Shutters */}
+      {/* Upper split panel */}
       <div
-        ref={shutterTopRef}
-        className="preloader-shutter preloader-shutter-top absolute left-0 right-0 top-0 h-[50.5%] bg-[#07080c] pointer-events-none z-10"
-        aria-hidden="true"
+        className="ld-panel ld-top"
+        style={{ background: isLight ? '#f8fafc' : '#06070d' }}
       />
+      {/* Lower split panel */}
       <div
-        ref={shutterBottomRef}
-        className="preloader-shutter preloader-shutter-bottom absolute left-0 right-0 bottom-0 h-[50.5%] bg-[#07080c] pointer-events-none z-10"
-        aria-hidden="true"
+        className="ld-panel ld-bot"
+        style={{ background: isLight ? '#f8fafc' : '#06070d' }}
       />
 
-      {/* Central Minimal Stage */}
-      <div ref={stageRef} className="minimal-preloader-stage relative z-20 flex flex-col items-center justify-center text-center">
-        {/* Full Name Branding */}
-        <div ref={brandRef} className="minimal-preloader-brand">
-          <span className="preloader-brand-first">Richard</span>
-          <span className="preloader-brand-space">&nbsp;</span>
-          <span className="preloader-brand-last">D'souza</span>
-          <div ref={shimmerRef} className="preloader-brand-shimmer" aria-hidden="true" />
-        </div>
+      {/* Center content (blurs out on is-exit) */}
+      <div className="ld-content">
+        <div
+          className="ld-glow"
+          style={{
+            background: isLight
+              ? 'radial-gradient(520px circle at var(--mx) var(--my), rgba(99, 102, 241, 0.12), transparent 62%)'
+              : 'radial-gradient(520px circle at var(--mx) var(--my), rgba(124, 92, 255, 0.22), transparent 62%)',
+          }}
+          aria-hidden="true"
+        />
+        <span
+          className="ld-blob ld-b1"
+          style={{
+            background: isLight ? '#a5b4fc' : '#5b21b6',
+            opacity: isLight ? 0.14 : 0.26,
+          }}
+          aria-hidden="true"
+        />
+        <span
+          className="ld-blob ld-b2"
+          style={{
+            background: isLight ? '#93c5fd' : '#0284c7',
+            opacity: isLight ? 0.14 : 0.26,
+          }}
+          aria-hidden="true"
+        />
+        <span
+          className="ld-grain"
+          style={{
+            opacity: isLight ? 0.025 : 0.07,
+            mixBlendMode: isLight ? 'multiply' : 'overlay',
+          }}
+          aria-hidden="true"
+        />
 
-        {/* Large Clean Kinetic Numerical Counter */}
-        <div className="minimal-preloader-counter" aria-hidden="true">
-          <span ref={counterRef} className="minimal-counter-number">
-            00
+        {/* Name typography — pre-rendered in JSX for instant display */}
+        <h1 className="ld-name" aria-label="Richard D'souza">
+          <span
+            className="ld-layer ld-outline"
+            style={{
+              WebkitTextStroke: isLight
+                ? '1.5px rgba(15, 23, 42, 0.22)'
+                : '1px rgba(255, 255, 255, 0.32)',
+            }}
+            aria-hidden="true"
+          >
+            {NAME_LETTERS.map((item, idx) => (
+              <span
+                key={idx}
+                className="ld-ch"
+                style={{
+                  ['--i' as string]: item.i,
+                }}
+              >
+                {item.char}
+              </span>
+            ))}
           </span>
-          <span className="minimal-counter-pct">%</span>
-        </div>
+          <span className="ld-layer ld-fill" aria-hidden="true">
+            {NAME_LETTERS.map((item, idx) => (
+              <span
+                key={idx}
+                className="ld-ch"
+                style={{
+                  ['--i' as string]: item.i,
+                  color: isLight ? item.lightColor : item.darkColor,
+                }}
+              >
+                {item.char}
+              </span>
+            ))}
+          </span>
+        </h1>
 
-        {/* Hairline Laser Progress Line */}
-        <div className="minimal-preloader-track-wrap">
-          <div className="minimal-preloader-track">
-            <div ref={fillRef} className="minimal-preloader-fill" style={{ width: '0%' }}>
-              <span ref={beadRef} className="minimal-preloader-bead" />
+        {/* Bottom bar: status telemetry left, rolling odometer right */}
+        <div className="ld-bar">
+          <div
+            className="ld-status"
+            style={{ color: isLight ? '#64748b' : '#8b90a7' }}
+          >
+            <span
+              className="ld-dot"
+              style={{ background: isLight ? '#4f46e5' : '#38bdf8' }}
+            />
+            <span ref={wordRef} className="ld-word swap">Initializing</span>
+          </div>
+
+          <div className="ld-count" aria-hidden="true">
+            <div ref={hColRef} className="ld-col h">
+              <div ref={hStripRef} className="ld-strip">
+                <span style={isLight ? { background: 'linear-gradient(180deg, #0f172a 12%, #4338ca 52%, #0284c7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : undefined}>0</span>
+                <span style={isLight ? { background: 'linear-gradient(180deg, #0f172a 12%, #4338ca 52%, #0284c7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' } : undefined}>1</span>
+              </div>
             </div>
+            <div className="ld-col">
+              <div ref={tStripRef} className="ld-strip">
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+                  <span
+                    key={n}
+                    style={isLight ? { background: 'linear-gradient(180deg, #0f172a 12%, #4338ca 52%, #0284c7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 2px 10px rgba(79, 70, 229, 0.2))' } : undefined}
+                  >
+                    {n}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="ld-col">
+              <div ref={oStripRef} className="ld-strip">
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+                  <span
+                    key={n}
+                    style={isLight ? { background: 'linear-gradient(180deg, #0f172a 12%, #4338ca 52%, #0284c7 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 2px 10px rgba(79, 70, 229, 0.2))' } : undefined}
+                  >
+                    {n}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <span
+              className="ld-pct"
+              style={{
+                color: isLight ? '#4f46e5' : '#38bdf8',
+                textShadow: isLight ? '0 0 10px rgba(79, 70, 229, 0.3)' : '0 0 12px rgba(56, 189, 248, 0.65)',
+              }}
+            >
+              %
+            </span>
           </div>
         </div>
 
-        {/* Subtle Status Telemetry */}
-        <div className="minimal-preloader-status">
-          <span
-            ref={statusDotRef}
-            className={`minimal-status-dot ${isReady ? 'is-ready' : ''}`}
-            aria-hidden="true"
-          />
-          <span
-            ref={statusTextRef}
-            className={`minimal-status-text ${isReady ? 'is-ready' : ''}`}
-          >
-            {isReady ? 'SYSTEM READY' : 'INITIALIZING'}
-          </span>
-        </div>
+        {/* Hairline glowing progress line along bottom edge */}
+        <div
+          className="ld-line"
+          style={{ background: isLight ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.08)' }}
+        />
       </div>
+
+      {/* Light seam where split panels part */}
+      <div
+        className="ld-seam"
+        style={{
+          background: isLight
+            ? 'linear-gradient(90deg, transparent, #4f46e5, transparent)'
+            : 'linear-gradient(90deg, transparent, #38bdf8, transparent)',
+        }}
+        aria-hidden="true"
+      />
     </div>
   )
 }

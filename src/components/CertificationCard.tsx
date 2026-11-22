@@ -275,7 +275,7 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
                 </span>
               ))}
               {remainingSkillsCount > 0 && (
-                <span className="inline-flex items-center text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/4 border border-white/10 text-white/50">
+                <span className="cert-skill-pill-more inline-flex items-center text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/8 border border-white/15 text-white/70">
                   +{remainingSkillsCount}
                 </span>
               )}
@@ -398,7 +398,7 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
               </span>
             ))}
             {remainingSkillsCount > 0 && (
-              <span className="inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/4 border border-white/10 text-white/50 shrink-0">
+              <span className="cert-skill-pill-more inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/8 border border-white/15 text-white/70 shrink-0">
                 +{remainingSkillsCount}
               </span>
             )}

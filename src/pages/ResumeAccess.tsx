@@ -13,6 +13,35 @@ export default function ResumeAccess() {
   const prefersReducedMotion = useReducedMotion() ?? false
   const started = useRef(false)
 
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('richard-portfolio-theme')
+        if (saved === 'light' || saved === 'dark') return saved
+      } catch {
+        /* ignore */
+      }
+      if (document.documentElement.dataset.theme === 'light') return 'light'
+    }
+    return 'dark'
+  })
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+      setTheme(current)
+    }
+    const obs = new MutationObserver(updateTheme)
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] })
+    window.addEventListener('storage', updateTheme)
+    return () => {
+      obs.disconnect()
+      window.removeEventListener('storage', updateTheme)
+    }
+  }, [])
+
+  const isLight = theme === 'light'
+
   function handleBack() {
     if (window.history.length > 1) {
       navigate(-1)
@@ -95,26 +124,26 @@ export default function ResumeAccess() {
             <span>Secure Access</span>
           </div>
 
-          <h1 className="resume-title">Resume Access</h1>
+          <h1 className={`resume-title ${isLight ? 'text-slate-900' : 'text-white'}`}>Resume Access</h1>
 
           {status === 'loading' ? (
             <div className="resume-loading-view">
               <div className="resume-loading-spinner-wrap">
                 <div className="resume-loading-radar" aria-hidden="true" />
-                <Loader2 size={36} className="animate-spin text-violet-400 relative z-10" />
+                <Loader2 size={36} className={`animate-spin relative z-10 ${isLight ? 'text-indigo-600' : 'text-violet-400'}`} />
               </div>
-              <p className="resume-loading-status">{message}</p>
-              <p className="resume-loading-sub">
+              <p className={`resume-loading-status ${isLight ? 'text-slate-900' : 'text-white'}`}>{message}</p>
+              <p className={`resume-loading-sub ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                 Your download link is being authenticated with end-to-end security...
               </p>
             </div>
           ) : (
             <div className="resume-access-error-view">
               <div className="resume-error-icon-wrap">
-                <AlertCircle size={36} className="text-rose-400" />
+                <AlertCircle size={36} className="text-rose-500" />
               </div>
-              <h2 className="resume-error-title">Access Unavailable</h2>
-              <p className="resume-error-desc" role="alert">
+              <h2 className={`resume-error-title ${isLight ? 'text-slate-900' : 'text-white'}`}>Access Unavailable</h2>
+              <p className={`resume-error-desc ${isLight ? 'text-slate-600' : 'text-slate-300'}`} role="alert">
                 {message}
               </p>
               <div className="resume-error-actions">
@@ -125,7 +154,7 @@ export default function ResumeAccess() {
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="resume-secondary-btn group cursor-pointer"
+                  className={`resume-secondary-btn group cursor-pointer ${isLight ? 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800' : ''}`}
                 >
                   <span>Return to portfolio</span>
                   <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />

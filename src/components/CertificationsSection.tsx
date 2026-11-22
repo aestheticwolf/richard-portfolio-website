@@ -31,6 +31,34 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
   const [loading, setLoading] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
   const [activeModalCert, setActiveModalCert] = useState<PublicCertification | null>(null)
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('richard-portfolio-theme')
+        if (saved === 'light' || saved === 'dark') return saved
+      } catch {
+        /* ignore */
+      }
+      if (document.documentElement.dataset.theme === 'light') return 'light'
+    }
+    return 'dark'
+  })
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const current = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+      setTheme(current)
+    }
+    const obs = new MutationObserver(updateTheme)
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] })
+    window.addEventListener('storage', updateTheme)
+    return () => {
+      obs.disconnect()
+      window.removeEventListener('storage', updateTheme)
+    }
+  }, [])
+
+  const isLight = theme === 'light'
 
   const loadData = useCallback(async () => {
     try {
@@ -179,26 +207,50 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
           {/* Left: Purple Medal Icon Box + Headings */}
           <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
             {/* Signature Rounded Purple Icon Box */}
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-linear-to-br from-[#8B3DFF]/35 to-[#151126]/85 border border-[#8B3DFF]/40 shadow-[0_0_25px_rgba(139,61,255,0.4)] flex items-center justify-center text-[#B69AFF] shrink-0">
-              <Award size={22} className="text-[#B69AFF]" />
+            <div
+              className={`cert-medal-box w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all ${
+                isLight
+                  ? 'bg-linear-to-br from-violet-100 to-indigo-50 border-violet-200/80 text-violet-700 shadow-sm'
+                  : 'bg-linear-to-br from-[#8B3DFF]/35 to-[#151126]/85 border-[#8B3DFF]/40 shadow-[0_0_25px_rgba(139,61,255,0.4)] text-[#B69AFF]'
+              }`}
+            >
+              <Award size={22} className={isLight ? 'text-violet-700' : 'text-[#B69AFF]'} />
             </div>
 
             <div>
               {/* Eyebrow with horizontal glowing line */}
               <div className="flex items-center gap-2.5 mb-1">
-                <span className="text-[10px] sm:text-xs font-mono font-bold tracking-[0.22em] text-[#B69AFF] uppercase">
+                <span
+                  className={`cert-eyebrow text-[10px] sm:text-xs font-mono font-bold tracking-[0.22em] uppercase ${
+                    isLight ? 'text-violet-700' : 'text-[#B69AFF]'
+                  }`}
+                >
                   CREDENTIALS & RECOGNITION
                 </span>
-                <span className="h-[1.5px] w-8 sm:w-12 bg-linear-to-r from-[#B69AFF]/70 to-transparent rounded-full" />
+                <span
+                  className={`cert-eyebrow-line h-[1.5px] w-8 sm:w-12 rounded-full ${
+                    isLight
+                      ? 'bg-linear-to-r from-violet-500/70 to-transparent'
+                      : 'bg-linear-to-r from-[#B69AFF]/70 to-transparent'
+                  }`}
+                />
               </div>
 
               {/* Main Heading */}
-              <h2 className="font-sans text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#F5F3FF]">
+              <h2
+                className={`cert-heading font-sans text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight ${
+                  isLight ? 'text-slate-900' : 'text-[#F5F3FF]'
+                }`}
+              >
                 Certifications<span className="text-[#8B3DFF]">.</span>
               </h2>
 
               {/* Subtitle */}
-              <p className="text-xs sm:text-sm text-[#AAA5BD] mt-0.5 leading-relaxed">
+              <p
+                className={`cert-subtitle text-xs sm:text-sm mt-0.5 leading-relaxed ${
+                  isLight ? 'text-slate-600' : 'text-[#AAA5BD]'
+                }`}
+              >
                 Professional learning, verified skills and industry-recognized achievements.
               </p>
             </div>
@@ -206,8 +258,14 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
 
           {/* Right: 2 Credentials Pill */}
           {!loading && certifications.length > 0 && (
-            <div className="inline-flex self-start sm:self-auto items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-[#151126]/70 backdrop-blur-md text-xs font-mono text-[#F5F3FF] shrink-0 shadow-lg">
-              <Layers size={13} className="text-[#8B3DFF]" />
+            <div
+              className={`cert-count-pill inline-flex self-start sm:self-auto items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-mono shrink-0 shadow-sm backdrop-blur-md transition-all ${
+                isLight
+                  ? 'bg-white/90 border-slate-300 text-slate-800'
+                  : 'border-white/10 bg-[#151126]/70 text-[#F5F3FF]'
+              }`}
+            >
+              <Layers size={13} className={isLight ? 'text-violet-600' : 'text-[#8B3DFF]'} />
               <span>{certifications.length} Credentials</span>
             </div>
           )}
@@ -265,11 +323,15 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                 <div className="absolute right-0 top-3 w-[54%] max-w-132.5 xl:max-w-153.75">
                   {/* Subtle layered translucent glass plates behind NVIDIA card for authentic deck depth */}
                   <div
-                    className="pointer-events-none absolute inset-0 rounded-3xl border border-[#386BFF]/25 bg-[#12285e]/30 backdrop-blur-md transform translate-x-3.5 -translate-y-2.5 z-0"
+                    className={`cert-nvidia-plate-1 pointer-events-none absolute inset-0 rounded-3xl border backdrop-blur-md transform translate-x-3.5 -translate-y-2.5 z-0 transition-colors ${
+                      isLight ? 'border-blue-400/30 bg-blue-100/50' : 'border-[#386BFF]/25 bg-[#12285e]/30'
+                    }`}
                     aria-hidden="true"
                   />
                   <div
-                    className="pointer-events-none absolute inset-0 rounded-3xl border border-[#386BFF]/15 bg-[#0c1a40]/20 transform translate-x-7 -translate-y-5 z-[-1]"
+                    className={`cert-nvidia-plate-2 pointer-events-none absolute inset-0 rounded-3xl border transform translate-x-7 -translate-y-5 z-[-1] transition-colors ${
+                      isLight ? 'border-blue-300/20 bg-blue-50/40' : 'border-[#386BFF]/15 bg-[#0c1a40]/20'
+                    }`}
                     aria-hidden="true"
                   />
 
@@ -352,10 +414,14 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                   onClick={() => setActiveIndex((prev) => Math.max(prev - 1, 0))}
                   disabled={activeIndex === 0}
                   aria-label="Previous certification"
-                  className={`p-2 rounded-full border border-white/10 bg-[#151126]/80 text-white transition-all cursor-pointer ${
+                  className={`cert-nav-btn p-2 rounded-full border transition-all cursor-pointer ${
                     activeIndex === 0
-                      ? 'opacity-25 cursor-not-allowed'
-                      : 'hover:bg-white/10 hover:border-white/20 active:scale-95 text-[#B69AFF]'
+                      ? isLight
+                        ? 'opacity-30 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400'
+                        : 'opacity-25 cursor-not-allowed border-white/10 bg-[#151126]/80 text-white'
+                      : isLight
+                      ? 'bg-white border-slate-200 text-violet-700 hover:bg-slate-50 shadow-xs active:scale-95'
+                      : 'border-white/10 bg-[#151126]/80 text-[#B69AFF] hover:bg-white/10 hover:border-white/20 active:scale-95'
                   }`}
                 >
                   <ChevronLeft size={16} />
@@ -378,7 +444,9 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                         className={`transition-all duration-300 cursor-pointer ${
                           isActive
                             ? activeColor
-                            : 'w-1.5 h-1.5 rounded-full bg-white/25 hover:bg-white/50'
+                            : isLight
+                            ? 'cert-dot-inactive w-1.5 h-1.5 rounded-full bg-slate-300 hover:bg-slate-400'
+                            : 'cert-dot-inactive w-1.5 h-1.5 rounded-full bg-white/25 hover:bg-white/50'
                         }`}
                       />
                     )
@@ -393,10 +461,14 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                   }
                   disabled={activeIndex === carouselCards.length - 1}
                   aria-label="Next certification"
-                  className={`p-2 rounded-full border border-white/10 bg-[#151126]/80 text-white transition-all cursor-pointer ${
+                  className={`cert-nav-btn p-2 rounded-full border transition-all cursor-pointer ${
                     activeIndex === carouselCards.length - 1
-                      ? 'opacity-25 cursor-not-allowed'
-                      : 'hover:bg-white/10 hover:border-white/20 active:scale-95 text-[#B69AFF]'
+                      ? isLight
+                        ? 'opacity-30 cursor-not-allowed bg-slate-100 border-slate-200 text-slate-400'
+                        : 'opacity-25 cursor-not-allowed border-white/10 bg-[#151126]/80 text-white'
+                      : isLight
+                      ? 'bg-white border-slate-200 text-violet-700 hover:bg-slate-50 shadow-xs active:scale-95'
+                      : 'border-white/10 bg-[#151126]/80 text-[#B69AFF] hover:bg-white/10 hover:border-white/20 active:scale-95'
                   }`}
                 >
                   <ChevronRight size={16} />
@@ -405,7 +477,11 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
 
               {/* Swipe Helper Text */}
               <div className="text-center mt-2">
-                <span className="text-[11px] font-mono text-[#AAA5BD]/60 tracking-wider">
+                <span
+                  className={`cert-swipe-text text-[11px] font-mono tracking-wider ${
+                    isLight ? 'text-slate-500' : 'text-[#AAA5BD]/60'
+                  }`}
+                >
                   Swipe or tap to switch ({activeIndex + 1}/{carouselCards.length})
                 </span>
               </div>
@@ -420,7 +496,9 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                 className={`transition-all duration-300 cursor-pointer ${
                   isHackerRankActive
                     ? 'w-7 h-1.5 rounded-full bg-[#8B3DFF] shadow-[0_0_10px_#8B3DFF]'
-                    : 'w-1.5 h-1.5 rounded-full bg-white/25 hover:bg-white/50'
+                    : isLight
+                    ? 'cert-dot-inactive w-1.5 h-1.5 rounded-full bg-slate-300 hover:bg-slate-400'
+                    : 'cert-dot-inactive w-1.5 h-1.5 rounded-full bg-white/25 hover:bg-white/50'
                 }`}
               />
               <button
@@ -430,7 +508,9 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                 className={`transition-all duration-300 cursor-pointer ${
                   !isHackerRankActive
                     ? 'w-7 h-1.5 rounded-full bg-[#386BFF] shadow-[0_0_10px_#386BFF]'
-                    : 'w-1.5 h-1.5 rounded-full bg-white/25 hover:bg-white/50'
+                    : isLight
+                    ? 'cert-dot-inactive w-1.5 h-1.5 rounded-full bg-slate-300 hover:bg-slate-400'
+                    : 'cert-dot-inactive w-1.5 h-1.5 rounded-full bg-white/25 hover:bg-white/50'
                 }`}
               />
             </div>
@@ -454,7 +534,9 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setActiveModalCert(null)}
-                className="fixed inset-0 bg-[#090914]/90 backdrop-blur-2xl"
+                className={`fixed inset-0 backdrop-blur-2xl transition-colors ${
+                  isLight ? 'bg-slate-900/60' : 'bg-[#090914]/90'
+                }`}
               />
 
               {/* Modal Box */}
@@ -466,23 +548,41 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="cert-modal relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-[#8B3DFF]/35 bg-[#0e0e1a] p-4 sm:p-6 shadow-[0_25px_70px_rgba(0,0,0,0.85),0_0_35px_rgba(139,61,255,0.2)] overflow-hidden z-10"
+                className={`cert-modal relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl p-4 sm:p-6 overflow-hidden z-10 transition-colors ${
+                  isLight
+                    ? 'border border-slate-200 bg-white shadow-[0_25px_70px_rgba(15,23,42,0.25)]'
+                    : 'border border-[#8B3DFF]/35 bg-[#0e0e1a] shadow-[0_25px_70px_rgba(0,0,0,0.85),0_0_35px_rgba(139,61,255,0.2)]'
+                }`}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-white/10 shrink-0">
+                <div
+                  className={`flex items-center justify-between pb-3.5 mb-3 border-b shrink-0 transition-colors ${
+                    isLight ? 'border-slate-200' : 'border-white/10'
+                  }`}
+                >
                   <div className="min-w-0 pr-3">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[11px] font-mono uppercase tracking-wider text-[#B69AFF]">
+                      <span
+                        className={`text-[11px] font-mono uppercase tracking-wider ${
+                          isLight ? 'text-violet-700' : 'text-[#B69AFF]'
+                        }`}
+                      >
                         {activeModalCert.issuer}
                       </span>
-                      <span className="text-zinc-600">•</span>
-                      <span className="text-xs font-mono text-[#AAA5BD]">
+                      <span className={isLight ? 'text-slate-400' : 'text-zinc-600'}>•</span>
+                      <span
+                        className={`text-xs font-mono ${
+                          isLight ? 'text-slate-500' : 'text-[#AAA5BD]'
+                        }`}
+                      >
                         {activeModalCert.issueDate}
                       </span>
                     </div>
                     <h4
                       id="cert-modal-title"
-                      className="text-base sm:text-lg font-serif font-normal text-[#F5F3FF] truncate"
+                      className={`text-base sm:text-lg font-serif font-normal truncate ${
+                        isLight ? 'text-slate-900' : 'text-[#F5F3FF]'
+                      }`}
                     >
                       {activeModalCert.title}
                     </h4>
@@ -494,7 +594,11 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                         href={activeModalCert.certificateUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-mono text-[#AAA5BD] hover:text-[#F5F3FF] transition-colors"
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono transition-colors ${
+                          isLight
+                            ? 'border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900'
+                            : 'border-white/15 bg-white/5 hover:bg-white/10 text-[#AAA5BD] hover:text-[#F5F3FF]'
+                        }`}
                       >
                         <ExternalLink size={13} />
                         <span className="hidden sm:inline">Open Original</span>
@@ -503,7 +607,11 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => setActiveModalCert(null)}
-                      className="p-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-[#AAA5BD] hover:text-[#F5F3FF] transition-colors cursor-pointer"
+                      className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                        isLight
+                          ? 'border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900'
+                          : 'border-white/15 bg-white/5 hover:bg-white/10 text-[#AAA5BD] hover:text-[#F5F3FF]'
+                      }`}
                       aria-label="Close modal"
                     >
                       <X size={16} />
@@ -512,7 +620,11 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
                 </div>
 
                 {/* Display Window */}
-                <div className="relative flex-1 min-h-55 sm:min-h-90 md:min-h-115 max-h-[62vh] sm:max-h-[72vh] w-full rounded-2xl bg-black/75 border border-white/10 flex items-center justify-center overflow-auto p-2">
+                <div
+                  className={`relative flex-1 min-h-55 sm:min-h-90 md:min-h-115 max-h-[62vh] sm:max-h-[72vh] w-full rounded-2xl border flex items-center justify-center overflow-auto p-2 transition-colors ${
+                    isLight ? 'bg-slate-100/80 border-slate-200' : 'bg-black/75 border-white/10'
+                  }`}
+                >
                   {activeModalCert.fileType === 'pdf' ? (
                     <iframe
                       src={activeModalCert.certificateUrl}

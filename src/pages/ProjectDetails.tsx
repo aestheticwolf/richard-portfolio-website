@@ -24,6 +24,7 @@ import { MusicButton } from '../components/music'
 import BackgroundAnimation from '../components/BackgroundAnimation'
 import CosmicHorizonDivider from '../components/CosmicHorizonDivider'
 import CinematicSection from '../components/CinematicSection'
+import ErrorView from '../components/error/ErrorView'
 import { smoothScrollToTop } from '../lib/smoothScroll'
 
 import {
@@ -292,10 +293,10 @@ export default function ProjectDetails() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
+      <main className="flex min-h-screen items-center justify-center bg-transparent px-6 text-slate-800 dark:text-white">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
-          <p className="text-sm font-medium text-zinc-400">Loading project details...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
+          <p className="text-sm font-medium text-slate-600 dark:text-zinc-400">Loading project details...</p>
         </div>
       </main>
     )
@@ -303,51 +304,41 @@ export default function ProjectDetails() {
 
   if (error) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
-        <div className="text-center">
-          <p role="alert" className="text-sm text-red-400 font-medium">
-            {error}
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <ThemeToggle />
-            <Link
-              to="/#projects"
-              onClick={handleBackToProjects}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
-            >
-              <ArrowLeft size={16} /> Back to projects
-            </Link>
-          </div>
-        </div>
-      </main>
+      <ErrorView
+        code="data"
+        customTitle="Unable to Load Project"
+        customDescription="Something prevented this project from loading properly. Please check your connection and try again."
+        onRetry={() => {
+          setLoading(true)
+          setError('')
+          void (async () => {
+            try {
+              const [published, prof] = await Promise.all([
+                getPublishedProjects(),
+                getPublishedProfile().catch(() => null),
+              ])
+              setPublishedProjects(published)
+              setProfile(prof)
+              const matched = published.find((p) => p.slug === slug || p.id === slug)
+              setProject(matched || null)
+            } catch (err) {
+              setError(err instanceof Error ? err.message : 'Could not load this project.')
+            } finally {
+              setLoading(false)
+            }
+          })()
+        }}
+      />
     )
   }
 
   if (!project) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#08090d] px-6 text-white">
-        <div className="text-center">
-          <p className="text-sm uppercase tracking-[0.25em] text-violet-400 font-semibold">
-            Project not found
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight">
-            Nothing here yet.
-          </h1>
-          <p className="mt-4 text-zinc-400">
-            This project may have been moved or does not exist.
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <ThemeToggle />
-            <Link
-              to="/#projects"
-              onClick={handleBackToProjects}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
-            >
-              <ArrowLeft size={16} /> Back to projects
-            </Link>
-          </div>
-        </div>
-      </main>
+      <ErrorView
+        code="content"
+        customTitle="Project Not Found"
+        customDescription="The project you're looking for may have moved, been renamed, or does not exist."
+      />
     )
   }
 
@@ -496,7 +487,7 @@ export default function ProjectDetails() {
                 <h2 className="mt-4 text-xl font-semibold">
                   {project.name}
                 </h2>
-                <p className="mt-2 text-sm text-zinc-400">
+                <p className="mt-2 text-sm text-slate-500 dark:text-zinc-400">
                   Project preview unavailable
                 </p>
               </div>
@@ -535,7 +526,7 @@ export default function ProjectDetails() {
                       {brokenImages.includes(image) ? (
                         <div className="project-gallery-fallback">
                           <Code2 size={24} className="text-violet-400" />
-                          <p className="mt-1.5 text-xs text-zinc-400">
+                          <p className="mt-1.5 text-xs text-slate-500 dark:text-zinc-400">
                             Image unavailable
                           </p>
                         </div>
