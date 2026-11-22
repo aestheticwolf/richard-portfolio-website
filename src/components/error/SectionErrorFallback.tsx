@@ -47,7 +47,7 @@ export default function SectionErrorFallback({
     <div
       role="alert"
       className={`relative w-full rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center overflow-hidden transition-colors border ${
-        isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-white/[0.03] border-white/10'
+        isLight ? 'bg-white border-slate-200/90 shadow-sm' : 'bg-white/3 border-white/10'
       } ${className}`}
     >
       <div
