@@ -239,7 +239,10 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
                 <ShieldCheck size={14} />
               </div>
             )}
-            <span className="cert-card-issuer font-sans font-bold text-white text-base sm:text-lg tracking-tight">
+            <span
+              className="cert-card-issuer font-sans font-bold text-white text-base sm:text-lg tracking-tight"
+              style={{ color: '#ffffff' }}
+            >
               {cert.issuer}
             </span>
           </div>
@@ -247,19 +250,27 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
           {/* Issue Date */}
           <div className="flex items-center gap-1.5">
             <Calendar size={11} className={`cert-date-icon ${dateColor}`} />
-            <span className={`cert-date-text text-[10px] sm:text-xs font-mono font-semibold tracking-wider uppercase ${dateColor}`}>
+            <span
+              className={`cert-date-text text-[10px] sm:text-xs font-mono font-semibold tracking-wider uppercase ${dateColor}`}
+            >
               {cert.issueDate}
             </span>
           </div>
 
           {/* Certification Title */}
-          <h3 className="cert-card-title font-sans font-bold text-white text-base xl:text-lg 2xl:text-xl leading-snug tracking-tight line-clamp-2">
+          <h3
+            className="cert-card-title font-sans font-bold text-white text-base xl:text-lg 2xl:text-xl leading-snug tracking-tight line-clamp-2"
+            style={{ color: '#ffffff' }}
+          >
             {cert.title}
           </h3>
 
           {/* Short Description */}
           {summaryText && (
-            <p className="cert-card-desc font-sans text-xs sm:text-[13px] text-[#E2E8F0] leading-relaxed line-clamp-3">
+            <p
+              className="cert-card-desc font-sans text-xs sm:text-[13px] text-[#E2E8F0] leading-relaxed line-clamp-3"
+              style={{ color: '#f1f5f9' }}
+            >
               {summaryText}
             </p>
           )}
@@ -340,7 +351,10 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
                 <ShieldCheck size={14} />
               </div>
             )}
-            <span className="cert-card-issuer font-sans font-bold text-white text-base tracking-tight truncate">
+            <span
+              className="cert-card-issuer font-sans font-bold text-white text-base tracking-tight truncate"
+              style={{ color: '#ffffff' }}
+            >
               {cert.issuer}
             </span>
           </div>
@@ -376,13 +390,19 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
         </div>
 
         {/* Row 3: Certification Title */}
-        <h3 className="cert-card-title font-sans font-bold text-white text-base sm:text-lg leading-snug tracking-tight break-words w-full min-w-0">
+        <h3
+          className="cert-card-title font-sans font-bold text-white text-base sm:text-lg leading-snug tracking-tight break-words w-full min-w-0"
+          style={{ color: '#ffffff' }}
+        >
           {cert.title}
         </h3>
 
         {/* Row 4: Short Description */}
         {summaryText && (
-          <p className="cert-card-desc font-sans text-xs sm:text-[13px] text-[#E2E8F0] leading-relaxed break-words w-full min-w-0">
+          <p
+            className="cert-card-desc font-sans text-xs sm:text-[13px] text-[#E2E8F0] leading-relaxed break-words w-full min-w-0"
+            style={{ color: '#f1f5f9' }}
+          >
             {summaryText}
           </p>
         )}

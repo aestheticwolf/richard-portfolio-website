@@ -1,29 +1,134 @@
-/* ===== Section scroll: snapping, reveal, rail. Nothing here changes section sizes. ===== */
+/* ===== Section scroll: snapping, reveal, rail. ===== */
 :root {
   --sc-accent: var(--accent, #a78bfa);   /* brand purple / indigo */
   --sc-accent2: var(--ambient-blue, #38bdf8);  /* brand cyan / blue */
 }
 
-/* ---- 1. snapping (only active after the script marks the page) ---- */
-html.sc-on { scroll-padding-top: var(--sc-header, 0px); }
-html.sc-on[data-sc-snap="mandatory"] { scroll-snap-type: y mandatory !important; }
-html.sc-on[data-sc-snap="proximity"] { scroll-snap-type: y proximity !important; }
-html.sc-on [data-sc] { scroll-snap-align: start !important; }
-html.sc-on[data-sc-snap="mandatory"] [data-sc] { scroll-snap-stop: always; }
-html.sc-on [data-sc-end] { scroll-snap-align: end !important; }
+/* ---- 1. snapping & viewport sizing (anti-lag, 1 section per screen) ---- */
+html.sc-on {
+  scroll-padding-top: var(--sc-header, 72px);
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory !important;
+  overscroll-behavior-y: none;
+}
 
-/* ---- 2. reveal (individual transform properties: no clash with motion's `transform`) ---- */
+html.sc-on [data-sc],
+html.sc-on .hero-section,
+html.sc-on #home,
+html.sc-on .about-section,
+html.sc-on #about,
+html.sc-on .skills-section,
+html.sc-on #skills,
+html.sc-on .certifications-section,
+html.sc-on #certifications,
+html.sc-on .projects-section,
+html.sc-on #projects,
+html.sc-on .contact-section,
+html.sc-on #contact {
+  scroll-snap-align: start !important;
+  scroll-snap-stop: always !important;
+  min-height: 100dvh !important;
+  min-height: 100vh !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  transform: translateZ(0); /* GPU composite layer */
+  backface-visibility: hidden;
+}
+
+html.sc-on [data-sc-end] {
+  scroll-snap-align: end !important;
+  scroll-snap-stop: normal !important;
+}
+
+/* Remove competing translateY / scale on whole sections when snapping is active (anti-lag) */
+html.sc-on .cinematic-crossfade-section {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* Hide hairline dividers between full-height sections so they don't break snap alignment */
+html.sc-on .cosmic-horizon-divider {
+  display: none !important;
+}
+
+/* Ensure mobile hero fills the full 100dvh viewport and centers cleanly */
+html.sc-on .hero-section {
+  min-height: 100dvh !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+html.sc-on .hero-section > div {
+  padding-top: clamp(4.5rem, 8vh, 6rem) !important;
+  padding-bottom: clamp(1.5rem, 4vh, 3rem) !important;
+}
+
+/* Ensure other sections have comfortable vertical centering and snap alignment */
+html.sc-on .about-section,
+html.sc-on .skills-section,
+html.sc-on .certifications-section,
+html.sc-on .projects-section,
+html.sc-on .contact-section {
+  min-height: 100dvh !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+/* On mobile, adjust section padding so full-screen content fits cleanly without awkward overflow */
+@media (max-width: 768px) {
+  html.sc-on [data-sc],
+  html.sc-on .hero-section,
+  html.sc-on #home,
+  html.sc-on .about-section,
+  html.sc-on #about,
+  html.sc-on .skills-section,
+  html.sc-on #skills,
+  html.sc-on .certifications-section,
+  html.sc-on #certifications,
+  html.sc-on .projects-section,
+  html.sc-on #projects,
+  html.sc-on .contact-section,
+  html.sc-on #contact {
+    min-height: 100dvh !important;
+    min-height: 100vh !important;
+    padding-top: clamp(4rem, 9vh, 5.25rem) !important;
+    padding-bottom: clamp(2rem, 5vh, 3.5rem) !important;
+  }
+
+  html.sc-on .about-section,
+  html.sc-on .skills-section,
+  html.sc-on .certifications-section,
+  html.sc-on .projects-section,
+  html.sc-on .contact-section {
+    padding-top: clamp(4rem, 8vh, 5.25rem) !important;
+    padding-bottom: clamp(2rem, 5vh, 3.5rem) !important;
+  }
+
+  /* Prevent rail from overlapping mobile bottom dock */
+  .sc-rail {
+    display: none !important;
+  }
+}
+
+/* ---- 2. reveal (hardware-accelerated, zero-lag, no GPU blur bottleneck) ---- */
 html.sc-reveal [data-sc-r] {
   opacity: 0;
-  translate: 0 24px;
-  filter: blur(8px);
-  transition: opacity .7s ease, translate .8s cubic-bezier(.22, 1, .36, 1), filter .7s ease;
-  transition-delay: calc(var(--sc-i, 0) * 70ms);
+  transform: translate3d(0, 16px, 0);
+  will-change: opacity, transform;
+  transition: opacity 0.45s ease-out, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--sc-i, 0) * 45ms);
 }
 html.sc-reveal [data-sc].is-in [data-sc-r] {
   opacity: 1;
-  translate: 0 0;
-  filter: blur(0);
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
 }
 
 /* ---- 3. optional depth: add data-sc-depth to a section to dim/shrink its content as it leaves ---- */

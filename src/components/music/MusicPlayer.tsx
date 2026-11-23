@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { X, ExternalLink, Sparkles, Volume2, Radio, Square } from 'lucide-react'
 import { SiSpotify } from 'react-icons/si'
@@ -23,6 +23,27 @@ export const MusicPlayer: React.FC = () => {
 
   const prefersReducedMotion = useReducedMotion()
   const playerRef = useRef<HTMLDivElement>(null)
+
+  // Track light theme dynamically
+  const [isLight, setIsLight] = useState<boolean>(() => {
+    if (typeof document === 'undefined') return false
+    return document.documentElement.getAttribute('data-theme') === 'light'
+  })
+
+  useEffect(() => {
+    const checkTheme = () => {
+      setIsLight(document.documentElement.getAttribute('data-theme') === 'light')
+    }
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.attributeName === 'data-theme' || m.attributeName === 'class') {
+          checkTheme()
+        }
+      }
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] })
+    return () => observer.disconnect()
+  }, [])
 
   // Click outside to close (desktop & mobile)
   useEffect(() => {
@@ -204,16 +225,16 @@ export const MusicPlayer: React.FC = () => {
 
               {loadingPlaylists ? (
                 /* Skeleton pills while loading */
-                <div className="flex overflow-x-auto gap-1.5 pb-0.5 sm:grid sm:grid-cols-3 sm:overflow-visible">
-                  {[1, 2, 3].map((n) => (
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                  {[1, 2, 3, 4].map((n) => (
                     <div
                       key={n}
-                      className="music-preset-pill shrink-0 w-24 sm:w-auto h-11 sm:h-13 rounded-lg sm:rounded-xl bg-white/3 border border-white/6 animate-pulse"
+                      className="music-preset-pill h-11 sm:h-12 rounded-lg sm:rounded-xl bg-white/3 border border-white/6 animate-pulse"
                     />
                   ))}
                 </div>
               ) : (
-                <div className="flex overflow-x-auto no-scrollbar gap-1.5 pb-0.5 sm:grid sm:grid-cols-3 sm:gap-1.5 sm:overflow-visible">
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
                   {playlists.map((preset) => {
                     const isSelected = preset.id === currentPreset.id
                     return (
@@ -221,13 +242,13 @@ export const MusicPlayer: React.FC = () => {
                         key={preset.id}
                         type="button"
                         onClick={() => selectPresetById(preset.id)}
-                        className={`music-preset-pill shrink-0 sm:shrink flex flex-col items-start p-1.5 px-2.5 sm:p-2 rounded-lg sm:rounded-xl text-left transition-all min-w-24 max-w-32.5 sm:min-w-0 sm:max-w-none ${
+                        className={`music-preset-pill flex flex-col items-start p-1.5 px-2 sm:p-2 rounded-lg sm:rounded-xl text-left transition-all ${
                           isSelected
                             ? 'is-selected bg-violet-500/15 border-violet-400/35 text-white shadow-[0_0_12px_rgba(167,139,250,0.18)]'
                             : 'bg-white/3 border-white/6 text-zinc-400 hover:text-zinc-200 hover:bg-white/6'
                         } border`}
                       >
-                        <span className="text-[10px] sm:text-[10.5px] font-semibold leading-tight line-clamp-1">
+                        <span className="text-[10px] sm:text-[10.5px] font-semibold leading-tight line-clamp-1 w-full">
                           {preset.title.split('&')[0].trim()}
                         </span>
                         <span className="text-[8.5px] sm:text-[9px] text-zinc-500 line-clamp-1 mt-0.5">
@@ -248,6 +269,7 @@ export const MusicPlayer: React.FC = () => {
                 spotifyUrl={currentPreset.spotifyUrl}
                 height={musicConfig.ui.defaultEmbedHeight}
                 title={currentPreset.title}
+                isLight={isLight}
                 onPlaybackStateChange={(playing) => setIsPlaying(playing)}
               />
             ) : (

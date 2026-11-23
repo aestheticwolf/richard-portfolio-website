@@ -1189,7 +1189,7 @@ function Home() {
       
       
       {/* ─── Floating Top Brand & Utility Bar ─── */}
-      <header className="portfolio-top-bar portfolio-nav fixed inset-x-0 top-0 z-40 transition-all duration-300">
+      <header className="portfolio-top-bar portfolio-nav fixed inset-x-0 top-0 z-40">
         <nav className="portfolio-container flex h-16 sm:h-18 items-center justify-between">
           <a
             href="#home"
@@ -2576,7 +2576,7 @@ function AnimatedRoutes() {
   return (
     <>
       <ScrollProgress />
-      <ScrollExperience headerOffset={72} rail={false} />
+      <ScrollExperience headerOffset={72} rail={false} snap="mandatory" />
       <GlobalBackToTop />
       <MusicPlayer />
       <Routes location={location}>

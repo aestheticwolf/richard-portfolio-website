@@ -97,8 +97,12 @@
       : window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
   } catch (error) {
     document.documentElement.dataset.theme = 'dark';
     document.documentElement.style.colorScheme = 'dark';
+    document.documentElement.classList.remove('light');
+    document.documentElement.classList.add('dark');
   }
 })();

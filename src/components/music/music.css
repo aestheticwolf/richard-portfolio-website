@@ -99,7 +99,7 @@
    Responsive Layout — Mobile bottom sheet / Tablet / Desktop floating panel
    ========================================================================== */
 
-/* Mobile (< 640px): compact floating bottom-sheet widget (55-65% dvh) */
+/* Mobile (< 640px): compact floating bottom-sheet widget (up to 85% dvh to prevent iframe scrollbars) */
 @media (max-width: 639px) {
   .music-player-popover {
     top: auto !important;
@@ -110,7 +110,7 @@
     max-width: 420px !important;
     margin: 0 auto !important;
     min-width: 0 !important;
-    max-height: min(62dvh, 410px) !important;
+    max-height: min(88dvh, 560px) !important;
     border-radius: 1.15rem !important;
     overflow: hidden !important;
     box-shadow:
@@ -120,7 +120,7 @@
   }
 
   .music-player-body {
-    max-height: calc(min(62dvh, 410px) - 2.75rem) !important;
+    max-height: calc(min(88dvh, 560px) - 2.75rem) !important;
     padding: 0.6rem 0.75rem max(0.6rem, env(safe-area-inset-bottom, 0.6rem)) !important;
     overflow-y: auto !important;
     overscroll-behavior: contain !important;
@@ -133,6 +133,11 @@
 
   .spotify-embed-container iframe {
     height: 80px !important;
+  }
+
+  .spotify-embed-container.is-playlist {
+    height: 80px !important;
+    min-height: 80px !important;
   }
 }
 
@@ -268,4 +273,18 @@
   background: #ede9fe !important;
   border-color: #8b5cf6 !important;
   color: #5b21b6 !important;
+}
+
+[data-theme='light'] .spotify-embed-container {
+  background: #0f172a !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
+}
+
+[data-theme='light'] .music-player-popover .text-zinc-400 {
+  color: #475569 !important;
+}
+
+[data-theme='light'] .music-player-popover .text-zinc-500 {
+  color: #64748b !important;
 }

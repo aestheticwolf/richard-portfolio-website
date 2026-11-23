@@ -76,11 +76,9 @@ export function createSectionScroll(opts: SectionScrollOptions = {}): () => void
   };
 
   const applyMode = () => {
-    const vh = window.innerHeight;
     let mode = snapOpt;
     if (mode === 'auto') {
-      const veryTall = sections.some((s) => s.offsetHeight > vh * 1.6);
-      mode = reduced ? 'off' : veryTall ? 'proximity' : 'mandatory';
+      mode = reduced ? 'off' : 'mandatory';
     }
     root.dataset.scSnap = mode;
   };
@@ -97,8 +95,10 @@ export function createSectionScroll(opts: SectionScrollOptions = {}): () => void
       if (j === i) d.setAttribute('aria-current', 'true');
       else d.removeAttribute('aria-current');
     });
-    root.dataset.scIndex = String(i);
-    root.dataset.scActive = sections[i].id || String(i);
+    const iStr = String(i);
+    if (root.dataset.scIndex !== iStr) root.dataset.scIndex = iStr;
+    const activeId = sections[i]?.id || iStr;
+    if (root.dataset.scActive !== activeId) root.dataset.scActive = activeId;
   };
 
   const setupReveal = () => {
@@ -107,30 +107,32 @@ export function createSectionScroll(opts: SectionScrollOptions = {}): () => void
       const found = Array.from(sec.querySelectorAll(revealSelector)) as HTMLElement[];
       const items = found.filter(
         (el) =>
-          !el.closest('[data-no-reveal], nav, header, footer, button, a') &&
+          !el.closest(
+            '[data-no-reveal], nav, header, footer, button, a, .cert-glass-card, .project-poster-card, .hero-portrait-wrapper',
+          ) &&
           !found.some((other) => other !== el && other.contains(el)),
       );
       items.forEach((el, i) => {
         el.setAttribute('data-sc-r', '');
-        el.style.setProperty('--sc-i', String(Math.min(i, 10)));
+        el.style.setProperty('--sc-i', String(Math.min(i, 8)));
       });
     });
     revealIO = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (!e.isIntersecting) return;
-          const sec = e.target;
+          const sec = e.target as HTMLElement;
           sec.classList.add('is-in');
           if (revealIO) revealIO.unobserve(sec);
           // after the animation, hand the elements back to their normal styles
           timers.push(
             window.setTimeout(() => {
               sec.querySelectorAll('[data-sc-r]').forEach((el) => el.removeAttribute('data-sc-r'));
-            }, 1800),
+            }, 1000),
           );
         });
       },
-      { threshold: 0, rootMargin: '0px 0px -12% 0px' },
+      { threshold: 0.1, rootMargin: '0px 0px -5% 0px' },
     );
     sections.forEach((s) => {
       if (revealIO) revealIO.observe(s);
@@ -199,10 +201,15 @@ export function createSectionScroll(opts: SectionScrollOptions = {}): () => void
   // scroll-linked values: rail fill, header flag, optional [data-sc-depth] effect
   const update = () => {
     raf = 0;
-    const max = root.scrollHeight - window.innerHeight;
-    const p = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
-    if (rail) rail.style.setProperty('--sc-fill', p.toFixed(4));
-    root.dataset.scY = window.scrollY > 40 ? '1' : '0';
+    const nextY = window.scrollY > 40 ? '1' : '0';
+    if (root.dataset.scY !== nextY) {
+      root.dataset.scY = nextY;
+    }
+    if (wantRail && rail) {
+      const max = root.scrollHeight - window.innerHeight;
+      const p = max > 0 ? Math.min(Math.max(window.scrollY / max, 0), 1) : 0;
+      rail.style.setProperty('--sc-fill', p.toFixed(4));
+    }
     const vh = window.innerHeight;
     sections.forEach((s) => {
       if (!s.hasAttribute('data-sc-depth')) return;

@@ -250,17 +250,23 @@ export default function ErrorView({
                 disabled={isRetrying || (countdown !== null && countdown > 0)}
                 onClick={() => handleAction(config.primaryAction.action, config.primaryAction.onClick)}
                 className={`error-action-primary flex-1 min-w-35 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  config.primaryAction.action === 'retry' ? 'is-retry' : ''
+                  config.primaryAction.action === 'retry'
+                    ? 'is-retry'
+                    : isLight
+                    ? 'bg-slate-900 text-white shadow-slate-900/20 hover:bg-slate-800'
+                    : 'bg-white text-slate-950 shadow-white/10 hover:bg-slate-100'
                 }`}
               >
                 {config.primaryAction.action === 'retry' ? (
-                  <RefreshCw size={16} className={isRetrying ? 'animate-spin' : ''} />
+                  <RefreshCw size={16} className={`shrink-0 ${isRetrying ? 'animate-spin' : ''}`} />
                 ) : config.primaryAction.action === 'back' ? (
-                  <ArrowLeft size={16} />
+                  <ArrowLeft size={16} className="shrink-0" />
                 ) : (
-                  <Home size={16} />
+                  <Home size={16} className="shrink-0" />
                 )}
-                <span>{config.primaryAction.label}</span>
+                <span className={config.primaryAction.action === 'retry' ? 'text-white' : isLight ? 'text-white font-medium' : 'text-slate-950 font-medium'}>
+                  {config.primaryAction.label}
+                </span>
               </button>
             )}
 
@@ -269,16 +275,22 @@ export default function ErrorView({
               <button
                 type="button"
                 onClick={() => handleAction(config.secondaryAction!.action, config.secondaryAction!.onClick)}
-                className="error-action-secondary flex-1 min-w-35 active:scale-95"
+                className={`error-action-secondary flex-1 min-w-35 active:scale-95 ${
+                  isLight
+                    ? 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50 hover:text-indigo-600'
+                    : 'bg-white/6 text-slate-200 border-white/12 hover:bg-white/12 hover:text-white'
+                }`}
               >
                 {config.secondaryAction.action === 'back' ? (
-                  <ArrowLeft size={16} />
+                  <ArrowLeft size={16} className="shrink-0" />
                 ) : config.secondaryAction.action === 'home' ? (
-                  <Home size={16} />
+                  <Home size={16} className="shrink-0" />
                 ) : (
-                  <RefreshCw size={16} />
+                  <RefreshCw size={16} className="shrink-0" />
                 )}
-                <span>{config.secondaryAction.label}</span>
+                <span className={isLight ? 'text-slate-800 font-medium' : 'text-slate-200 font-medium'}>
+                  {config.secondaryAction.label}
+                </span>
               </button>
             )}
           </div>

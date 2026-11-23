@@ -20,10 +20,39 @@ export default function ThemeToggle() {
 
   const toggleTheme = () => {
     const nextTheme: Theme = theme === 'dark' ? 'light' : 'dark'
+
+    // Zero-lag instant theme switch: temporarily suppress transitions across the DOM
+    // to prevent hundreds of CSS properties from animating simultaneously
+    const styleEl = document.createElement('style')
+    styleEl.setAttribute('id', 'disable-theme-transitions')
+    styleEl.textContent = `
+      *, *::before, *::after {
+        -webkit-transition: none !important;
+        -moz-transition: none !important;
+        -o-transition: none !important;
+        -ms-transition: none !important;
+        transition: none !important;
+      }
+    `
+    document.head.appendChild(styleEl)
+
     document.documentElement.dataset.theme = nextTheme
     document.documentElement.style.colorScheme = nextTheme
+    document.documentElement.classList.remove('light', 'dark')
+    document.documentElement.classList.add(nextTheme)
     localStorage.setItem(storageKey, nextTheme)
     setTheme(nextTheme)
+
+    // Force layout / reflow so styles are applied synchronously in this frame
+    void window.getComputedStyle(document.documentElement).opacity
+
+    // Re-enable transitions on the subsequent frame for smooth user hover/click interactions
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = document.getElementById('disable-theme-transitions')
+        if (el) el.remove()
+      })
+    })
   }
 
   const isDark = theme === 'dark'

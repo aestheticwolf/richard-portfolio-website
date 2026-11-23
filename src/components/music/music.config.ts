@@ -106,37 +106,45 @@ export const musicConfig: MusicConfig = {
 }
 
 /**
- * Utility to convert Spotify open URL to Spotify URI or Embed URL
+ * Utility to convert Spotify open URL to Spotify URI or Embed URL with theme awareness
  */
 export function formatSpotifyEmbedUrl(inputUrlOrUri: string): string {
   if (!inputUrlOrUri) return ''
 
-  // If already an embed URL
-  if (inputUrlOrUri.includes('open.spotify.com/embed')) {
-    return inputUrlOrUri
-  }
-
+  let base = inputUrlOrUri
   // Handle Spotify URI: spotify:playlist:XYZ or spotify:track:XYZ
   if (inputUrlOrUri.startsWith('spotify:')) {
     const parts = inputUrlOrUri.split(':')
     if (parts.length >= 3) {
       const type = parts[1]
       const id = parts[2]
-      return `https://open.spotify.com/embed/${type}/${id}?utm_source=generator&theme=0`
+      base = `https://open.spotify.com/embed/${type}/${id}`
+    }
+  } else if (!inputUrlOrUri.includes('open.spotify.com/embed')) {
+    // Handle standard Spotify web URL: https://open.spotify.com/playlist/XYZ
+    try {
+      const url = new URL(inputUrlOrUri)
+      const segments = url.pathname.split('/').filter(Boolean)
+      if (segments.length >= 2) {
+        const type = segments[0] // playlist, track, album
+        const id = segments[1]
+        base = `https://open.spotify.com/embed/${type}/${id}`
+      }
+    } catch {
+      // If not a parseable URL, fallback as-is
     }
   }
 
-  // Handle standard Spotify web URL: https://open.spotify.com/playlist/XYZ
-  try {
-    const url = new URL(inputUrlOrUri)
-    const segments = url.pathname.split('/').filter(Boolean)
-    if (segments.length >= 2) {
-      const type = segments[0] // playlist, track, album
-      const id = segments[1]
-      return `https://open.spotify.com/embed/${type}/${id}?utm_source=generator&theme=0`
-    }
-  } catch {
-    // If not a parseable URL, fallback as-is
+  // Ensure query parameters match current theme
+  if (base.includes('open.spotify.com/embed')) {
+    const [pathPart, queryPart] = base.split('?')
+    const params = new URLSearchParams(queryPart || '')
+    params.set('utm_source', 'generator')
+    // Always enforce dark theme in Spotify embed iframe so the iframe internal document
+    // never renders an unstyled white background
+    params.set('theme', '0')
+    const query = params.toString()
+    return query ? `${pathPart}?${query}` : pathPart
   }
 
   return inputUrlOrUri

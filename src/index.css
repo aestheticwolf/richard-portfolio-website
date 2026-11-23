@@ -1912,7 +1912,17 @@ textarea:focus-visible {
   .hero-title { font-size: clamp(1.45rem, 6.2vw, 2.1rem); line-height: 1.12; }
   .hero-kicker { margin-top: 0.25rem; font-size: 0.72rem; }
   .hero-intro { margin-top: 0.95rem; font-size: 0.84rem; line-height: 1.58; }
-  .hero-scroll-cue { display: none; }
+  .hero-scroll-cue {
+    display: flex !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    width: 1.85rem !important;
+    height: 2.85rem !important;
+  }
+  .hero-scroll-arrows svg {
+    width: 0.85rem !important;
+    height: 0.85rem !important;
+  }
 
   /* Hero Visual & Avatar on Mobile */
   .hero-visual {
@@ -9920,7 +9930,7 @@ main,
     gap: 0.3rem !important;
   }
   .hero-scroll-cue {
-    display: none !important;
+    display: flex !important;
   }
 }
 
@@ -12372,9 +12382,119 @@ html:not(.sc-on) .cinematic-crossfade-section {
 [data-theme='light'] [class*="bg-slate-900"].text-white,
 [data-theme='light'] [class*="bg-slate-900"] .text-white,
 [data-theme='light'] .cert-glass-card .text-white,
-[data-theme='light'] .cert-glass-card [class*="text-white"] {
+[data-theme='light'] .cert-glass-card [class*="text-white"],
+[data-theme='light'] .cert-glass-card h3,
+[data-theme='light'] .cert-glass-card p {
   color: #ffffff !important;
 }
+
+/* ==========================================================================
+   Zero-Desynchronization & High-Contrast Light Mode Guarantees
+   ========================================================================== */
+
+/* 1. Header synchronization */
+:root[data-theme='light'] .portfolio-top-bar,
+[data-theme='light'] .portfolio-top-bar,
+:root[data-theme='light'] .portfolio-nav,
+[data-theme='light'] .portfolio-nav {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1) !important;
+}
+
+:root[data-theme='dark'] .portfolio-top-bar,
+[data-theme='dark'] .portfolio-top-bar,
+:root[data-theme='dark'] .portfolio-nav,
+[data-theme='dark'] .portfolio-nav {
+  background: rgba(8, 9, 13, 0.88) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* 2. Project details category and back buttons in light mode */
+:root[data-theme='light'] .project-detail-category-badge,
+[data-theme='light'] .project-detail-category-badge {
+  color: #4338ca !important;
+  background: #ede9fe !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
+  font-weight: 700 !important;
+}
+
+:root[data-theme='light'] .project-browse-link,
+[data-theme='light'] .project-browse-link,
+:root[data-theme='light'] .project-nav-back-btn,
+[data-theme='light'] .project-nav-back-btn {
+  color: #4338ca !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(99, 102, 241, 0.25) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+:root[data-theme='light'] .project-browse-link:hover,
+[data-theme='light'] .project-browse-link:hover,
+:root[data-theme='light'] .project-nav-back-btn:hover,
+[data-theme='light'] .project-nav-back-btn:hover {
+  color: #312e81 !important;
+  background: #f5f3ff !important;
+  border-color: rgba(99, 102, 241, 0.5) !important;
+}
+
+/* 3. Resume Access & Request Navigation in light mode */
+.resume-back-btn.is-light,
+:root[data-theme='light'] .resume-back-btn,
+[data-theme='light'] .resume-back-btn,
+.resume-top-actions.is-light .theme-toggle,
+:root[data-theme='light'] .resume-top-actions .theme-toggle,
+[data-theme='light'] .resume-top-actions .theme-toggle {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(15, 23, 42, 0.16) !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08) !important;
+}
+
+.resume-back-btn.is-light:hover,
+:root[data-theme='light'] .resume-back-btn:hover,
+[data-theme='light'] .resume-back-btn:hover,
+.resume-top-actions.is-light .theme-toggle:hover,
+:root[data-theme='light'] .resume-top-actions .theme-toggle:hover,
+[data-theme='light'] .resume-top-actions .theme-toggle:hover {
+  background: #ffffff !important;
+  border-color: rgba(99, 102, 241, 0.45) !important;
+  color: #4f46e5 !important;
+}
+
+:root[data-theme='light'] .resume-submit-btn,
+[data-theme='light'] .resume-submit-btn {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.18) !important;
+}
+
+:root[data-theme='light'] .resume-submit-btn:hover:not(:disabled),
+[data-theme='light'] .resume-submit-btn:hover:not(:disabled) {
+  background: #1e293b !important;
+}
+
+/* 4. Error page actions explicit sync */
+:root[data-theme='light'] .error-action-primary,
+[data-theme='light'] .error-action-primary {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+:root[data-theme='light'] .error-action-primary *,
+[data-theme='light'] .error-action-primary * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+:root[data-theme='dark'] .error-action-primary,
+[data-theme='dark'] .error-action-primary {
+  background: #ffffff !important;
+  color: #090b13 !important;
+}
+:root[data-theme='dark'] .error-action-primary *,
+[data-theme='dark'] .error-action-primary * {
+  color: #090b13 !important;
+  stroke: #090b13 !important;
+}
+
 
 
 

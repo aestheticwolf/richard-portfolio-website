@@ -99,12 +99,12 @@ export default function ResumeAccess() {
         <button
           type="button"
           onClick={handleBack}
-          className="resume-back-btn group cursor-pointer"
+          className={`resume-back-btn group cursor-pointer ${isLight ? 'is-light' : ''}`}
         >
           <ArrowLeft size={16} className="transition-transform duration-200 group-hover:-translate-x-1" />
           <span>Back to portfolio</span>
         </button>
-        <div className="resume-top-actions">
+        <div className={`resume-top-actions ${isLight ? 'is-light' : ''}`}>
           <ThemeToggle />
         </div>
       </div>
