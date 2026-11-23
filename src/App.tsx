@@ -1,4 +1,4 @@
-import PortfolioPreloader from './components/PortfolioPreloader'
+import Loader from './components/Loader/Loader'
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
@@ -816,9 +816,22 @@ function Home() {
 
   const [heroSlideIndex, setHeroSlideIndex] = useState(0)
   const [heroSlideExiting, setHeroSlideExiting] = useState(false)
+  const [heroReady, setHeroReady] = useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.dataset.loader === 'done'
+    }
+    return false
+  })
 
   useEffect(() => {
-    if (prefersReducedMotion) return
+    if (heroReady) return
+    const handleLoaderDone = () => setHeroReady(true)
+    window.addEventListener('loader:done', handleLoaderDone)
+    return () => window.removeEventListener('loader:done', handleLoaderDone)
+  }, [heroReady])
+
+  useEffect(() => {
+    if (prefersReducedMotion || !heroReady) return
 
     const currentSlide = heroSlides[heroSlideIndex]
     const tokenCount = currentSlide?.tokens.length || 15
@@ -840,7 +853,7 @@ function Home() {
       window.clearTimeout(exitTimer)
       window.clearTimeout(switchTimer)
     }
-  }, [heroSlideIndex, prefersReducedMotion, heroSlides])
+  }, [heroSlideIndex, prefersReducedMotion, heroSlides, heroReady])
 
   const handlePrevProject = () => {
     if (projects.length <= 1) return
@@ -1253,7 +1266,7 @@ function Home() {
             <motion.div
               className="hero-copy"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={heroReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.72, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="hero-morph-wrapper">
@@ -1361,7 +1374,7 @@ function Home() {
             <motion.div
               className="hero-visual"
               initial={prefersReducedMotion ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={heroReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.82, delay: prefersReducedMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
             >
               <SpatialHeroConsole
@@ -2593,14 +2606,10 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
-  const [preloaderActive, setPreloaderActive] = useState(true)
-
   return (
     <MusicProvider>
       <ErrorBoundary>
-        {preloaderActive && (
-          <PortfolioPreloader onComplete={() => setPreloaderActive(false)} />
-        )}
+        <Loader name="Richard D'souza" />
         <BrowserRouter>
           <AnimatedRoutes />
         </BrowserRouter>
