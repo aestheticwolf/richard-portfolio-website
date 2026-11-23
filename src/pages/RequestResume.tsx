@@ -199,7 +199,7 @@ export default function RequestResume() {
                       type="text"
                       name="name"
                       autoComplete="name"
-                      placeholder="e.g. Richard D'Souza"
+                      placeholder="e.g. Richard D'souza"
                       value={name}
                       onChange={(event) => {
                         setName(event.target.value)

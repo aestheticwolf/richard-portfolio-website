@@ -9364,6 +9364,14 @@ textarea:focus-visible {
 .hero-title { max-width: none; }
 .hero-intro { max-width: 34rem; margin-top: 1.25rem; }
 .hero-visual { width: min(100%, 34.5rem); padding-top: 1.25rem; }
+@media (min-width: 640px) {
+  .hero-section > div {
+    padding-top: clamp(6.75rem, 9.5vh, 8.25rem) !important;
+  }
+  .hero-visual {
+    padding-top: 1.75rem !important;
+  }
+}
 @media (min-width: 1024px) {
   .hero-portrait { width: clamp(11.5rem, 16vw, 13.5rem); }
   .hero-profile-card { padding-top: 4.5rem; }
@@ -11568,157 +11576,145 @@ html:not(.sc-on) .cinematic-crossfade-section {
    Hero Mascot Speech & Greeting Bubbles (Premium Frosted Glass Design)
    ========================================================================== */
 .hero-speech-bubble {
-  white-space: nowrap !important;
-  background: rgba(15, 17, 28, 0.88) !important;
-  border: 1px solid rgba(167, 139, 250, 0.3) !important;
+  position: relative;
+  background: rgba(15, 17, 28, 0.92) !important;
+  border: 1px solid rgba(167, 139, 250, 0.35) !important;
   color: #f8fafc !important;
   box-shadow:
-    0 12px 32px -4px rgba(0, 0, 0, 0.65),
-    0 0 20px rgba(167, 139, 250, 0.16),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.15) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    0 16px 36px -4px rgba(0, 0, 0, 0.72),
+    0 0 24px rgba(167, 139, 250, 0.22),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  transition: border-color 200ms ease, box-shadow 200ms ease !important;
 }
-.hero-speech-bubble span,
-.hero-speech-bubble p {
-  color: #f8fafc !important;
-  font-weight: 500 !important;
-  letter-spacing: -0.01em !important;
-  white-space: nowrap !important;
+.hero-speech-bubble:hover {
+  border-color: rgba(167, 139, 250, 0.5) !important;
+  box-shadow:
+    0 20px 42px -4px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(167, 139, 250, 0.28),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22) !important;
 }
-.hero-speech-bubble .bubble-pointer {
+.hero-speech-bubble .bubble-pointer,
+.hero-greeting-bubble .bubble-pointer {
   background: #0f111c !important;
-  border-color: rgba(167, 139, 250, 0.3) !important;
+  border-color: rgba(167, 139, 250, 0.35) !important;
 }
-.hero-speech-bubble button {
+.hero-speech-bubble button,
+.hero-greeting-bubble button {
   color: #94a3b8 !important;
   transition: all 150ms ease !important;
 }
-.hero-speech-bubble button:hover {
+.hero-speech-bubble button:hover,
+.hero-greeting-bubble button:hover {
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.12) !important;
-}
-
-@media (max-width: 639px) {
-  .hero-speech-bubble {
-    font-size: 0.58rem !important;
-    padding: 0.16rem 0.38rem !important;
-    gap: 0.2rem !important;
-    white-space: nowrap !important;
-    top: -1.35rem !important;
-    right: 0.25rem !important;
-    left: auto !important;
-    transform: none !important;
-    max-width: calc(100vw - 1.5rem) !important;
-  }
-  .hero-speech-bubble span {
-    font-size: 0.58rem !important;
-    white-space: nowrap !important;
-  }
-  .hero-speech-bubble .bubble-pointer {
-    right: 1.5rem !important;
-    left: auto !important;
-    transform: rotate(45deg) !important;
-  }
-  .hero-greeting-bubble {
-    top: -1.35rem !important;
-    right: 0.25rem !important;
-    left: auto !important;
-    transform: none !important;
-    font-size: 0.6rem !important;
-    padding: 0.18rem 0.42rem !important;
-  }
-}
-
-@media (max-width: 360px) {
-  .hero-greeting-bubble {
-    top: -1.35rem !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    font-size: 0.54rem !important;
-    padding: 0.15rem 0.35rem !important;
-  }
+  background: rgba(255, 255, 255, 0.14) !important;
 }
 
 .hero-greeting-bubble {
-  background: rgba(15, 17, 28, 0.82) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  position: relative;
+  overflow: visible;
+  background: rgba(15, 17, 28, 0.86) !important;
+  border: 1px solid rgba(167, 139, 250, 0.35) !important;
   box-shadow:
     0 10px 25px -4px rgba(0, 0, 0, 0.6),
-    0 0 16px rgba(167, 139, 250, 0.14),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.16) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+    0 0 18px rgba(167, 139, 250, 0.2),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 .hero-greeting-bubble:hover {
-  border-color: rgba(167, 139, 250, 0.4) !important;
+  border-color: rgba(167, 139, 250, 0.55) !important;
   box-shadow:
-    0 14px 30px -4px rgba(0, 0, 0, 0.7),
-    0 0 22px rgba(167, 139, 250, 0.22),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.22) !important;
+    0 14px 30px -4px rgba(0, 0, 0, 0.75),
+    0 0 24px rgba(167, 139, 250, 0.32),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25) !important;
 }
 .hero-greeting-bubble span {
   color: #f8fafc !important;
   font-weight: 500 !important;
   letter-spacing: -0.01em !important;
 }
-.hero-greeting-bubble button {
-  color: #94a3b8 !important;
-  transition: all 150ms ease !important;
+
+/* Shimmer highlight that sweeps across greeting bubble */
+.hero-greeting-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: skewX(-20deg);
+  animation: heroBubbleShimmer 4s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: 9999px;
+  opacity: 0;
 }
-.hero-greeting-bubble button:hover {
-  color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.12) !important;
+@keyframes heroBubbleShimmer {
+  0% { left: -100%; opacity: 0; }
+  10% { opacity: 1; }
+  45% { left: 200%; opacity: 1; }
+  46%, 100% { left: 200%; opacity: 0; }
 }
 
 /* Light Mode / White Mode */
 [data-theme='light'] .hero-speech-bubble {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
   box-shadow:
-    0 12px 28px -4px rgba(15, 23, 42, 0.1),
-    0 3px 8px -2px rgba(15, 23, 42, 0.04),
+    0 16px 36px -4px rgba(15, 23, 42, 0.14),
+    0 4px 12px -2px rgba(15, 23, 42, 0.06),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
 }
-[data-theme='light'] .hero-speech-bubble span,
-[data-theme='light'] .hero-speech-bubble p {
+[data-theme='light'] .hero-speech-bubble h4 {
   color: #0f172a !important;
+}
+[data-theme='light'] .hero-speech-bubble p {
+  color: #475569 !important;
+}
+[data-theme='light'] .hero-speech-bubble .hero-take-next {
+  color: #334155 !important;
   font-weight: 600 !important;
-  letter-spacing: -0.01em !important;
 }
-[data-theme='light'] .hero-speech-bubble .bubble-pointer {
+[data-theme='light'] .hero-speech-bubble .hero-take-next:hover {
+  color: #0f172a !important;
+}
+[data-theme='light'] .hero-speech-bubble .bubble-pointer,
+[data-theme='light'] .hero-greeting-bubble .bubble-pointer {
   background: #ffffff !important;
-  border-color: rgba(15, 23, 42, 0.1) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
 }
-[data-theme='light'] .hero-speech-bubble button {
+[data-theme='light'] .hero-speech-bubble button,
+[data-theme='light'] .hero-greeting-bubble button {
   color: #64748b !important;
   transition: all 150ms ease !important;
 }
-[data-theme='light'] .hero-speech-bubble button:hover {
+[data-theme='light'] .hero-speech-bubble button:hover,
+[data-theme='light'] .hero-greeting-bubble button:hover {
   color: #0f172a !important;
   background: rgba(15, 23, 42, 0.08) !important;
 }
 
 [data-theme='light'] .hero-greeting-bubble {
-  background: rgba(255, 255, 255, 0.90) !important;
-  border: 1px solid rgba(15, 23, 42, 0.09) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(99, 102, 241, 0.25) !important;
   box-shadow:
     0 10px 24px -4px rgba(15, 23, 42, 0.08),
     0 2px 6px -1px rgba(15, 23, 42, 0.04),
+    0 0 16px rgba(99, 102, 241, 0.12),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(18px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
-  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 [data-theme='light'] .hero-greeting-bubble:hover {
-  border-color: rgba(99, 102, 241, 0.35) !important;
+  border-color: rgba(99, 102, 241, 0.45) !important;
   box-shadow:
-    0 12px 28px -4px rgba(99, 102, 241, 0.12),
-    0 2px 6px -1px rgba(15, 23, 42, 0.05),
+    0 14px 30px -4px rgba(99, 102, 241, 0.16),
+    0 2px 8px -1px rgba(15, 23, 42, 0.06),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
 }
 [data-theme='light'] .hero-greeting-bubble span {
@@ -11726,13 +11722,8 @@ html:not(.sc-on) .cinematic-crossfade-section {
   font-weight: 600 !important;
   letter-spacing: -0.01em !important;
 }
-[data-theme='light'] .hero-greeting-bubble button {
-  color: #64748b !important;
-  transition: all 150ms ease !important;
-}
-[data-theme='light'] .hero-greeting-bubble button:hover {
-  color: #0f172a !important;
-  background: rgba(15, 23, 42, 0.08) !important;
+[data-theme='light'] .hero-greeting-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.15), transparent);
 }
 
 /* ==========================================================================

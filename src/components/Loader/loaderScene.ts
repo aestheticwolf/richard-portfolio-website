@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 
 /**
- * High-performance background scene for the loader:
- * A particle constellation that assembles into an elegant rotating sphere.
- * Optimized with balanced particle density, capped DPR, and light/dark theme support
- * to guarantee 60-120 FPS anti-lag smoothness across all viewports.
+ * Ultra-smooth, GPU-optimized background constellation scene for the loader.
+ * Uses calibrated particle density, mediump precision shaders, and capped DPR
+ * to ensure 60-120 FPS anti-lag fluidity without any CPU or GPU hiccups.
  */
 type SceneOptions = {
   getProgress: () => number; // 0..1
@@ -14,6 +13,7 @@ type SceneOptions = {
 };
 
 const VERT = /* glsl */ `
+  precision mediump float;
   uniform float uP;
   uniform float uTime;
   uniform float uPR;
@@ -22,19 +22,20 @@ const VERT = /* glsl */ `
   varying float vK;
   varying float vR;
   void main() {
-    float k = clamp(uP * 1.3 - aRand * 0.3, 0.0, 1.0);
+    float k = clamp(uP * 1.25 - aRand * 0.25, 0.0, 1.0);
     k = 1.0 - pow(1.0 - k, 3.0);
     vec3 p = mix(aStart, position, k);
-    p += normalize(position) * 0.05 * sin(uTime * 1.1 + aRand * 25.0) * k;
+    p += normalize(position) * (0.045 * sin(uTime * 1.1 + aRand * 20.0)) * k;
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = (2.0 + aRand * 2.0) * uPR * (6.6 / -mv.z) * 1.4;
+    gl_PointSize = (2.0 + aRand * 2.0) * uPR * (6.8 / -mv.z) * 1.35;
     vK = k;
     vR = aRand;
   }
 `;
 
 const FRAG_POINTS = /* glsl */ `
+  precision mediump float;
   uniform vec3 uA;
   uniform vec3 uB;
   uniform float uOpacity;
@@ -46,12 +47,13 @@ const FRAG_POINTS = /* glsl */ `
     if (d > 0.5) discard;
     float a = smoothstep(0.5, 0.0, d);
     vec3 col = mix(uA, uB, vR);
-    float alphaMult = uIsLight > 0.5 ? 0.75 : (0.28 + 0.72 * vK);
+    float alphaMult = uIsLight > 0.5 ? 0.78 : (0.28 + 0.72 * vK);
     gl_FragColor = vec4(col, a * alphaMult * uOpacity);
   }
 `;
 
 const FRAG_LINES = /* glsl */ `
+  precision mediump float;
   uniform vec3 uA;
   uniform vec3 uB;
   uniform float uOpacity;
@@ -59,7 +61,7 @@ const FRAG_LINES = /* glsl */ `
   varying float vK;
   varying float vR;
   void main() {
-    float baseAlpha = uIsLight > 0.5 ? 0.32 : 0.17;
+    float baseAlpha = uIsLight > 0.5 ? 0.34 : 0.18;
     gl_FragColor = vec4(mix(uA, uB, vR), baseAlpha * vK * vK * uOpacity);
   }
 `;
@@ -72,9 +74,10 @@ function makeRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer | null {
       antialias: true,
       powerPreference: 'high-performance',
       stencil: false,
+      depth: false,
     });
   } catch {
-    return null; // WebGL unavailable: the loader still works without the 3D scene
+    return null;
   }
 }
 
@@ -89,10 +92,10 @@ export function createLoaderScene(canvas: HTMLCanvasElement, opts: SceneOptions)
   const group = new THREE.Group();
   scene.add(group);
 
-  // Balanced particle count: eliminates main-thread initialization lag while keeping the constellation dense & rich
+  // Calibrated particle count for instantaneous initialization with zero lag
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-  const N = isMobile ? 180 : 340;
-  const R = isMobile ? 1.7 : 2.05; // professional proportional radius
+  const N = isMobile ? 150 : 280;
+  const R = isMobile ? 1.65 : 1.95;
   const target = new Float32Array(N * 3);
   const start = new Float32Array(N * 3);
   const rnd = new Float32Array(N);
@@ -103,15 +106,15 @@ export function createLoaderScene(canvas: HTMLCanvasElement, opts: SceneOptions)
     const r = Math.sqrt(1 - y * y);
     const th = golden * i;
     target.set([Math.cos(th) * r * R, y * R, Math.sin(th) * r * R], i * 3);
-    start.set([(Math.random() - 0.5) * 14, (Math.random() - 0.5) * 9, (Math.random() - 0.5) * 7], i * 3);
+    start.set([(Math.random() - 0.5) * 13, (Math.random() - 0.5) * 8.5, (Math.random() - 0.5) * 6.5], i * 3);
     rnd[i] = Math.random();
   }
 
-  // Fast neighbour connection graph (runs in ~1ms with N=340)
+  // Constellation connecting lines
   const lp: number[] = [];
   const ls: number[] = [];
   const lr: number[] = [];
-  const maxD = isMobile ? 0.62 : 0.55;
+  const maxD = isMobile ? 0.62 : 0.56;
   for (let i = 0; i < N; i++) {
     for (let j = i + 1; j < N; j++) {
       const dx = target[i * 3] - target[j * 3];
@@ -166,7 +169,7 @@ export function createLoaderScene(canvas: HTMLCanvasElement, opts: SceneOptions)
   });
   group.add(new THREE.LineSegments(linesGeo, linesMat));
 
-  // Sizing, smooth pointer parallax, render loop
+  // Pointer parallax & render loop
   let tx = 0, ty = 0, mx = 0, my = 0, zoom = 0, time = 0;
   const onMove = (e: PointerEvent) => {
     tx = e.clientX / window.innerWidth - 0.5;
@@ -177,8 +180,8 @@ export function createLoaderScene(canvas: HTMLCanvasElement, opts: SceneOptions)
   const resize = () => {
     const w = canvas.clientWidth || 1;
     const h = canvas.clientHeight || 1;
-    // Cap DPR at 1.5 to eliminate retina fill-rate lag and preserve ultra-smooth FPS
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    // Cap DPR at 1.25 for peak framerate stability
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
@@ -200,13 +203,13 @@ export function createLoaderScene(canvas: HTMLCanvasElement, opts: SceneOptions)
     uniforms.uP.value = opts.reduced ? 1 : opts.getProgress();
     uniforms.uTime.value = time;
 
-    mx += (tx - mx) * 0.06;
-    my += (ty - my) * 0.06;
-    group.rotation.y = time * 0.11 + mx * 0.5;
-    group.rotation.x = 0.12 + my * 0.35;
+    mx += (tx - mx) * 0.055;
+    my += (ty - my) * 0.055;
+    group.rotation.y = time * 0.11 + mx * 0.45;
+    group.rotation.x = 0.11 + my * 0.32;
 
-    // Exit: gentle zoom towards camera while fading out
-    zoom += ((opts.getExit() ? 1 : 0) - zoom) * 0.05;
+    // Exit zoom
+    zoom += ((opts.getExit() ? 1 : 0) - zoom) * 0.055;
     camera.position.z = 6.8 - zoom * 4.6;
     uniforms.uOpacity.value = Math.max(0, 1 - zoom * 0.95);
 

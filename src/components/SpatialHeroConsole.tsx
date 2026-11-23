@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'motion/react'
 import * as THREE from 'three'
-import { X } from 'lucide-react'
+import { X, ChevronRight } from 'lucide-react'
 import type { PublicProfile } from '../lib/profile'
 
 export interface SpatialHeroConsoleProps {
@@ -10,6 +10,7 @@ export interface SpatialHeroConsoleProps {
   technologyLucideIconMap?: Record<string, unknown>
   technologyBrandColorMap?: Record<string, string>
   prefersReducedMotion?: boolean
+  heroReady?: boolean
 }
 
 /* ─── Procedural Soft Radial Particle Texture for Three.js ─── */
@@ -362,8 +363,70 @@ function NeonCodeBadge() {
   )
 }
 
+/* ─── Interactive Dialogue Takes (Authentic, Buzzword-Free Descriptions) ─── */
+interface DialogueTake {
+  id: number
+  badge: string
+  emoji: string
+  headline: string
+  subtext: string
+  accentColor: string
+}
+
+const DIALOGUE_TAKES: DialogueTake[] = [
+  {
+    id: 1,
+    badge: 'About Me',
+    emoji: '👋',
+    headline: "Hey, I'm Richard D'souza",
+    subtext: 'Software Engineer based in Goa, building web and mobile applications.',
+    accentColor: '#a78bfa',
+  },
+  {
+    id: 2,
+    badge: 'What I Do',
+    emoji: '💻',
+    headline: 'Frontend & Backend',
+    subtext: 'Building apps with React, TypeScript, Tailwind, Node.js & Supabase.',
+    accentColor: '#38bdf8',
+  },
+  {
+    id: 3,
+    badge: 'Featured Work',
+    emoji: '🚀',
+    headline: 'Featured Projects',
+    subtext: 'Working demos, full source code and practical architectures below.',
+    accentColor: '#34d399',
+  },
+  {
+    id: 4,
+    badge: 'Education',
+    emoji: '🎓',
+    headline: 'M.Sc. in Information Technology',
+    subtext: 'Completed at Parvatibai Chowgule College, focused on practical software.',
+    accentColor: '#fbbf24',
+  },
+  {
+    id: 5,
+    badge: 'Get in Touch',
+    emoji: '📬',
+    headline: 'Open to Roles & Projects',
+    subtext: 'Feel free to explore my work or send me a message directly below.',
+    accentColor: '#f472b6',
+  },
+]
+
+interface SparkleParticle {
+  id: number
+  x: number
+  y: number
+  color: string
+  size: number
+}
+
 export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
   prefersReducedMotion = false,
+  heroReady,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -390,7 +453,28 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
   const [isWaving, setIsWaving] = useState(false)
   const [showSpeechBubble, setShowSpeechBubble] = useState(false)
   const [greetingDismissed, setGreetingDismissed] = useState(false)
+  const [takeIndex, setTakeIndex] = useState(0)
+  const [sparkleBursts, setSparkleBursts] = useState<SparkleParticle[]>([])
   const speechTimerRef = useRef<number | null>(null)
+  const sparkleTimerRef = useRef<number | null>(null)
+  const waveTimerRef = useRef<number | null>(null)
+
+  // Track readiness: wait for page loader to reveal hero before starting animations
+  const [internalReady, setInternalReady] = useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.dataset.loader === 'done' || !document.querySelector('.ld-root')
+    }
+    return true
+  })
+
+  useEffect(() => {
+    if (internalReady) return
+    const handleDone = () => setInternalReady(true)
+    window.addEventListener('loader:done', handleDone, { once: true })
+    return () => window.removeEventListener('loader:done', handleDone)
+  }, [internalReady])
+
+  const isReady = heroReady !== undefined ? heroReady : internalReady
 
   // Listen for system reduced motion and touch changes
   useEffect(() => {
@@ -425,21 +509,22 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
   }, [])
 
   const motionDisabled = prefersReducedMotion || systemReducedMotion
-  const isAnimating = isInView && !motionDisabled
+  const isAnimating = isInView && !motionDisabled && isReady
 
   // 1. Natural Synchronized Blinking Loop (every 3.2s to 6.0s, lasts 150ms)
   useEffect(() => {
     if (!isAnimating) return
 
-    let timeoutId: number
+    let blinkTimer: number | null = null
+    let reopenTimer: number | null = null
     let isMounted = true
 
     const scheduleNextBlink = () => {
       const interval = 3200 + Math.random() * 2800
-      timeoutId = window.setTimeout(() => {
+      blinkTimer = window.setTimeout(() => {
         if (!isMounted) return
         setIsBlinking(true)
-        timeoutId = window.setTimeout(() => {
+        reopenTimer = window.setTimeout(() => {
           if (!isMounted) return
           setIsBlinking(false)
           scheduleNextBlink()
@@ -451,31 +536,54 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
 
     return () => {
       isMounted = false
-      clearTimeout(timeoutId)
+      if (blinkTimer) clearTimeout(blinkTimer)
+      if (reopenTimer) clearTimeout(reopenTimer)
+      setIsBlinking(false)
     }
   }, [isAnimating])
+
+  // Dedicated Safety Watchdog: Guarantee eyelids never stay closed longer than 180ms
+  useEffect(() => {
+    if (!isBlinking) return
+    const timer = window.setTimeout(() => {
+      setIsBlinking(false)
+    }, 180)
+    return () => clearTimeout(timer)
+  }, [isBlinking])
+
+  // Window visibility listener: re-open eyes immediately if tab changes
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setIsBlinking(false)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
 
   // 2. Waving Trigger & Control
   const triggerWave = useCallback(() => {
     if (motionDisabled) return
     setIsWaving(true)
-    window.setTimeout(() => {
+    if (waveTimerRef.current) clearTimeout(waveTimerRef.current)
+    waveTimerRef.current = window.setTimeout(() => {
       setIsWaving(false)
     }, 1450)
   }, [motionDisabled])
 
-  // Initial greeting wave shortly after page load
+  // Initial greeting wave shortly after loader finishes & hero is revealed
   useEffect(() => {
-    if (motionDisabled) return
+    if (motionDisabled || !isReady) return
     const timer = window.setTimeout(() => {
       triggerWave()
-    }, 650)
+    }, 550)
     return () => clearTimeout(timer)
-  }, [motionDisabled, triggerWave])
+  }, [motionDisabled, isReady, triggerWave])
 
-  // Periodic gentle wave while idle (every 9 to 13.5 seconds)
+  // Periodic gentle wave while idle (every 9 to 13.5 seconds) - pauses while reading dialogue card
   useEffect(() => {
-    if (!isAnimating) return
+    if (!isAnimating || showSpeechBubble) return
 
     let timer: number
     let isMounted = true
@@ -495,19 +603,68 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
       isMounted = false
       clearTimeout(timer)
     }
-  }, [isAnimating, triggerWave])
+  }, [isAnimating, showSpeechBubble, triggerWave])
 
-  // Click interaction: Mascot waves and displays temporary speech bubble
-  const handleMascotClick = useCallback(() => {
-    triggerWave()
+  // Dynamic particle sparkle burst
+  const triggerSparkles = useCallback((accentColor = '#a78bfa') => {
+    const count = 8
+    const palette = ['#a78bfa', '#38bdf8', '#fbbf24', '#34d399', '#f472b6']
+    const newParticles: SparkleParticle[] = Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.4
+      const dist = 26 + Math.random() * 32
+      return {
+        id: Date.now() + i,
+        x: Math.cos(angle) * dist,
+        y: Math.sin(angle) * dist - 8,
+        color: palette[i % palette.length] || accentColor,
+        size: 4 + Math.random() * 4,
+      }
+    })
+    setSparkleBursts(newParticles)
+    if (sparkleTimerRef.current) clearTimeout(sparkleTimerRef.current)
+    sparkleTimerRef.current = window.setTimeout(() => setSparkleBursts([]), 650)
+  }, [])
+
+  // Advance dialogue takes WITHOUT triggering the wave animation (calm reading experience)
+  const handleAdvanceTake = useCallback((targetIndex?: number) => {
+    const nextIdx =
+      typeof targetIndex === 'number'
+        ? targetIndex
+        : (takeIndex + 1) % DIALOGUE_TAKES.length
+    setTakeIndex(nextIdx)
     setShowSpeechBubble(true)
-    if (speechTimerRef.current) {
-      clearTimeout(speechTimerRef.current)
-    }
+    triggerSparkles(DIALOGUE_TAKES[nextIdx].accentColor)
+
+    if (speechTimerRef.current) clearTimeout(speechTimerRef.current)
     speechTimerRef.current = window.setTimeout(() => {
       setShowSpeechBubble(false)
-    }, 4200)
-  }, [triggerWave])
+    }, 6500)
+  }, [takeIndex, triggerSparkles])
+
+  // Click interaction: Mascot waves and opens dialogue card, or advances take if already open
+  const handleMascotClick = useCallback(() => {
+    if (!showSpeechBubble) {
+      triggerWave()
+      setShowSpeechBubble(true)
+      triggerSparkles(DIALOGUE_TAKES[takeIndex].accentColor)
+      if (speechTimerRef.current) clearTimeout(speechTimerRef.current)
+      speechTimerRef.current = window.setTimeout(() => {
+        setShowSpeechBubble(false)
+      }, 6500)
+    } else {
+      handleAdvanceTake()
+    }
+  }, [showSpeechBubble, takeIndex, triggerWave, triggerSparkles, handleAdvanceTake])
+
+  useEffect(() => {
+    return () => {
+      if (speechTimerRef.current) clearTimeout(speechTimerRef.current)
+      if (sparkleTimerRef.current) clearTimeout(sparkleTimerRef.current)
+      if (waveTimerRef.current) clearTimeout(waveTimerRef.current)
+    }
+  }, [])
+
+  const activeTake = DIALOGUE_TAKES[takeIndex] || DIALOGUE_TAKES[0]
 
   // Physics-based spring config: High damping + velvet softness
   const mouseX = useMotionValue(0)
@@ -627,57 +784,50 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
         }}
         className="relative z-10 flex flex-col items-center justify-center cursor-default"
       >
-        {/* Interactive Speech Bubble on Click */}
+        {/* Sparkle burst feedback particles */}
         <AnimatePresence>
-          {showSpeechBubble && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.85, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: 8 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-              className="hero-speech-bubble absolute -top-8 xs:-top-9 sm:top-2 md:top-3 right-0 sm:right-auto sm:left-1/2 translate-x-0 sm:-translate-x-1/2 z-40 flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-4 sm:py-2 rounded-2xl backdrop-blur-xl select-none cursor-pointer transition-colors duration-200 text-[9.5px] sm:text-sm whitespace-nowrap shadow-lg max-w-[calc(100vw-2rem)]"
-              onClick={() => setShowSpeechBubble(false)}
-            >
-              <span className="text-[11px] sm:text-base shrink-0">👋</span>
-              <span className="text-[9px] xs:text-[9.5px] sm:text-sm font-medium tracking-wide whitespace-nowrap">
-                <span className="hidden xs:inline">Hey! Welcome to my portfolio.</span>
-                <span className="xs:hidden">Welcome to my portfolio!</span>
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setShowSpeechBubble(false)
-                }}
-                className="ml-0.5 sm:ml-1 p-0.5 rounded-md transition-colors shrink-0"
-                aria-label="Close speech bubble"
-              >
-                <X size={11} className="sm:w-3 sm:h-3" />
-              </button>
-              {/* Pointer triangle */}
-              <div className="bubble-pointer absolute -bottom-1.5 right-8 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
-            </motion.div>
-          )}
+          {sparkleBursts.map((p) => (
+            <motion.span
+              key={p.id}
+              initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+              animate={{ opacity: 0, scale: 1.4, x: p.x, y: p.y }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.55, ease: 'easeOut' }}
+              className="absolute z-50 pointer-events-none rounded-full"
+              style={{
+                width: p.size,
+                height: p.size,
+                backgroundColor: p.color,
+                boxShadow: `0 0 10px ${p.color}`,
+                top: '20%',
+                left: '50%',
+              }}
+            />
+          ))}
         </AnimatePresence>
 
-        {/* Dismissible / Interactive Greeting Bubble: "Hey, welcome! 👋" */}
-        <AnimatePresence>
-          {!greetingDismissed && !showSpeechBubble && (
+        {/* Unified Interactive Mascot Bubble: Positioned ABOVE Mascot Hair (Never on Face) */}
+        <AnimatePresence mode="wait">
+          {!greetingDismissed && (
             <motion.div
-              initial={motionDisabled ? false : { opacity: 0, scale: 0.85, y: -6 }}
+              key={showSpeechBubble ? `take-${activeTake.id}` : 'greeting'}
+              initial={{ opacity: 0, scale: 0.92, y: 4 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.85, y: -6 }}
-              transition={{ duration: 0.45, delay: 0.2 }}
+              exit={{ opacity: 0, scale: 0.92, y: 4 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 transform: 'translateZ(44px)',
                 x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
-                y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
               }}
-              className="hero-greeting-bubble absolute -top-7 xs:-top-8 sm:top-2 right-1 sm:right-auto sm:-left-4 md:-left-5 translate-x-0 sm:translate-x-0 z-30 flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-full backdrop-blur-md cursor-pointer transition-transform hover:scale-104 active:scale-96 text-[9.5px] sm:text-xs whitespace-nowrap shadow-md max-w-[calc(100vw-3rem)]"
+              className={`hero-mascot-bubble absolute z-30 select-none cursor-pointer ${
+                showSpeechBubble
+                  ? 'bottom-full mb-1.5 -right-2.5 xs:-right-3 sm:right-auto sm:bottom-auto sm:-top-11 md:-top-12 sm:left-1/2 sm:-translate-x-1/2'
+                  : 'bottom-full mb-1.5 left-1/2 -translate-x-1/2 sm:bottom-auto sm:-top-9 md:-top-10'
+              }`}
               onClick={handleMascotClick}
               role="button"
               tabIndex={0}
-              aria-label="Click to interact with mascot"
+              aria-label="Interactive chibi mascot message"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
@@ -685,21 +835,137 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 }
               }}
             >
-              <span className="text-[9.5px] sm:text-xs font-medium">
-                <span className="hidden sm:inline">Hey, welcome! 👋</span>
-                <span className="sm:hidden">Hey! 👋</span>
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setGreetingDismissed(true)
-                }}
-                aria-label="Dismiss greeting"
-                className="ml-0.5 p-0.5 rounded-md transition-colors"
-              >
-                <X size={11} />
-              </button>
+              {!showSpeechBubble ? (
+                /* Initial Greeting State: "Hey, Welcome! 👋" (Exact position above mascot hair) */
+                <div className="hero-greeting-bubble relative flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full backdrop-blur-xl shadow-lg transition-transform hover:scale-105 active:scale-95 whitespace-nowrap">
+                  {/* Shimmer effect strictly clipped inside pill container */}
+                  <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none" aria-hidden="true">
+                    <div className="hero-greeting-shimmer" />
+                  </div>
+                  <span className="font-semibold tracking-tight flex items-center gap-1 text-[10.5px] sm:text-xs relative z-1">
+                    <span>Hey, Welcome!</span>
+                    <motion.span
+                      className="inline-block origin-[75%_75%] select-none"
+                      animate={
+                        !motionDisabled
+                          ? { rotate: [0, 18, -10, 18, -6, 12, 0] }
+                          : { rotate: 0 }
+                      }
+                      transition={{
+                        repeat: Infinity,
+                        repeatDelay: 2.8,
+                        duration: 1.15,
+                        ease: 'easeInOut',
+                      }}
+                    >
+                      👋
+                    </motion.span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setGreetingDismissed(true)
+                    }}
+                    aria-label="Dismiss greeting"
+                    className="ml-0.5 p-0.5 rounded-full transition-colors text-slate-400 hover:text-white hover:bg-white/10 relative z-1"
+                  >
+                    <X size={11} />
+                  </button>
+                  {/* Pointer triangle pointing down directly to hair */}
+                  <div className="bubble-pointer absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 border-b border-r rotate-45" />
+                </div>
+              ) : (
+                /* Interactive Takes State: Rich Dialogue Card with Full Authentic Description & Zero Buzzwords */
+                <div
+                  className="hero-speech-bubble relative flex flex-col gap-1 p-2 xs:p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl backdrop-blur-2xl shadow-2xl w-[190px] xs:w-[208px] sm:w-[310px] md:w-[330px] max-w-[calc(100vw-2rem)] border transition-all duration-300"
+                  style={{
+                    borderColor: `${activeTake.accentColor}40`,
+                    boxShadow: `0 16px 36px -4px rgba(0,0,0,0.72), 0 0 24px ${activeTake.accentColor}20`,
+                  }}
+                >
+                  {/* Header: Tag + Progress Dots + Next Hint + Close */}
+                  <div className="flex items-center justify-between gap-1 w-full">
+                    <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                      <span
+                        className="text-[8.5px] sm:text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 sm:px-2 rounded-full border transition-colors duration-300 shrink-0 whitespace-nowrap"
+                        style={{
+                          color: activeTake.accentColor,
+                          borderColor: `${activeTake.accentColor}44`,
+                          backgroundColor: `${activeTake.accentColor}18`,
+                        }}
+                      >
+                        {activeTake.badge}
+                      </span>
+                      {/* Dots */}
+                      <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                        {DIALOGUE_TAKES.map((t, i) => (
+                          <span
+                            key={t.id}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAdvanceTake(i)
+                            }}
+                            className="w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer"
+                            style={{
+                              backgroundColor: i === takeIndex ? activeTake.accentColor : 'rgba(150, 150, 170, 0.3)',
+                              transform: i === takeIndex ? 'scale(1.25)' : 'scale(1)',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleAdvanceTake()
+                        }}
+                        className="hero-take-next text-[9.5px] sm:text-[10px] font-semibold flex items-center gap-0.5 transition-colors cursor-pointer text-slate-300 hover:text-white"
+                      >
+                        Next <ChevronRight size={11} className="inline sm:w-3 sm:h-3" />
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowSpeechBubble(false)
+                        }}
+                        className="p-0.5 sm:p-1 rounded-md transition-colors text-slate-400 hover:text-white hover:bg-white/10"
+                        aria-label="Close speech bubble"
+                      >
+                        <X size={11} className="sm:w-3 sm:h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Animated Content: Full Details Without Truncation */}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeTake.id}
+                      initial={{ opacity: 0, x: 4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -4 }}
+                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                      className="flex items-start gap-2 sm:gap-2.5 mt-0.5"
+                    >
+                      <span className="text-base sm:text-xl shrink-0 select-none mt-0.5">{activeTake.emoji}</span>
+                      <div className="flex flex-col min-w-0">
+                        <h4 className="text-[11px] sm:text-sm font-semibold tracking-tight text-white leading-tight">
+                          {activeTake.headline}
+                        </h4>
+                        <p className="text-[9.5px] sm:text-xs text-slate-300 font-normal leading-snug mt-0.5">
+                          {activeTake.subtext}
+                        </p>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Pointer triangle pointing down directly to hair */}
+                  <div className="bubble-pointer absolute -bottom-1.5 right-15 xs:right-16 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -714,6 +980,12 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 }
               : { y: 0, rotate: 0 }
           }
+          whileHover={{ scale: 1.18, rotate: -6 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={(e) => {
+            e.stopPropagation()
+            handleAdvanceTake(1) // Jump to Take 02: Full-Stack Tech Stack
+          }}
           transition={{
             repeat: Infinity,
             duration: 5.2,
@@ -724,7 +996,10 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
             x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
             y: motionDisabled || isTouchDevice ? 0 : chipParallaxY1,
           }}
-          className="absolute top-1 sm:top-12 md:top-14 -left-9 xs:-left-10 sm:-left-3 md:-left-6 lg:-left-8 z-20 pointer-events-none select-none transition-transform duration-300 scale-50 xs:scale-55 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-right"
+          className="absolute top-1 sm:top-12 md:top-14 -left-9 xs:-left-10 sm:-left-3 md:-left-6 lg:-left-8 z-20 select-none transition-transform duration-300 scale-50 xs:scale-55 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-right cursor-pointer"
+          role="button"
+          tabIndex={0}
+          aria-label="View Full-Stack developer take"
         >
           <NeonHoloLaptop />
         </motion.div>
@@ -739,6 +1014,12 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 }
               : { y: 0, rotate: 0 }
           }
+          whileHover={{ scale: 1.18, rotate: 6 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={(e) => {
+            e.stopPropagation()
+            handleAdvanceTake(2) // Jump to Take 03: 60 FPS Micro-Interactions & Code
+          }}
           transition={{
             repeat: Infinity,
             duration: 5.6,
@@ -750,7 +1031,10 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
             x: motionDisabled || isTouchDevice ? 0 : chipParallaxX2,
             y: motionDisabled || isTouchDevice ? 0 : chipParallaxY2,
           }}
-          className="absolute top-2.5 sm:top-14 md:top-16 -right-7 xs:-right-8 sm:right-0 md:right-1 lg:-right-3 z-20 pointer-events-none select-none transition-transform duration-300 scale-50 xs:scale-55 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-left"
+          className="absolute top-2.5 sm:top-14 md:top-16 -right-7 xs:-right-8 sm:right-0 md:right-1 lg:-right-3 z-20 select-none transition-transform duration-300 scale-50 xs:scale-55 sm:scale-80 md:scale-90 lg:scale-100 origin-bottom-left cursor-pointer"
+          role="button"
+          tabIndex={0}
+          aria-label="View Micro-Interactions developer take"
         >
           <NeonCodeBadge />
         </motion.div>
@@ -871,7 +1155,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 height: '7.957%',
                 zIndex: 22,
                 pointerEvents: 'none',
-                opacity: isBlinking ? 1 : 0,
+                opacity: isAnimating && isBlinking ? 1 : 0,
                 transition: 'opacity 40ms ease-out',
               }}
               aria-hidden="true"

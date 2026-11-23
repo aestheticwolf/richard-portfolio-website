@@ -145,18 +145,18 @@ export default function ErrorView({
         <Link
           to="/"
           className="portfolio-brand-logo portfolio-nav-logo inline-flex items-center shrink-0 focus:outline-hidden"
-          aria-label="Richard D'Souza Home"
+          aria-label="Richard D'souza Home"
         >
           <img
             src="/logo-dark.png"
-            alt="Richard D'Souza"
+            alt="Richard D'souza"
             className="nav-logo-dark h-8 w-auto max-w-30 shrink-0 object-contain"
             width="128"
             height="32"
           />
           <img
             src="/logo-light.png"
-            alt="Richard D'Souza"
+            alt="Richard D'souza"
             className="nav-logo-light h-8 w-auto max-w-30 shrink-0 object-contain"
             width="128"
             height="32"

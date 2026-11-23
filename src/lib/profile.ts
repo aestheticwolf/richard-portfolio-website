@@ -156,7 +156,7 @@ export const DEFAULT_ABOUT_DATA: AboutDataConfig = {
   overview_prefix: '// software engineering & digital craft',
   foundations_badge: 'Academic & Technical Foundations',
   foundations_icon: 'GraduationCap',
-  foundations_text: 'Software Developer completing an M.Sc in Information Technology from Parvatibai Chowgule College of Arts and Science. Focused on building reliable web & mobile applications, exploring modern cloud architectures, and finding practical solutions to real-world problems.',
+  foundations_text: 'Software Developer with an M.Sc in Information Technology from Parvatibai Chowgule College of Arts and Science. Focused on building reliable web & mobile applications, exploring modern cloud architectures, and finding practical solutions to real-world problems.',
   mindset_cards: [
     {
       title: 'Continuous Growth & Curiosity',

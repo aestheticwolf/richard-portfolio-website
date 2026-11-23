@@ -744,7 +744,7 @@ function Home() {
       setContactStatusMessage('')
     }, durationMs)
   }
-  const heroName = profile?.full_name || "Richard D'Souza"
+  const heroName = profile?.full_name || "Richard D'souza"
   const heroSlides = useMemo(() => {
     const rawSlides = [
       {
@@ -754,9 +754,9 @@ function Home() {
         accentClass: 'hero-title-accent-sheen',
       },
       {
-        kicker: 'CURRENT ROLE',
-        text: profile?.professional_title || 'Software Developer',
-        accentWord: 'Developer',
+        kicker: 'SPECIALIZATION',
+        text: profile?.professional_title || 'Software Engineering',
+        accentWord: 'Engineering',
         accentClass: 'hero-title-accent-cyan',
       },
       {
@@ -930,7 +930,7 @@ function Home() {
 
     formData.set('access_key', accessKey)
     formData.set('subject', `Portfolio message from ${name || 'a visitor'}`)
-    formData.set('from_name', "Richard D'Souza Portfolio")
+    formData.set('from_name', "Richard D'souza Portfolio")
     formData.set('replyto', email)
     if (contactStatusTimerRef.current) {
       window.clearTimeout(contactStatusTimerRef.current)
@@ -1218,10 +1218,10 @@ function Home() {
               }
             }}
             className="portfolio-brand-logo portfolio-nav-logo inline-flex items-center shrink-0"
-            aria-label="Richard D'Souza Home"
+            aria-label="Richard D'souza Home"
           >
-            <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
-            <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
+            <img src="/logo-dark.png" alt="Richard D'souza" className="nav-logo-dark h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
+            <img src="/logo-light.png" alt="Richard D'souza" className="nav-logo-light h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
           </a>
 
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -1380,6 +1380,7 @@ function Home() {
               <SpatialHeroConsole
                 profile={profile}
                 prefersReducedMotion={prefersReducedMotion}
+                heroReady={heroReady}
               />
             </motion.div>
 

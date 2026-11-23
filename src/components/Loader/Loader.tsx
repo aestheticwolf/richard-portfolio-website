@@ -56,7 +56,7 @@ function grad(t: number, stops: Array<[number, [number, number, number]]>): stri
   return `rgb(${last.join(',')})`;
 }
 
-const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
+const EASE_SMOOTH: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const EASE_SPLIT: [number, number, number, number] = [0.76, 0, 0.24, 1];
 
 function getIsLight(): boolean {
@@ -77,6 +77,7 @@ function getIsLight(): boolean {
   return false;
 }
 
+// Letter reveal with hardware accelerated GPU compositing (no blur filter raster stalls)
 function NameLayer({
   text,
   fill,
@@ -102,9 +103,9 @@ function NameLayer({
           key={i}
           className="ch"
           style={fill ? { color: grad(i / Math.max(chars.length - 1, 1), stops) } : undefined}
-          initial={{ opacity: 0, y: '60%', rotate: 4, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, y: '0%', rotate: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.85, ease: EASE_OUT, delay: 0.22 + i * 0.05 }}
+          initial={{ opacity: 0, y: '45%' }}
+          animate={{ opacity: 1, y: '0%' }}
+          transition={{ duration: 0.72, ease: EASE_SMOOTH, delay: 0.18 + i * 0.04 }}
         >
           {c === ' ' ? '\u00a0' : c}
         </motion.span>
@@ -113,7 +114,7 @@ function NameLayer({
   );
 }
 
-// Odometer rolling digit
+// Odometer rolling digit with fluid tween easing (avoids spring oscillation jitter)
 function Digit({ d, max }: { d: number; max: number }) {
   const n = max + 1;
   return (
@@ -122,7 +123,7 @@ function Digit({ d, max }: { d: number; max: number }) {
         className="ld-strip"
         initial={{ y: '0%' }}
         animate={{ y: `${-(d / n) * 100}%` }}
-        transition={{ type: 'spring', stiffness: 180, damping: 24 }}
+        transition={{ duration: 0.26, ease: EASE_SMOOTH }}
       >
         {Array.from({ length: n }, (_, i) => (
           <span key={i}>{i}</span>
@@ -152,6 +153,7 @@ export default function Loader({
   const doneRef = useRef(false);
   const prevOverflow = useRef<[string, string] | null>(null);
   const pageLoaded = useRef(typeof document !== 'undefined' && document.readyState === 'complete');
+  const pointerRaf = useRef(0);
   const reduced = useMemo(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches, []);
   const duration = reduced ? 600 : minMs;
 
@@ -159,7 +161,7 @@ export default function Loader({
   useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
-  // Synchronize theme changes
+  // Synchronize theme changes dynamically
   useEffect(() => {
     const checkTheme = () => setIsLight(getIsLight());
     const observer = new MutationObserver(checkTheme);
@@ -179,7 +181,7 @@ export default function Loader({
     document.documentElement.dataset.loader = 'loading';
   }, []);
 
-  // Real page load
+  // Real page load detection
   useEffect(() => {
     const onLoad = () => { pageLoaded.current = true; };
     window.addEventListener('load', onLoad);
@@ -208,10 +210,13 @@ export default function Loader({
         document.body.style.overflow = prevOverflow.current[1];
         prevOverflow.current = null;
       }
+      if (pointerRaf.current) {
+        cancelAnimationFrame(pointerRaf.current);
+      }
     };
   }, []);
 
-  // Anti-lag progress loop: updates state ONLY on integer changes to eliminate React re-render thrashing
+  // Anti-lag progress animation loop: buttery smooth easing
   useEffect(() => {
     let raf = 0;
     let timer = 0;
@@ -224,13 +229,13 @@ export default function Loader({
       const forced = now - t0 > maxWaitMs;
       const cap = forced || (pageLoaded.current && readyRef.current) ? 100 : 90;
       const target = Math.min((1 - Math.pow(1 - k, 3)) * 100, cap);
-      shown += (target - shown) * 0.14;
-      if (target >= 100 && 100 - shown < 0.4) shown = 100;
+      shown += (target - shown) * 0.16;
+      if (target >= 100 && 100 - shown < 0.3) shown = 100;
       progress.set(shown);
 
       if (shown >= 100 && !finished) {
         finished = true;
-        timer = window.setTimeout(() => setPhase('exit'), 320);
+        timer = window.setTimeout(() => setPhase('exit'), 300);
         return;
       }
       raf = requestAnimationFrame(frame);
@@ -243,7 +248,7 @@ export default function Loader({
     };
   }, [duration, maxWaitMs, progress]);
 
-  // Anti-lag: Only trigger React state change when the integer percent changes
+  // Anti-lag: Only trigger React state change when the integer percent value changes
   useMotionValueEvent(progress, 'change', (v) => {
     const nextPct = Math.min(100, Math.floor(v + 0.0001));
     setPct((prev) => (prev === nextPct ? prev : nextPct));
@@ -252,7 +257,7 @@ export default function Loader({
   // Exit transition
   useEffect(() => {
     if (phase !== 'exit') return;
-    const id = window.setTimeout(() => setPhase('open'), 550);
+    const id = window.setTimeout(() => setPhase('open'), 500);
     return () => window.clearTimeout(id);
   }, [phase]);
 
@@ -288,10 +293,24 @@ export default function Loader({
     }
   }, [progress, reduced, isLight]);
 
+  // Transform scaleX for GPU compositor acceleration (zero layout reflows)
   const clip = useTransform(progress, (v) => `inset(-25% ${100 - v}% -25% 0)`);
-  const lineWidth = useTransform(progress, (v) => `${v}%`);
+  const scaleX = useTransform(progress, (v) => v / 100);
   const word = useMemo(() => STEPS.reduce((acc, [t, w]) => (pct >= t ? w : acc), STEPS[0][1]), [pct]);
-  const initials = useMemo(() => name.split(' ').map((s) => s[0]).join('').slice(0, 2).toUpperCase(), [name]);
+
+  // Throttled mouse move for zero-lag ambient light tracking
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (pointerRaf.current) return;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    pointerRaf.current = requestAnimationFrame(() => {
+      pointerRaf.current = 0;
+      const el = rootRef.current;
+      if (!el) return;
+      el.style.setProperty('--mx', `${clientX}px`);
+      el.style.setProperty('--my', `${clientY}px`);
+    });
+  }, []);
 
   if (phase === 'done') return null;
 
@@ -303,24 +322,19 @@ export default function Loader({
       role="status"
       aria-live="polite"
       aria-label="Loading portfolio"
-      onPointerMove={(e) => {
-        const el = rootRef.current;
-        if (!el) return;
-        el.style.setProperty('--mx', `${e.clientX}px`);
-        el.style.setProperty('--my', `${e.clientY}px`);
-      }}
+      onPointerMove={handlePointerMove}
     >
       <motion.div
         className="ld-panel ld-top"
         initial={false}
         animate={{ y: phase === 'open' ? '-101%' : '0%' }}
-        transition={{ duration: 0.95, ease: EASE_SPLIT }}
+        transition={{ duration: 0.92, ease: EASE_SPLIT }}
       />
       <motion.div
         className="ld-panel ld-bot"
         initial={false}
         animate={{ y: phase === 'open' ? '101%' : '0%' }}
-        transition={{ duration: 0.95, ease: EASE_SPLIT }}
+        transition={{ duration: 0.92, ease: EASE_SPLIT }}
         onAnimationComplete={() => {
           if (phaseRef.current === 'open') finish();
         }}
@@ -331,10 +345,10 @@ export default function Loader({
         initial={false}
         animate={
           phase === 'loading'
-            ? { opacity: 1, filter: 'blur(0px)', scale: 1 }
-            : { opacity: 0, filter: 'blur(8px)', scale: 1.04 }
+            ? { opacity: 1, scale: 1 }
+            : { opacity: 0, scale: 0.98 }
         }
-        transition={{ duration: 0.52 }}
+        transition={{ duration: 0.45, ease: EASE_SMOOTH }}
       >
         <div className="ld-glow" aria-hidden="true" />
         <span className="ld-blob ld-b1" aria-hidden="true" />
@@ -342,9 +356,24 @@ export default function Loader({
         <canvas ref={canvasRef} className="ld-canvas" aria-hidden="true" />
         <span className="ld-grain" aria-hidden="true" />
 
-        {/* Top bar — Software Developer / Goa text removed as requested */}
+        {/* Top bar with exact RD Brand Logo (matching header) */}
         <div className="ld-topbar" aria-hidden="true">
-          <span className="ld-mark">{initials}</span>
+          <div className="ld-brand-logo inline-flex items-center shrink-0">
+            <img
+              src="/logo-dark.png"
+              alt="Richard D'souza"
+              className="nav-logo-dark ld-logo-img shrink-0 object-contain"
+              width="128"
+              height="32"
+            />
+            <img
+              src="/logo-light.png"
+              alt="Richard D'souza"
+              className="nav-logo-light ld-logo-img shrink-0 object-contain"
+              width="128"
+              height="32"
+            />
+          </div>
         </div>
 
         {/* Wordmark heading: Professional, refined sizing */}
@@ -360,9 +389,9 @@ export default function Loader({
             <motion.span
               key={word}
               className="ld-word"
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28 }}
+              transition={{ duration: 0.25, ease: EASE_SMOOTH }}
             >
               {word}
             </motion.span>
@@ -373,13 +402,13 @@ export default function Loader({
               className="ld-col"
               initial={{ width: '0em' }}
               animate={{ width: pct >= 100 ? '0.62em' : '0em' }}
-              transition={{ duration: 0.35, ease: EASE_OUT }}
+              transition={{ duration: 0.28, ease: EASE_SMOOTH }}
             >
               <motion.div
                 className="ld-strip"
                 initial={{ y: '0%' }}
                 animate={{ y: pct >= 100 ? '-50%' : '0%' }}
-                transition={{ type: 'spring', stiffness: 180, damping: 24 }}
+                transition={{ duration: 0.28, ease: EASE_SMOOTH }}
               >
                 <span>0</span>
                 <span>1</span>
@@ -391,9 +420,12 @@ export default function Loader({
           </div>
         </div>
 
-        {/* Bottom hairline progress line */}
+        {/* Bottom hairline progress line (hardware accelerated scaleX) */}
         <div className="ld-line">
-          <motion.div className="ld-line-fill" style={{ width: lineWidth }} />
+          <motion.div
+            className="ld-line-fill"
+            style={{ scaleX, transformOrigin: '0% 50%' }}
+          />
         </div>
       </motion.div>
 
@@ -409,7 +441,7 @@ export default function Loader({
               ? { opacity: 0, scaleX: 1 }
               : { opacity: 0, scaleX: 0.1 }
         }
-        transition={{ duration: 0.48, ease: EASE_SPLIT }}
+        transition={{ duration: 0.45, ease: EASE_SPLIT }}
       />
     </div>
   );

@@ -357,10 +357,10 @@ export default function ProjectDetails() {
             }}
             state={{ resetScroll: true }}
             className="portfolio-nav-logo inline-flex items-center shrink-0"
-            aria-label="Richard D'Souza Home"
+            aria-label="Richard D'souza Home"
           >
-            <img src="/logo-dark.png" alt="Richard D'Souza" className="nav-logo-dark h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
-            <img src="/logo-light.png" alt="Richard D'Souza" className="nav-logo-light h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
+            <img src="/logo-dark.png" alt="Richard D'souza" className="nav-logo-dark h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
+            <img src="/logo-light.png" alt="Richard D'souza" className="nav-logo-light h-8 w-auto max-w-30 shrink-0 object-contain" width="128" height="32" />
           </Link>
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <ThemeToggle />
@@ -1056,7 +1056,7 @@ export default function ProjectDetails() {
             <div className="footer-brand-block">
               <Link to="/" className="footer-brand-title group">
                 <span className="footer-brand-monogram">RD</span>
-                <span className="footer-brand-name">{profile?.full_name || "Richard D'Souza"}</span>
+                <span className="footer-brand-name">{profile?.full_name || "Richard D'souza"}</span>
                 <span className="footer-brand-dot" aria-hidden="true" />
               </Link>
 
@@ -1125,7 +1125,7 @@ export default function ProjectDetails() {
           <div className="footer-bottom-content">
             <p className="footer-copyright">
               © {new Date().getFullYear()}{' '}
-              <span className="footer-copyright-name">{profile?.full_name || "Richard D'Souza"}</span>. All rights reserved.
+              <span className="footer-copyright-name">{profile?.full_name || "Richard D'souza"}</span>. All rights reserved.
             </p>
 
             <button
