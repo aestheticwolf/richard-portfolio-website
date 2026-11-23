@@ -321,3 +321,33 @@ html.sc-reveal [data-sc].is-in [data-sc-r] {
 @media print {
   .sc-rail { display: none; }
 }
+
+/* ==========================================================================
+   Project Detail & Subpage Immunity: Never snap or force 100dvh on subpages
+   ========================================================================== */
+.project-detail-page,
+.project-detail-page *,
+.project-detail-hero-frame,
+.project-gallery,
+.project-detail-layout,
+.project-related {
+  scroll-snap-align: none !important;
+  scroll-snap-stop: normal !important;
+}
+
+html.sc-on .project-detail-hero-frame,
+html.sc-on .project-gallery,
+html.sc-on .project-detail-layout,
+html.sc-on .project-related,
+.project-detail-page .cinematic-crossfade-section {
+  min-height: auto !important;
+  display: block !important;
+  justify-content: flex-start !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  transform: none !important;
+}
+
+.project-detail-page .cosmic-horizon-divider {
+  display: flex !important;
+}

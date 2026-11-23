@@ -378,7 +378,7 @@ export default function ProjectDetails() {
         </nav>
       </header>
 
-      <main className="project-detail-content portfolio-container py-6 sm:py-10">
+      <main data-no-snap className="project-detail-content portfolio-container py-6 sm:py-10">
         {/* Project Header Block */}
         <motion.div
           className="project-detail-header"
@@ -441,7 +441,7 @@ export default function ProjectDetails() {
         </motion.div>
 
         {/* Featured Project Browser Window Frame */}
-        <motion.section
+        <motion.div
           initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: prefersReducedMotion ? 0 : 0.1 }}
@@ -493,7 +493,7 @@ export default function ProjectDetails() {
               </div>
             )}
           </div>
-        </motion.section>
+        </motion.div>
 
         {/* Screenshots & Previews Gallery */}
         {galleryImages.length > 0 && (

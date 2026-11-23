@@ -20,6 +20,17 @@ export default function ScrollExperience({
   const { pathname } = useLocation();
 
   useEffect(() => {
+    // Section snapping is exclusively for the single-page home layout (slide-by-slide).
+    // Subpages (like /projects/:slug, /request-resume, /resume-access, /error) are standard scrollable documents.
+    if (pathname !== '/') {
+      document.documentElement.classList.remove('sc-on', 'sc-reveal');
+      delete document.documentElement.dataset.scSnap;
+      delete document.documentElement.dataset.scActive;
+      delete document.documentElement.dataset.scIndex;
+      delete document.documentElement.dataset.scY;
+      return;
+    }
+
     let destroy: (() => void) | undefined;
     // wait a moment so the new route's DOM exists
     const id = window.setTimeout(() => {
