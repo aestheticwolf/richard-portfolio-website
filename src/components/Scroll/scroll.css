@@ -117,6 +117,53 @@ html.sc-on .contact-section {
   }
 }
 
+/* Mobile browser in "Desktop site" mode or tall portrait viewports (eliminates 1500px+ voids) */
+@media (orientation: portrait) and (min-width: 640px), (max-aspect-ratio: 1.15/1) and (min-width: 640px) {
+  html.sc-on {
+    scroll-snap-type: y proximity !important;
+  }
+
+  html.sc-on [data-sc],
+  html.sc-on .hero-section,
+  html.sc-on #home,
+  html.sc-on .about-section,
+  html.sc-on #about,
+  html.sc-on .skills-section,
+  html.sc-on #skills,
+  html.sc-on .certifications-section,
+  html.sc-on #certifications,
+  html.sc-on .projects-section,
+  html.sc-on #projects,
+  html.sc-on .contact-section,
+  html.sc-on #contact {
+    min-height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: normal !important;
+  }
+
+  html.sc-on .hero-section > div {
+    padding-top: clamp(5.25rem, 7.5vh, 6.5rem) !important;
+    padding-bottom: clamp(1.5rem, 3vh, 2.5rem) !important;
+  }
+
+  html.sc-on .about-section,
+  html.sc-on .skills-section,
+  html.sc-on .certifications-section,
+  html.sc-on .projects-section,
+  html.sc-on .contact-section {
+    min-height: auto !important;
+    padding-top: clamp(3rem, 5vh, 4.25rem) !important;
+    padding-bottom: clamp(2.5rem, 4vh, 3.75rem) !important;
+  }
+
+  html.sc-on .cosmic-horizon-divider {
+    display: block !important;
+  }
+}
+
 /* ---- 2. reveal (hardware-accelerated, zero-lag, no GPU blur bottleneck) ---- */
 html.sc-reveal [data-sc-r] {
   opacity: 0;

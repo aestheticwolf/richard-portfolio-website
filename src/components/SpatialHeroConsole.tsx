@@ -878,17 +878,17 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
               ) : (
                 /* Interactive Takes State: Rich Dialogue Card with Full Authentic Description & Zero Buzzwords */
                 <div
-                  className="hero-speech-bubble relative flex flex-col gap-1 p-2 xs:p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl backdrop-blur-2xl shadow-2xl w-[190px] xs:w-[208px] sm:w-[310px] md:w-[330px] max-w-[calc(100vw-2rem)] border transition-all duration-300"
+                  className="hero-speech-bubble relative flex flex-col gap-1 p-2 xs:p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl backdrop-blur-2xl shadow-2xl w-51.5 xs:w-[220px] sm:w-77.5 md:w-82.5 max-w-[calc(100vw-2rem)] border transition-all duration-300"
                   style={{
                     borderColor: `${activeTake.accentColor}40`,
                     boxShadow: `0 16px 36px -4px rgba(0,0,0,0.72), 0 0 24px ${activeTake.accentColor}20`,
                   }}
                 >
                   {/* Header: Tag + Progress Dots + Next Hint + Close */}
-                  <div className="flex items-center justify-between gap-1 w-full">
+                  <div className="flex items-center justify-between gap-1.5 sm:gap-2 w-full">
                     <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
                       <span
-                        className="text-[8.5px] sm:text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 sm:px-2 rounded-full border transition-colors duration-300 shrink-0 whitespace-nowrap"
+                        className="text-[7.5px] xs:text-[8px] sm:text-[10px] font-semibold tracking-normal sm:tracking-wider uppercase px-1.5 py-0.5 sm:px-2 rounded-full border transition-colors duration-300 shrink-0 whitespace-nowrap"
                         style={{
                           color: activeTake.accentColor,
                           borderColor: `${activeTake.accentColor}44`,
@@ -898,7 +898,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                         {activeTake.badge}
                       </span>
                       {/* Dots */}
-                      <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                      <div className="flex items-center gap-0.75 sm:gap-1 shrink-0">
                         {DIALOGUE_TAKES.map((t, i) => (
                           <span
                             key={t.id}
@@ -906,7 +906,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                               e.stopPropagation()
                               handleAdvanceTake(i)
                             }}
-                            className="w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer"
+                            className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full transition-all duration-300 cursor-pointer"
                             style={{
                               backgroundColor: i === takeIndex ? activeTake.accentColor : 'rgba(150, 150, 170, 0.3)',
                               transform: i === takeIndex ? 'scale(1.25)' : 'scale(1)',
@@ -963,7 +963,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                   </AnimatePresence>
 
                   {/* Pointer triangle pointing down directly to hair */}
-                  <div className="bubble-pointer absolute -bottom-1.5 right-15 xs:right-16 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
+                  <div className="bubble-pointer absolute -bottom-1.5 right-16 xs:right-17 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
                 </div>
               )}
             </motion.div>
