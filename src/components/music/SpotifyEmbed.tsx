@@ -25,26 +25,23 @@ export const SpotifyEmbed: React.FC<SpotifyEmbedProps> = ({
   // Track vs playlist detection
   const isTrack = spotifyUrl.includes('/track/')
 
-  // Detect mobile viewport (< 640px)
-  // On mobile screens (< 640px), Spotify embeds automatically render in compact 80px bar format.
-  // When given 152px on mobile, Spotify only draws the 80px widget and leaves the bottom 72px as a blank white/empty void.
-  // Setting height to 80px on mobile (< 640px) or for any single track eliminates this blank space completely.
+  // On mobile viewports (< 640px), Spotify always collapses its embed
+  // to the 80px compact bar format regardless of given height.
+  // Setting 152px would leave blank dead space below the player widget.
+  // We detect the viewport and set the actual render height accordingly.
   const [isMobile, setIsMobile] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < 640
-    }
+    if (typeof window !== 'undefined') return window.innerWidth < 640
     return false
   })
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 640)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    const onResize = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', onResize, { passive: true })
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  const actualHeight = isMobile || isTrack ? 80 : (height || 152)
+  // 80px for tracks, 80px on mobile (compact bar mode), 152px on desktop playlists
+  const actualHeight = isTrack || isMobile ? 80 : (height || 152)
 
   const isLoading = loadedUrl !== embedUrl
 
@@ -53,11 +50,10 @@ export const SpotifyEmbed: React.FC<SpotifyEmbedProps> = ({
     const timeout = window.setTimeout(() => {
       setLoadedUrl(embedUrl)
     }, 8000)
-
     return () => window.clearTimeout(timeout)
   }, [embedUrl])
 
-  // Listen for message events from Spotify iframe if available
+  // Listen for message events from Spotify iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (typeof event.origin === 'string' && event.origin.includes('spotify.com')) {
@@ -72,19 +68,20 @@ export const SpotifyEmbed: React.FC<SpotifyEmbedProps> = ({
         }
       }
     }
-
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
   }, [onPlaybackStateChange])
+
+  const bgColor = isLight ? '#1e1b4b' : '#121212'
 
   return (
     <div
       ref={containerRef}
       className={`spotify-embed-container relative w-full overflow-hidden rounded-xl transition-all ${
         isLight
-          ? 'bg-slate-900 border border-slate-200/80 shadow-md ring-1 ring-slate-900/5'
+          ? 'bg-[#1e1b4b] border border-indigo-200/20 shadow-lg'
           : 'bg-[#121212] border border-white/8 shadow-md'
-      }`}
+      } ${isTrack || isMobile ? 'is-compact' : 'is-expanded'}`}
       style={{
         minHeight: `${actualHeight}px`,
         height: `${actualHeight}px`,
@@ -94,10 +91,8 @@ export const SpotifyEmbed: React.FC<SpotifyEmbedProps> = ({
       {/* Loading Skeleton Shimmer */}
       {isLoading && !hasError && (
         <div
-          className={`absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 backdrop-blur-md transition-opacity duration-300 ${
-            isLight ? 'bg-slate-900/90' : 'bg-[#121212]/95'
-          }`}
-          style={{ minHeight: `${actualHeight}px`, height: `${actualHeight}px` }}
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 backdrop-blur-md transition-opacity duration-300"
+          style={{ background: bgColor, minHeight: `${actualHeight}px`, height: `${actualHeight}px` }}
         >
           <div className="flex items-center gap-2 text-xs font-medium text-zinc-300">
             <Loader2 size={15} className="animate-spin text-emerald-400" />
@@ -112,8 +107,8 @@ export const SpotifyEmbed: React.FC<SpotifyEmbedProps> = ({
       {/* Error State Fallback */}
       {hasError && (
         <div
-          className="flex flex-col items-center justify-center gap-1.5 p-3 text-center text-xs text-zinc-400 bg-red-950/20"
-          style={{ minHeight: `${actualHeight}px`, height: `${actualHeight}px` }}
+          className="flex flex-col items-center justify-center gap-1.5 p-3 text-center text-xs text-zinc-400"
+          style={{ background: bgColor, minHeight: `${actualHeight}px`, height: `${actualHeight}px` }}
         >
           <AlertCircle size={18} className="text-amber-400" />
           <p className="font-medium text-zinc-300 text-[11px]">Unable to load Spotify embed</p>
@@ -141,13 +136,13 @@ export const SpotifyEmbed: React.FC<SpotifyEmbedProps> = ({
           display: 'block',
           width: '100%',
           height: `${actualHeight}px`,
-          backgroundColor: '#121212',
+          backgroundColor: bgColor,
           colorScheme: 'dark',
         }}
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
         loading="lazy"
         title={title}
-        className={`w-full transition-opacity duration-300 ${isTrack || isMobile ? 'is-track-height' : 'is-playlist-height'}`}
+        className={`w-full transition-opacity duration-300`}
         onLoad={() => {
           setLoadedUrl(embedUrl)
           setHasError(false)

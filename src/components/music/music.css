@@ -99,20 +99,22 @@
    Responsive Layout — Mobile bottom sheet / Tablet / Desktop floating panel
    ========================================================================== */
 
-/* Mobile (< 640px): compact floating bottom-sheet widget (up to 85% dvh to prevent iframe scrollbars) */
+/* Mobile (< 640px): compact floating bottom-sheet widget with full vertical breathing room */
 @media (max-width: 639px) {
   .music-player-popover {
     top: auto !important;
-    bottom: 0.65rem !important;
+    bottom: 0.75rem !important;
     right: 0.65rem !important;
     left: 0.65rem !important;
     width: auto !important;
     max-width: 420px !important;
     margin: 0 auto !important;
     min-width: 0 !important;
-    max-height: min(88dvh, 560px) !important;
-    border-radius: 1.15rem !important;
+    max-height: calc(100dvh - 5.5rem) !important;
+    border-radius: 1.25rem !important;
     overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
     box-shadow:
       0 20px 60px -8px rgba(0, 0, 0, 0.9),
       0 0 28px -4px rgba(167, 139, 250, 0.28),
@@ -120,24 +122,32 @@
   }
 
   .music-player-body {
-    max-height: calc(min(88dvh, 560px) - 2.75rem) !important;
-    padding: 0.6rem 0.75rem max(0.6rem, env(safe-area-inset-bottom, 0.6rem)) !important;
+    flex: 1 1 auto !important;
+    max-height: calc(100dvh - 8.5rem) !important;
+    padding: 0.75rem 0.85rem max(0.85rem, env(safe-area-inset-bottom, 0.85rem)) !important;
     overflow-y: auto !important;
     overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(167, 139, 250, 0.3) transparent !important;
   }
 
-  .spotify-embed-container {
-    height: 80px !important;
-    min-height: 80px !important;
+  .music-player-body::-webkit-scrollbar {
+    width: 3px !important;
   }
 
+  .music-player-body::-webkit-scrollbar-thumb {
+    background: rgba(167, 139, 250, 0.3) !important;
+    border-radius: 9999px !important;
+  }
+
+  /* On mobile Spotify always collapses to 80px compact bar.
+     Force exact 80px so there's zero blank dead space below the player */
+  .spotify-embed-container,
   .spotify-embed-container iframe {
     height: 80px !important;
-  }
-
-  .spotify-embed-container.is-playlist {
-    height: 80px !important;
     min-height: 80px !important;
+    max-height: 80px !important;
   }
 }
 
@@ -223,20 +233,21 @@
 }
 
 [data-theme='light'] .music-player-popover {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-color: rgba(15, 23, 42, 0.14) !important;
+  background: rgba(248, 250, 252, 0.97) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
   box-shadow:
-    0 24px 50px -8px rgba(15, 23, 42, 0.18),
-    0 4px 14px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.95) !important;
+    0 24px 50px -8px rgba(15, 23, 42, 0.14),
+    0 4px 14px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.98) !important;
 }
 
 [data-theme='light'] .music-player-header {
-  border-bottom-color: rgba(15, 23, 42, 0.08) !important;
-  background: rgba(248, 250, 252, 0.6) !important;
+  border-bottom-color: rgba(15, 23, 42, 0.07) !important;
+  background: rgba(255, 255, 255, 0.7) !important;
 }
 
-[data-theme='light'] .music-player-header span.text-white {
+[data-theme='light'] .music-player-header span.text-white,
+[data-theme='light'] .music-player-header .text-white {
   color: #0f172a !important;
 }
 
@@ -249,36 +260,67 @@
   background: rgba(15, 23, 42, 0.06) !important;
 }
 
-[data-theme='light'] .music-track-card {
-  background: rgba(248, 250, 252, 0.85) !important;
-  border-color: rgba(15, 23, 42, 0.1) !important;
+[data-theme='light'] .music-stop-btn {
+  color: #64748b !important;
 }
 
+[data-theme='light'] .music-track-card {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-theme='light'] .music-track-card h4,
 [data-theme='light'] .music-track-card h4.text-white {
   color: #0f172a !important;
 }
 
+[data-theme='light'] .music-track-card p,
+[data-theme='light'] .music-track-card .text-zinc-400 {
+  color: #475569 !important;
+}
+
+[data-theme='light'] .music-presets-section .text-zinc-400 {
+  color: #475569 !important;
+}
+
+[data-theme='light'] .music-presets-section .text-zinc-500 {
+  color: #64748b !important;
+}
+
 [data-theme='light'] .music-preset-pill {
-  background: rgba(248, 250, 252, 0.75) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
   border-color: rgba(15, 23, 42, 0.1) !important;
   color: #334155 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
 }
 
 [data-theme='light'] .music-preset-pill:hover {
   background: #ffffff !important;
-  color: #0f172a !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  color: #1e293b !important;
 }
 
 [data-theme='light'] .music-preset-pill.is-selected {
   background: #ede9fe !important;
   border-color: #8b5cf6 !important;
   color: #5b21b6 !important;
+  box-shadow: 0 0 0 1px #8b5cf6, 0 2px 8px rgba(139, 92, 246, 0.2) !important;
 }
 
+[data-theme='light'] .music-preset-pill .text-zinc-500 {
+  color: #64748b !important;
+}
+
+[data-theme='light'] .music-preset-pill.is-selected .text-zinc-500 {
+  color: #7c3aed !important;
+}
+
+/* Spotify embed sits in a dark media cradle so its dark player looks intentional in light mode */
 [data-theme='light'] .spotify-embed-container {
-  background: #0f172a !important;
-  border-color: rgba(15, 23, 42, 0.15) !important;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08) !important;
+  background: #1e1b4b !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.12), 0 1px 4px rgba(15, 23, 42, 0.08) !important;
 }
 
 [data-theme='light'] .music-player-popover .text-zinc-400 {
@@ -287,4 +329,12 @@
 
 [data-theme='light'] .music-player-popover .text-zinc-500 {
   color: #64748b !important;
+}
+
+[data-theme='light'] .music-player-popover a.text-emerald-400 {
+  color: #059669 !important;
+}
+
+[data-theme='light'] .music-player-popover a.text-emerald-400:hover {
+  color: #047857 !important;
 }

@@ -90,7 +90,7 @@ export const MusicPlayer: React.FC = () => {
           pointerEvents: isOpen ? 'auto' : 'none',
           visibility: isOpen ? 'visible' : 'hidden',
         }}
-        className="music-player-popover fixed z-70 top-18 right-3 sm:right-6 md:right-20 lg:right-24 w-[calc(100vw-1.5rem)] sm:w-95 md:w-100 rounded-2xl overflow-hidden shadow-2xl select-none"
+        className="music-player-popover fixed z-70 top-18 right-3 sm:right-6 md:right-20 lg:right-24 w-[calc(100vw-1.5rem)] sm:w-95 md:w-100 rounded-2xl shadow-2xl select-none"
         role="dialog"
         aria-label="Spotify Music Player"
         aria-modal="true"
