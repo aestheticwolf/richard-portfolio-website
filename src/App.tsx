@@ -79,6 +79,7 @@ import CosmicHorizonDivider from './components/CosmicHorizonDivider'
 import SpatialHeroConsole from './components/SpatialHeroConsole'
 import CinematicSection from './components/CinematicSection'
 import CertificationsSection from './components/CertificationsSection'
+import ScrollExperience from './components/Scroll/ScrollExperience'
 import Footer from './components/Footer'
 import { smoothScrollToTop } from './lib/smoothScroll'
 import {
@@ -2575,6 +2576,7 @@ function AnimatedRoutes() {
   return (
     <>
       <ScrollProgress />
+      <ScrollExperience headerOffset={72} rail={false} />
       <GlobalBackToTop />
       <MusicPlayer />
       <Routes location={location}>

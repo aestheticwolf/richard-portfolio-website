@@ -140,7 +140,7 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
   let borderColor = 'border-[#E85DCE]/45'
   let glowShadow =
     'shadow-[0_0_35px_rgba(232,93,206,0.3),0_25px_60px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.15)]'
-  let dateColor = 'text-[#E85DCE]'
+  let dateColor = 'text-[#FF77D9]'
   let btnGradient =
     'bg-linear-to-r from-[#8B3DFF] to-[#a855f7] hover:from-[#9d57ff] hover:to-[#b86bfc] shadow-[0_0_20px_rgba(139,61,255,0.45)]'
   let previewBg = 'bg-black/75 border-white/15'
@@ -151,7 +151,7 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
     borderColor = 'border-[#386BFF]/45'
     glowShadow =
       'shadow-[0_0_35px_rgba(56,107,255,0.32),0_25px_60px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.15)]'
-    dateColor = 'text-[#7095FF]'
+    dateColor = 'text-[#82A8FF]'
     btnGradient =
       'bg-linear-to-r from-[#386BFF] to-[#2563eb] hover:from-[#5783ff] hover:to-[#3b82f6] shadow-[0_0_20px_rgba(56,107,255,0.45)]'
     previewBg = 'bg-white/95 border-white/20'
@@ -161,7 +161,7 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
     borderColor = 'border-[#8B3DFF]/40'
     glowShadow =
       'shadow-[0_0_30px_rgba(139,61,255,0.25),0_25px_60px_rgba(0,0,0,0.7)]'
-    dateColor = 'text-[#B69AFF]'
+    dateColor = 'text-[#C4B5FD]'
     btnGradient =
       'bg-linear-to-r from-[#8B3DFF] to-[#6366f1] hover:from-[#9d57ff] hover:to-[#7377ff] shadow-[0_0_20px_rgba(139,61,255,0.4)]'
     previewBg = 'bg-black/60 border-white/15'
@@ -189,6 +189,7 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onSelect}
+      data-no-reveal=""
       className={`cert-glass-card group relative rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 lg:p-6 xl:p-7 backdrop-blur-2xl transition-all duration-300 border-[1.5px] ${borderColor} ${glowShadow} w-full max-w-full min-w-0 box-border ${className} ${
         !isForeground ? 'cursor-pointer hover:border-white/40' : ''
       }`}
@@ -203,7 +204,7 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
       )}
 
       {/* Top Right Floating Badge (Desktop) */}
-      <div className="hidden lg:block absolute top-5 right-5 sm:top-6 sm:right-6 z-20">
+      <div className="cert-badge-icon hidden lg:block absolute top-5 right-5 sm:top-6 sm:right-6 z-20">
         {isHackerRank ? (
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-linear-to-br from-[#FF4E98] to-[#8B3DFF] shadow-[0_0_20px_rgba(232,93,206,0.65)] border border-white/25 flex items-center justify-center text-white shrink-0">
             <Trophy size={16} />
@@ -238,27 +239,27 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
                 <ShieldCheck size={14} />
               </div>
             )}
-            <span className="font-sans font-bold text-white text-base sm:text-lg tracking-tight">
+            <span className="cert-card-issuer font-sans font-bold text-white text-base sm:text-lg tracking-tight">
               {cert.issuer}
             </span>
           </div>
 
           {/* Issue Date */}
           <div className="flex items-center gap-1.5">
-            <Calendar size={11} className={dateColor} />
-            <span className={`text-[10px] sm:text-xs font-mono font-semibold tracking-wider uppercase ${dateColor}`}>
+            <Calendar size={11} className={`cert-date-icon ${dateColor}`} />
+            <span className={`cert-date-text text-[10px] sm:text-xs font-mono font-semibold tracking-wider uppercase ${dateColor}`}>
               {cert.issueDate}
             </span>
           </div>
 
           {/* Certification Title */}
-          <h3 className="font-sans font-bold text-white text-base xl:text-lg 2xl:text-xl leading-snug tracking-tight line-clamp-2">
+          <h3 className="cert-card-title font-sans font-bold text-white text-base xl:text-lg 2xl:text-xl leading-snug tracking-tight line-clamp-2">
             {cert.title}
           </h3>
 
           {/* Short Description */}
           {summaryText && (
-            <p className="font-sans text-xs sm:text-[13px] text-[#AAA5BD] leading-relaxed line-clamp-3">
+            <p className="cert-card-desc font-sans text-xs sm:text-[13px] text-[#E2E8F0] leading-relaxed line-clamp-3">
               {summaryText}
             </p>
           )}
@@ -269,13 +270,13 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
               {rawSkills.map((skill, sIdx) => (
                 <span
                   key={sIdx}
-                  className="inline-flex items-center text-[10px] sm:text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-white/6 border border-white/10 text-[#AAA5BD]"
+                  className="cert-skill-pill inline-flex items-center text-[10px] sm:text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-white/12 border border-white/20 text-[#F1F5F9]"
                 >
                   {skill}
                 </span>
               ))}
               {remainingSkillsCount > 0 && (
-                <span className="cert-skill-pill-more inline-flex items-center text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/8 border border-white/15 text-white/70">
+                <span className="cert-skill-pill-more inline-flex items-center text-[10px] sm:text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/16 border border-white/25 text-white">
                   +{remainingSkillsCount}
                 </span>
               )}
@@ -316,9 +317,9 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
                 className="w-full h-full object-contain rounded-xl transition-transform duration-500 group-hover/preview:scale-[1.04]"
               />
             ) : (
-              <div className="flex flex-col items-center justify-center text-center p-4 text-[#AAA5BD]">
+              <div className="flex flex-col items-center justify-center text-center p-4 text-[#E2E8F0]">
                 <Award size={28} className={dateColor} />
-                <span className="text-xs font-mono mt-1">Official Credential</span>
+                <span className="text-xs font-mono mt-1 text-[#E2E8F0]">Official Credential</span>
               </div>
             )}
           </div>
@@ -339,13 +340,13 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
                 <ShieldCheck size={14} />
               </div>
             )}
-            <span className="font-sans font-bold text-white text-base tracking-tight truncate">
+            <span className="cert-card-issuer font-sans font-bold text-white text-base tracking-tight truncate">
               {cert.issuer}
             </span>
           </div>
 
           {/* Floating Badge (Mobile Compact Size) */}
-          <div className="shrink-0">
+          <div className="cert-badge-icon shrink-0">
             {isHackerRank ? (
               <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#FF4E98] to-[#8B3DFF] shadow-[0_0_14px_rgba(232,93,206,0.6)] border border-white/20 flex items-center justify-center text-white shrink-0">
                 <Trophy size={14} />
@@ -364,24 +365,24 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
 
         {/* Row 2: Issue Date & Credential Number */}
         <div className="flex items-center gap-2 flex-wrap w-full min-w-0">
-          <span className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold tracking-wider uppercase ${dateColor}`}>
-            <Calendar size={11} className={dateColor} />
+          <span className={`cert-date-text inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold tracking-wider uppercase ${dateColor}`}>
+            <Calendar size={11} className={`cert-date-icon ${dateColor}`} />
             <span>{cert.issueDate}</span>
           </span>
-          <span className="text-white/20 text-xs">•</span>
-          <span className="text-[10px] font-mono text-[#AAA5BD] bg-white/4 px-2 py-0.5 rounded-md border border-white/10 shrink-0">
+          <span className="text-white/40 text-xs">•</span>
+          <span className="cert-credential-pill text-[10px] font-mono text-[#E2E8F0] bg-white/10 px-2 py-0.5 rounded-md border border-white/18 shrink-0">
             Credential {String(index + 1).padStart(2, '0')}/{String(totalCount).padStart(2, '0')}
           </span>
         </div>
 
         {/* Row 3: Certification Title */}
-        <h3 className="font-sans font-bold text-white text-base sm:text-lg leading-snug tracking-tight break-words w-full min-w-0">
+        <h3 className="cert-card-title font-sans font-bold text-white text-base sm:text-lg leading-snug tracking-tight break-words w-full min-w-0">
           {cert.title}
         </h3>
 
         {/* Row 4: Short Description */}
         {summaryText && (
-          <p className="font-sans text-xs sm:text-[13px] text-[#AAA5BD] leading-relaxed break-words w-full min-w-0">
+          <p className="cert-card-desc font-sans text-xs sm:text-[13px] text-[#E2E8F0] leading-relaxed break-words w-full min-w-0">
             {summaryText}
           </p>
         )}
@@ -392,13 +393,13 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
             {rawSkills.map((skill, sIdx) => (
               <span
                 key={sIdx}
-                className="inline-flex items-center text-[10.5px] font-mono px-2.5 py-0.5 rounded-full bg-white/6 border border-white/10 text-[#AAA5BD] break-words"
+                className="cert-skill-pill inline-flex items-center text-[10.5px] font-mono px-2.5 py-0.5 rounded-full bg-white/12 border border-white/20 text-[#F1F5F9] break-words"
               >
                 {skill}
               </span>
             ))}
             {remainingSkillsCount > 0 && (
-              <span className="cert-skill-pill-more inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/8 border border-white/15 text-white/70 shrink-0">
+              <span className="cert-skill-pill-more inline-flex items-center text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/16 border border-white/25 text-white shrink-0">
                 +{remainingSkillsCount}
               </span>
             )}
@@ -421,9 +422,9 @@ export const CertificationCard: React.FC<CertificationCardProps> = ({
               className="max-h-[145px] sm:max-h-[170px] w-full h-auto object-contain rounded-xl"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center text-center p-4 text-[#AAA5BD]">
+            <div className="flex flex-col items-center justify-center text-center p-4 text-[#E2E8F0]">
               <Award size={28} className={dateColor} />
-              <span className="text-xs font-mono mt-1">Official Credential</span>
+              <span className="text-xs font-mono mt-1 text-[#E2E8F0]">Official Credential</span>
             </div>
           )}
         </div>

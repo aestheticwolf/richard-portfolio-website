@@ -11561,10 +11561,10 @@ textarea {
 }
 
 /* Responsive 3D Scroll Stage: Pure native smooth momentum scrolling (no scroll-snap resistance) */
-html {
+html:not(.sc-on) {
   scroll-snap-type: none !important;
 }
-.cinematic-crossfade-section {
+html:not(.sc-on) .cinematic-crossfade-section {
   scroll-snap-align: none !important;
 }
 
@@ -11609,6 +11609,7 @@ html {
   max-width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
+  color: #ffffff !important;
 }
 
 @media (max-width: 1023px) {
@@ -11617,13 +11618,75 @@ html {
   }
 }
 
-.cert-glass-card h3 {
+/* Ensure certificate cards maintain vibrant, high-contrast, perfectly blended typography in both dark and light modes */
+.cert-glass-card h3,
+.cert-glass-card .cert-card-title,
+[data-theme='light'] .cert-glass-card h3,
+[data-theme='light'] .cert-glass-card .cert-card-title,
+[data-theme='light'] .cert-glass-card .text-white,
+.cert-glass-card .text-white {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   letter-spacing: -0.02em;
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-.cert-glass-card p {
+.cert-glass-card .cert-card-issuer,
+[data-theme='light'] .cert-glass-card .cert-card-issuer {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.cert-glass-card p,
+.cert-glass-card .cert-card-desc,
+[data-theme='light'] .cert-glass-card p,
+[data-theme='light'] .cert-glass-card .cert-card-desc {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  color: #e2e8f0 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.cert-glass-card .cert-date-text,
+[data-theme='light'] .cert-glass-card .cert-date-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.cert-glass-card .cert-skill-pill,
+[data-theme='light'] .cert-glass-card .cert-skill-pill {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: #f8fafc !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.cert-glass-card .cert-skill-pill-more,
+[data-theme='light'] .cert-glass-card .cert-skill-pill-more {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.cert-glass-card .cert-credential-pill,
+[data-theme='light'] .cert-glass-card .cert-credential-pill {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #e2e8f0 !important;
+}
+
+.cert-glass-card .cert-badge-icon,
+.cert-glass-card .cert-badge-icon svg,
+[data-theme='light'] .cert-glass-card .cert-badge-icon,
+[data-theme='light'] .cert-glass-card .cert-badge-icon svg {
+  color: #ffffff !important;
+}
+
+.cert-glass-card button,
+.cert-glass-card button span,
+.cert-glass-card button svg,
+[data-theme='light'] .cert-glass-card button,
+[data-theme='light'] .cert-glass-card button span,
+[data-theme='light'] .cert-glass-card button svg {
+  color: #ffffff !important;
 }
 
 /* Light Theme Styling for Certifications Gallery */
@@ -12307,7 +12370,9 @@ html {
 [data-theme='light'] [class*="bg-black/"].text-white,
 [data-theme='light'] [class*="bg-black/"] .text-white,
 [data-theme='light'] [class*="bg-slate-900"].text-white,
-[data-theme='light'] [class*="bg-slate-900"] .text-white {
+[data-theme='light'] [class*="bg-slate-900"] .text-white,
+[data-theme='light'] .cert-glass-card .text-white,
+[data-theme='light'] .cert-glass-card [class*="text-white"] {
   color: #ffffff !important;
 }
 

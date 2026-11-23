@@ -1,0 +1,171 @@
+/* ===== Section scroll: snapping, reveal, rail. Nothing here changes section sizes. ===== */
+:root {
+  --sc-accent: var(--accent, #a78bfa);   /* brand purple / indigo */
+  --sc-accent2: var(--ambient-blue, #38bdf8);  /* brand cyan / blue */
+}
+
+/* ---- 1. snapping (only active after the script marks the page) ---- */
+html.sc-on { scroll-padding-top: var(--sc-header, 0px); }
+html.sc-on[data-sc-snap="mandatory"] { scroll-snap-type: y mandatory !important; }
+html.sc-on[data-sc-snap="proximity"] { scroll-snap-type: y proximity !important; }
+html.sc-on [data-sc] { scroll-snap-align: start !important; }
+html.sc-on[data-sc-snap="mandatory"] [data-sc] { scroll-snap-stop: always; }
+html.sc-on [data-sc-end] { scroll-snap-align: end !important; }
+
+/* ---- 2. reveal (individual transform properties: no clash with motion's `transform`) ---- */
+html.sc-reveal [data-sc-r] {
+  opacity: 0;
+  translate: 0 24px;
+  filter: blur(8px);
+  transition: opacity .7s ease, translate .8s cubic-bezier(.22, 1, .36, 1), filter .7s ease;
+  transition-delay: calc(var(--sc-i, 0) * 70ms);
+}
+html.sc-reveal [data-sc].is-in [data-sc-r] {
+  opacity: 1;
+  translate: 0 0;
+  filter: blur(0);
+}
+
+/* ---- 3. optional depth: add data-sc-depth to a section to dim/shrink its content as it leaves ---- */
+[data-sc-depth] > * {
+  transform-origin: 50% 0;
+  scale: calc(1 - var(--sc-leave, 0) * .04);
+  opacity: calc(1 - var(--sc-leave, 0) * .45);
+}
+
+/* ---- 4. side rail (bottom pill on phones) ---- */
+.sc-rail {
+  position: fixed;
+  right: clamp(10px, 1.6vw, 24px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 9px;
+  border-radius: 999px;
+  background: rgba(10, 12, 22, .5);
+  border: 1px solid rgba(255, 255, 255, .09);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  animation: scRailIn .8s .4s cubic-bezier(.22, 1, .36, 1) forwards;
+}
+@keyframes scRailIn {
+  from { opacity: 0; transform: translateY(-50%) translateX(12px); }
+  to { opacity: 1; transform: translateY(-50%); }
+}
+.sc-track {
+  position: absolute;
+  left: 50%;
+  top: 20px;
+  bottom: 20px;
+  width: 1px;
+  margin-left: -.5px;
+  background: rgba(255, 255, 255, .1);
+  overflow: hidden;
+}
+.sc-track::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform-origin: top;
+  transform: scaleY(var(--sc-fill, 0));
+  background: linear-gradient(var(--sc-accent), var(--sc-accent2));
+}
+.sc-dot {
+  position: relative;
+  z-index: 1;
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, .3);
+  transition: height .35s cubic-bezier(.22, 1, .36, 1), background .3s, transform .3s;
+}
+.sc-dot:hover {
+  transform: scale(1.35);
+  background: rgba(255, 255, 255, .7);
+}
+.sc-dot:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 3px;
+}
+.sc-dot.is-active {
+  height: 24px;
+  background: linear-gradient(var(--sc-accent), var(--sc-accent2));
+  box-shadow: 0 0 14px rgba(167, 139, 250, .55);
+}
+.sc-tip {
+  position: absolute;
+  right: calc(100% + 16px);
+  top: 50%;
+  transform: translate(6px, -50%);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  font: 500 .8rem Inter, system-ui, sans-serif;
+  color: #fff;
+  padding: 6px 11px;
+  border-radius: 9px;
+  background: rgba(10, 12, 22, .85);
+  border: 1px solid rgba(255, 255, 255, .1);
+  transition: opacity .25s, transform .3s cubic-bezier(.22, 1, .36, 1);
+}
+.sc-dot:hover .sc-tip,
+.sc-dot:focus-visible .sc-tip {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+@media (hover: none) {
+  .sc-tip { display: none; }
+}
+
+@media (max-width: 768px) {
+  .sc-rail {
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    flex-direction: row;
+    gap: 12px;
+    padding: 9px 16px;
+    transform: translateX(-50%);
+    animation-name: scRailInM;
+  }
+  @keyframes scRailInM {
+    from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+    to { opacity: 1; transform: translateX(-50%); }
+  }
+  .sc-track {
+    left: 20px;
+    right: 20px;
+    top: 50%;
+    bottom: auto;
+    width: auto;
+    height: 1px;
+    margin: -.5px 0 0;
+  }
+  .sc-track::before {
+    transform-origin: left;
+    transform: scaleX(var(--sc-fill, 0));
+    background: linear-gradient(90deg, var(--sc-accent), var(--sc-accent2));
+  }
+  .sc-dot.is-active {
+    height: 9px;
+    width: 24px;
+    background: linear-gradient(90deg, var(--sc-accent), var(--sc-accent2));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-rail { animation: none; opacity: 1; }
+  html.sc-reveal [data-sc-r] { opacity: 1; translate: none; filter: none; transition: none; }
+}
+@media print {
+  .sc-rail { display: none; }
+}
