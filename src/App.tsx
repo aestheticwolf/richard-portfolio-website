@@ -1,7 +1,7 @@
 import Loader from './components/Loader/Loader'
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react'
 import type { LucideProps } from 'lucide-react'
 import {
   ArrowDown,
@@ -393,6 +393,20 @@ function resolveAboutIcon(name?: string | null, fallback: React.ComponentType<Lu
 
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PROJECTS SECTION: Magazine Stagger Reveal (2026 Signature Motion)
+// Container staggers each child card in with 110ms offsets.
+// ─────────────────────────────────────────────────────────────────────────────
+const projectStaggerContainer = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.11,
+      delayChildren: 0.06,
+    },
+  },
+}
+
 // Bidirectional Spatial Heading Reveal (Crystal Sharp, No Blur)
 const spatialHeadingReveal = {
   hidden: {
@@ -575,6 +589,30 @@ function Home() {
   const sectionHeadingReveal = prefersReducedMotion ? reducedSpatialHeading : spatialHeadingReveal
   const sectionCardReveal = prefersReducedMotion ? reducedSpatialCard : spatialCardReveal
   const sectionStagger = prefersReducedMotion ? reducedSpatialStagger : spatialStagger
+
+  // ── Projects section: scroll-linked rotateY depth parallax (2026 Signature) ─
+  // As user scrolls through the projects section, the active card gets a subtle,
+  // living "look-away" 3D rotation with physics damping that makes the environment feel alive.
+  const projectsSectionRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress: projectsSectionScroll } = useScroll({
+    target: projectsSectionRef,
+    offset: ['start end', 'end start'],
+  })
+  // Maps 0→0.35→0.65→1 scroll progress to 3.5°→0°→0°→-3.5° rotateY on active card
+  const rawActiveCardDepthRotateY = useTransform(
+    projectsSectionScroll,
+    [0, 0.35, 0.65, 1],
+    [prefersReducedMotion ? 0 : 3.5, 0, 0, prefersReducedMotion ? 0 : -3.5]
+  )
+  const activeCardDepthRotateY = useSpring(rawActiveCardDepthRotateY, {
+    stiffness: 120,
+    damping: 24,
+    mass: 0.2,
+  })
+  // Track when the carousel has entered viewport for the CSS stagger entry reveal
+  const [carouselHasEntered, setCarouselHasEntered] = useState(false)
+  // ─────────────────────────────────────────────────────────────────────────────
+
   const [activeSection, setActiveSection] = useState('home')
   const [projects, setProjects] = useState<PortfolioProject[]>([])
   const [projectsLoading, setProjectsLoading] = useState(true)
@@ -2091,7 +2129,7 @@ function Home() {
           type="section"
           className="projects-section scroll-mt-24 py-20 sm:py-24"
         >
-          <div className="portfolio-container">
+          <div className="portfolio-container" ref={projectsSectionRef}>
             <motion.div
               className="projects-heading-row"
               variants={sectionHeadingReveal}
@@ -2116,11 +2154,12 @@ function Home() {
 
             {!projectsLoading && !projectsError && projects.length > 0 && (
               <motion.div
-                className="projects-carousel-wrapper"
-                variants={sectionCardReveal}
+                className={`projects-carousel-wrapper${!prefersReducedMotion && carouselHasEntered ? ' carousel-entered' : ''}`}
                 initial={prefersReducedMotion ? false : "hidden"}
                 whileInView="visible"
-                viewport={{ once: true, amount: 0.12 }}
+                onViewportEnter={() => setCarouselHasEntered(true)}
+                variants={projectStaggerContainer}
+                viewport={{ once: true, amount: 0.1 }}
               >
                 {/* Floating Left Navigation Arrow */}
                 {projects.length > 1 && (
@@ -2177,7 +2216,6 @@ function Home() {
                           x: 0,
                           y: isMobile ? -6 : -20, // Clean, steady elevation
                           scale: 1, // Steady scale - zero zoom glitch
-                          rotateY: 0,
                           opacity: 1,
                           zIndex: 20,
                         }
@@ -2218,12 +2256,24 @@ function Home() {
 
                     if (!isVisible && Math.abs(offset) > 2) return null
 
+                    // Magazine stagger: each card gets its own CSS animation delay when the section enters
+                    // Uses --card-delay custom property picked up by .carousel-entered .projects-carousel-card-wrapper
+                    const cardDelay = `${(index % Math.min(projects.length, 5)) * 0.11}s`
+
                     return (
                       <motion.div
                         key={project.id}
                         className={`projects-carousel-card-wrapper ${isActive ? 'is-active' : ''}`}
                         animate={animationProps}
                         transition={transitionProps}
+                        style={{
+                          // CSS stagger entry delay per card (drives keyframe animation in CSS)
+                          ['--card-delay' as string]: cardDelay,
+                          // Scroll-linked rotateY depth parallax: active card gets a living
+                          // 3°→0°→-3° depth tilt as the whole section scrolls through viewport.
+                          // Side cards keep their own carousel rotateY from animationProps.
+                          rotateY: isActive && !prefersReducedMotion ? activeCardDepthRotateY : undefined,
+                        }}
                         whileHover={
                           isActive && !prefersReducedMotion
                             ? { y: -24, transition: { duration: 0.2, ease: 'easeOut' } }

@@ -5647,6 +5647,36 @@ textarea:focus-visible {
   padding: 1.5rem 0 0.5rem;
 }
 
+/* ── Magazine Stagger Entry (2026 Scroll Reveal) ────────────────────────────
+   When .carousel-entered is added by JS on first viewport entry,
+   each card-wrapper runs a one-shot lift animation with its own --card-delay.
+   Uses GPU-only transform + opacity (zero layout shift, 60fps on mobile).
+   ────────────────────────────────────────────────────────────────────────── */
+@keyframes projectCardMagazineEntry {
+  from {
+    opacity: 0;
+    transform: translateY(44px) scale(0.97) rotateX(4deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px) scale(1) rotateX(0deg);
+  }
+}
+
+/* The entry animation fires once when .carousel-entered is set */
+.carousel-entered .projects-carousel-card-wrapper .project-poster-card {
+  animation: projectCardMagazineEntry 0.68s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--card-delay, 0s);
+  will-change: transform, opacity;
+}
+
+/* Respect user motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .carousel-entered .projects-carousel-card-wrapper .project-poster-card {
+    animation: none;
+  }
+}
+
 .projects-carousel-stage {
   position: relative;
   width: 100%;
