@@ -394,17 +394,38 @@ function resolveAboutIcon(name?: string | null, fallback: React.ComponentType<Lu
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROJECTS SECTION: Magazine Stagger Reveal (2026 Signature Motion)
-// Container staggers each child card in with 110ms offsets.
+// PROJECTS SECTION: Anti-Lag Magazine Stagger (Zero Re-render, Compositor-Only)
 // ─────────────────────────────────────────────────────────────────────────────
 const projectStaggerContainer = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.11,
-      delayChildren: 0.06,
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
     },
   },
+}
+
+const projectCardStagger = {
+  hidden: {
+    opacity: 0,
+    y: 32,
+    scale: 0.98,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.52,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  },
+}
+
+const reducedProjectCardStagger = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.15 } },
 }
 
 // Bidirectional Spatial Heading Reveal (Crystal Sharp, No Blur)
@@ -590,27 +611,21 @@ function Home() {
   const sectionCardReveal = prefersReducedMotion ? reducedSpatialCard : spatialCardReveal
   const sectionStagger = prefersReducedMotion ? reducedSpatialStagger : spatialStagger
 
-  // ── Projects section: scroll-linked rotateY depth parallax (2026 Signature) ─
-  // As user scrolls through the projects section, the active card gets a subtle,
-  // living "look-away" 3D rotation with physics damping that makes the environment feel alive.
+  // ── Projects section: scroll-linked rotateY depth parallax (2026 Anti-Lag) ─
+  // Direct compositor transform: zero re-render, zero JS spring simulation loop.
   const projectsSectionRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress: projectsSectionScroll } = useScroll({
     target: projectsSectionRef,
     offset: ['start end', 'end start'],
   })
-  // Maps 0→0.35→0.65→1 scroll progress to 3.5°→0°→0°→-3.5° rotateY on active card
-  const rawActiveCardDepthRotateY = useTransform(
+  // Maps 0→0.35→0.65→1 scroll progress to 2.5°→0°→0°→-2.5° rotateY on active card
+  const activeCardDepthRotateY = useTransform(
     projectsSectionScroll,
     [0, 0.35, 0.65, 1],
-    [prefersReducedMotion ? 0 : 3.5, 0, 0, prefersReducedMotion ? 0 : -3.5]
+    [prefersReducedMotion ? 0 : 2.5, 0, 0, prefersReducedMotion ? 0 : -2.5],
+    { clamp: true }
   )
-  const activeCardDepthRotateY = useSpring(rawActiveCardDepthRotateY, {
-    stiffness: 120,
-    damping: 24,
-    mass: 0.2,
-  })
-  // Track when the carousel has entered viewport for the CSS stagger entry reveal
-  const [carouselHasEntered, setCarouselHasEntered] = useState(false)
+  const cardStaggerVariant = prefersReducedMotion ? reducedProjectCardStagger : projectCardStagger
   // ─────────────────────────────────────────────────────────────────────────────
 
   const [activeSection, setActiveSection] = useState('home')
@@ -2154,11 +2169,10 @@ function Home() {
 
             {!projectsLoading && !projectsError && projects.length > 0 && (
               <motion.div
-                className={`projects-carousel-wrapper${!prefersReducedMotion && carouselHasEntered ? ' carousel-entered' : ''}`}
+                className="projects-carousel-wrapper"
+                variants={projectStaggerContainer}
                 initial={prefersReducedMotion ? false : "hidden"}
                 whileInView="visible"
-                onViewportEnter={() => setCarouselHasEntered(true)}
-                variants={projectStaggerContainer}
                 viewport={{ once: true, amount: 0.1 }}
               >
                 {/* Floating Left Navigation Arrow */}
@@ -2256,10 +2270,6 @@ function Home() {
 
                     if (!isVisible && Math.abs(offset) > 2) return null
 
-                    // Magazine stagger: each card gets its own CSS animation delay when the section enters
-                    // Uses --card-delay custom property picked up by .carousel-entered .projects-carousel-card-wrapper
-                    const cardDelay = `${(index % Math.min(projects.length, 5)) * 0.11}s`
-
                     return (
                       <motion.div
                         key={project.id}
@@ -2267,10 +2277,8 @@ function Home() {
                         animate={animationProps}
                         transition={transitionProps}
                         style={{
-                          // CSS stagger entry delay per card (drives keyframe animation in CSS)
-                          ['--card-delay' as string]: cardDelay,
-                          // Scroll-linked rotateY depth parallax: active card gets a living
-                          // 3°→0°→-3° depth tilt as the whole section scrolls through viewport.
+                          // Scroll-linked rotateY depth parallax (anti-lag): active card gets a living
+                          // 2.5°→0°→-2.5° depth tilt as the whole section scrolls through viewport.
                           // Side cards keep their own carousel rotateY from animationProps.
                           rotateY: isActive && !prefersReducedMotion ? activeCardDepthRotateY : undefined,
                         }}
@@ -2286,7 +2294,10 @@ function Home() {
                         }}
                       >
                         {isActive && <div className="projects-carousel-ambient-glow" aria-hidden="true" />}
-                        <article className="project-poster-card">
+                        <motion.article
+                          className="project-poster-card"
+                          variants={cardStaggerVariant}
+                        >
                           {/* Dedicated Top Visual Preview Window (50% height) */}
                           <div className="project-poster-media-window">
                             {project.imageUrl && !brokenProjectImages.includes(project.imageUrl) ? (
@@ -2404,7 +2415,7 @@ function Home() {
                               </p>
                             )}
                           </div>
-                        </article>
+                        </motion.article>
                       </motion.div>
                     )
                   })}
