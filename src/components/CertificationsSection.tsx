@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import {
   Award,
@@ -15,7 +15,6 @@ import {
   getPublishedCertifications,
   type PublicCertification,
 } from '../lib/certifications'
-import { supabase } from '../lib/supabase'
 
 interface CertificationsSectionProps {
   prefersReducedMotion?: boolean
@@ -60,17 +59,6 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
 
   const isLight = theme === 'light'
 
-  const loadData = useCallback(async () => {
-    try {
-      const data = await getPublishedCertifications()
-      setCertifications(data)
-    } catch (err) {
-      console.error('[Certifications] Load error:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
     let active = true
 
@@ -91,31 +79,10 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
 
     void loadInitial()
 
-    // Realtime Supabase Subscription
-    const channel = supabase
-      .channel('public:certifications_realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'certifications' },
-        () => {
-          void loadData()
-        },
-      )
-      .subscribe()
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        void loadData()
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibility)
-
     return () => {
       active = false
-      void supabase.removeChannel(channel)
-      document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [loadData])
+  }, [])
 
   // Keyboard navigation
   useEffect(() => {

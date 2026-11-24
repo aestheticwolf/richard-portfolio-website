@@ -40,6 +40,7 @@ export async function fetchPublicPlaylists(): Promise<DbPlaylist[]> {
     .eq('is_active', true)
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true })
+    .limit(50)
 
   if (error) {
     console.error('[publicPlaylists] fetch error:', error.message)

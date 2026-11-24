@@ -73,6 +73,7 @@ export async function getPublishedCertifications(): Promise<PublicCertification[
     .eq('is_published', true)
     .order('display_order', { ascending: true })
     .order('created_at', { ascending: false })
+    .limit(100)
 
   if (error) {
     console.error('[Certifications] Load error:', error.message)

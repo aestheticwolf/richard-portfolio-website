@@ -89,6 +89,7 @@ export async function getPublishedProjects(): Promise<PortfolioProject[]> {
     .eq('status', 'published')
     .order('sort_order', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
+    .limit(50)
 
   if (error) {
     throw new Error(`Could not load published projects: ${error.message}`)
