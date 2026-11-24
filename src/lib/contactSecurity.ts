@@ -176,3 +176,87 @@ export function recordContactSubmission(email: string, message: string): void {
   })
 }
 
+export type ContactSubmissionPayload = {
+  name: string
+  email: string
+  message: string
+  botcheck?: boolean | string | null
+  fillDurationMs?: number
+}
+
+/**
+ * Dispatches the contact submission to the backend Edge Function for server-enforced
+ * rate limiting, duplicate protection, and secure relay.
+ */
+export async function submitContactMessage(
+  payload: ContactSubmissionPayload,
+): Promise<{ success: boolean; message: string }> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+
+  if (!supabaseUrl) {
+    throw new Error('Contact service configuration is missing.')
+  }
+
+  const endpoint = `${supabaseUrl}/functions/v1/submit-contact-message`
+
+  let response: Response
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: publishableKey,
+      },
+      body: JSON.stringify({
+        name: payload.name.trim(),
+        email: payload.email.trim(),
+        message: payload.message.trim(),
+        botcheck: payload.botcheck,
+        fill_duration_ms: payload.fillDurationMs,
+      }),
+    })
+  } catch {
+    throw new Error('Unable to send your message. Please check your connection and try again.')
+  }
+
+  const data = await response.json().catch((): unknown => null)
+  const isOk =
+    response.ok &&
+    typeof data === 'object' &&
+    data !== null &&
+    (data as { success?: unknown }).success === true
+
+  if (isOk) {
+    recordContactSubmission(payload.email, payload.message)
+    return {
+      success: true,
+      message:
+        (data as { message?: string }).message ||
+        'Thank you for reaching out. Your message has been received.',
+    }
+  }
+
+  const errorMessage =
+    typeof (data as { error?: string })?.error === 'string'
+      ? (data as { error: string }).error
+      : null
+
+  if (response.status === 429) {
+    throw new Error(errorMessage || 'Too many messages sent. Please wait before trying again.')
+  }
+
+  if (response.status === 413) {
+    throw new Error('Message is too long. Please shorten your message.')
+  }
+
+  if (response.status === 400) {
+    throw new Error(errorMessage || 'Please check your name, email, and message.')
+  }
+
+  throw new Error(
+    errorMessage || 'Your message could not be sent right now. Please try again later.',
+  )
+}
+
+

@@ -1,6 +1,8 @@
 export type ResumeRequest = {
   name: string
   email: string
+  website?: string
+  botcheck?: string | boolean
 }
 
 const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-resume-request`
@@ -16,7 +18,12 @@ export async function submitResumeRequest(request: ResumeRequest) {
         'Content-Type': 'application/json',
         apikey: publishableKey,
       },
-      body: JSON.stringify({ full_name: request.name, email: request.email }),
+      body: JSON.stringify({
+        full_name: request.name,
+        email: request.email,
+        website: request.website,
+        botcheck: request.botcheck,
+      }),
     })
   } catch {
     throw new Error('Unable to submit your request. Please try again.')

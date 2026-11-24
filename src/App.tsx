@@ -95,6 +95,7 @@ import { getColorDefinition } from './lib/colorPalette'
 import {
   validateContactSubmission,
   recordContactSubmission,
+  submitContactMessage,
 } from './lib/contactSecurity'
 import RequestResume from './pages/RequestResume'
 import ResumeAccess from './pages/ResumeAccess'
@@ -981,10 +982,6 @@ function Home() {
       return
     }
 
-    formData.set('access_key', accessKey)
-    formData.set('subject', `Portfolio message from ${name || 'a visitor'}`)
-    formData.set('from_name', "Richard D'souza Portfolio")
-    formData.set('replyto', email)
     if (contactStatusTimerRef.current) {
       window.clearTimeout(contactStatusTimerRef.current)
     }
@@ -992,22 +989,58 @@ function Home() {
     setContactStatusMessage('Sending your message…')
 
     try {
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        body: formData,
-        headers: { Accept: 'application/json' },
+      const result = await submitContactMessage({
+        name,
+        email,
+        message,
+        botcheck: Boolean(botcheck),
+        fillDurationMs,
       })
-      const result: { success?: boolean; message?: string } = await response.json()
 
-      if (!response.ok || !result.success) throw new Error(result.message || 'Submission failed')
-
-      recordContactSubmission(email, message)
       form.reset()
       contactFormInteractTimeRef.current = null
       contactFormMountTimeRef.current = Date.now()
-      setTimedContactStatus('sent', 'Thank you for reaching out. Your message has been received, and I will get back to you shortly.', 5500)
-    } catch {
-      setTimedContactStatus('error', 'Your message could not be sent right now. Please try again or email me directly at rich.dsz1997@gmail.com.', 6000)
+      setTimedContactStatus(
+        'sent',
+        result.message || 'Thank you for reaching out. Your message has been received, and I will get back to you shortly.',
+        5500,
+      )
+    } catch (err) {
+      // Fallback: If Edge Function service is unavailable, fallback to direct Web3Forms if key is present
+      if (accessKey) {
+        try {
+          formData.set('access_key', accessKey)
+          formData.set('subject', `Portfolio message from ${name || 'a visitor'}`)
+          formData.set('from_name', "Richard D'souza Portfolio")
+          formData.set('replyto', email)
+          const fallbackRes = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            body: formData,
+            headers: { Accept: 'application/json' },
+          })
+          const fallbackResult: { success?: boolean; message?: string } = await fallbackRes.json().catch(() => null)
+          if (fallbackRes.ok && fallbackResult?.success) {
+            recordContactSubmission(email, message)
+            form.reset()
+            contactFormInteractTimeRef.current = null
+            contactFormMountTimeRef.current = Date.now()
+            setTimedContactStatus(
+              'sent',
+              'Thank you for reaching out. Your message has been received, and I will get back to you shortly.',
+              5500,
+            )
+            return
+          }
+        } catch {
+          // ignore fallback error and report main error below
+        }
+      }
+
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : 'Your message could not be sent right now. Please try again or email me directly at rich.dsz1997@gmail.com.'
+      setTimedContactStatus('error', errorMsg, 6000)
     }
   }
   const displayedSkills = profile?.skills?.length

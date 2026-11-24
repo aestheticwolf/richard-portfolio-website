@@ -22,6 +22,7 @@ export default function RequestResume() {
   const prefersReducedMotion = useReducedMotion() ?? false
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [website, setWebsite] = useState('')
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
@@ -82,7 +83,7 @@ export default function RequestResume() {
     setStatus('submitting')
     setMessage('')
     try {
-      await submitResumeRequest({ name: trimmedName, email: trimmedEmail })
+      await submitResumeRequest({ name: trimmedName, email: trimmedEmail, website })
       setStatus('success')
       setMessage('Request submitted successfully.')
     } catch (error) {
@@ -160,6 +161,7 @@ export default function RequestResume() {
                     onClick={() => {
                       setName('')
                       setEmail('')
+                      setWebsite('')
                       setStatus('idle')
                       setMessage('')
                     }}
@@ -187,6 +189,18 @@ export default function RequestResume() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
+                {/* Honeypot field for bot trapping - invisible to humans */}
+                <div style={{ display: 'none' }} aria-hidden="true">
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(event) => setWebsite(event.target.value)}
+                  />
+                </div>
+
                 <div className="resume-field">
                   <label htmlFor="resume-name" className="resume-label">
                     <span>Your name</span>
