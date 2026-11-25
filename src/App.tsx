@@ -1135,70 +1135,81 @@ function Home() {
       .map((id) => document.getElementById(id))
       .filter((el): el is HTMLElement => el !== null)
 
-    const ratioMap = new Map<string, number>()
+    let rafId = 0
+    let lastActive = ''
+    let lockUntil = 0
+
+    const commitActive = (id: string) => {
+      if (id && id !== lastActive) {
+        lastActive = id
+        setActiveSection(id)
+      }
+    }
 
     const evaluateActiveSection = () => {
-      // 1. Prioritize 'home' when viewport is near top
-      if (window.scrollY < 140) {
-        setActiveSection('home')
+      rafId = 0
+      if (performance.now() < lockUntil) return
+
+      if (window.scrollY < 100) {
+        commitActive('home')
         return
       }
 
-      // 2. Prioritize 'contact' when viewport is near page bottom
       const scrollBottom = window.innerHeight + window.scrollY
       const docHeight = document.documentElement.scrollHeight
-      if (scrollBottom >= docHeight - 80) {
-        setActiveSection('contact')
+      if (scrollBottom >= docHeight - 60) {
+        commitActive('contact')
         return
       }
 
-      // 3. Find section with largest visibility ratio in middle reading band
-      let maxRatio = 0
-      let maxId = ''
-      ratioMap.forEach((ratio, id) => {
-        if (ratio > maxRatio) {
-          maxRatio = ratio
-          maxId = id
+      const probeY = Math.min(window.innerHeight * 0.35, 220)
+      let matched = ''
+      for (let i = 0; i < sections.length; i++) {
+        const r = sections[i].getBoundingClientRect()
+        if (r.top <= probeY && r.bottom > probeY) {
+          matched = sections[i].id
+          break
         }
-      })
+      }
 
-      if (maxId && maxRatio > 0.05) {
-        setActiveSection(maxId)
+      if (!matched && sections.length) {
+        let bestDist = Infinity
+        for (let i = 0; i < sections.length; i++) {
+          const dist = Math.abs(sections[i].getBoundingClientRect().top)
+          if (dist < bestDist) {
+            bestDist = dist
+            matched = sections[i].id
+          }
+        }
+      }
+
+      if (matched) {
+        commitActive(matched)
       }
     }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          ratioMap.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0)
-        })
-        evaluateActiveSection()
-      },
-      {
-        rootMargin: '-15% 0px -25% 0px',
-        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0],
-      }
-    )
-
-    sections.forEach((section) => observer.observe(section))
 
     const handleScroll = () => {
-      if (window.scrollY < 140) {
-        setActiveSection('home')
-      } else {
-        const scrollBottom = window.innerHeight + window.scrollY
-        const docHeight = document.documentElement.scrollHeight
-        if (scrollBottom >= docHeight - 80) {
-          setActiveSection('contact')
-        }
+      if (!rafId) {
+        rafId = window.requestAnimationFrame(evaluateActiveSection)
       }
     }
 
+    const handleInstantNav = (e: Event) => {
+      const targetId = (e as CustomEvent<string>).detail
+      if (targetId && sectionIds.includes(targetId)) {
+        lockUntil = performance.now() + 650
+        commitActive(targetId)
+      }
+    }
+
+    evaluateActiveSection()
     window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('section-nav:active', handleInstantNav)
 
     return () => {
-      observer.disconnect()
+      if (rafId) window.cancelAnimationFrame(rafId)
       window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('section-nav:active', handleInstantNav)
     }
   }, [])
 

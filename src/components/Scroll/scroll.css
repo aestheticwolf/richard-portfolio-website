@@ -4,11 +4,11 @@
   --sc-accent2: var(--ambient-blue, #38bdf8);  /* brand cyan / blue */
 }
 
-/* ---- 1. snapping & viewport sizing (anti-lag, 1 section per screen) ---- */
+/* ---- 1. snapping & viewport sizing (anti-lag, clean section-by-section flow) ---- */
 html.sc-on {
   scroll-padding-top: var(--sc-header, 72px);
   scroll-behavior: smooth;
-  scroll-snap-type: y mandatory !important;
+  scroll-snap-type: y proximity !important;
   overscroll-behavior-y: none;
 }
 
@@ -26,15 +26,24 @@ html.sc-on #projects,
 html.sc-on .contact-section,
 html.sc-on #contact {
   scroll-snap-align: start !important;
-  scroll-snap-stop: always !important;
-  min-height: 100dvh !important;
-  min-height: 100vh !important;
+  scroll-snap-stop: normal !important;
+  scroll-margin-top: 0 !important;
+  min-height: auto !important;
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
-  transform: translateZ(0); /* GPU composite layer */
-  backface-visibility: hidden;
+  justify-content: flex-start !important;
+  overflow-x: clip;
+}
+
+html.sc-on [data-sc] p,
+html.sc-on .hero-intro,
+html.sc-on .about-section p,
+html.sc-on .skills-section p,
+html.sc-on .certifications-section p,
+html.sc-on .projects-section p,
+html.sc-on .contact-section p {
+  overflow-wrap: break-word;
 }
 
 html.sc-on [data-sc-end] {
@@ -48,18 +57,21 @@ html.sc-on .cinematic-crossfade-section {
   opacity: 1 !important;
 }
 
-/* Hide hairline dividers between full-height sections so they don't break snap alignment */
+/* Hide hairline dividers between sections so they don't add empty vertical gaps */
 html.sc-on .cosmic-horizon-divider {
   display: none !important;
 }
 
-/* Ensure mobile hero fills the full 100dvh viewport and centers cleanly */
-html.sc-on .hero-section {
-  min-height: 100dvh !important;
+/* Ensure Hero fills the full 100dvh viewport and centers cleanly on all screen sizes */
+html.sc-on .hero-section,
+html.sc-on #home {
   min-height: 100vh !important;
+  min-height: 100dvh !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 html.sc-on .hero-section > div {
@@ -67,25 +79,33 @@ html.sc-on .hero-section > div {
   padding-bottom: clamp(1.5rem, 4vh, 3rem) !important;
 }
 
-/* Ensure other sections have comfortable vertical centering and snap alignment */
+/* Compact top-aligned spacing for non-Hero sections across desktop & tablet */
 html.sc-on .about-section,
+html.sc-on #about,
 html.sc-on .skills-section,
+html.sc-on #skills,
 html.sc-on .certifications-section,
+html.sc-on #certifications,
 html.sc-on .projects-section,
-html.sc-on .contact-section {
-  min-height: 100dvh !important;
-  min-height: 100vh !important;
+html.sc-on #projects,
+html.sc-on .contact-section,
+html.sc-on #contact {
+  min-height: auto !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   box-sizing: border-box !important;
+  padding-top: clamp(2.25rem, 4.5vh, 3.5rem) !important;
+  padding-bottom: clamp(2.25rem, 4.5vh, 3.5rem) !important;
 }
 
-/* On mobile, adjust section padding so full-screen content fits cleanly without awkward overflow */
+html.sc-on .contact-section,
+html.sc-on #contact {
+  padding-bottom: clamp(4rem, 7vh, 5rem) !important;
+}
+
+/* Tablet & mobile (<= 768px): hide side rail and reserve bottom clearance for FloatingNav */
 @media (max-width: 768px) {
-  html.sc-on [data-sc],
-  html.sc-on .hero-section,
-  html.sc-on #home,
   html.sc-on .about-section,
   html.sc-on #about,
   html.sc-on .skills-section,
@@ -96,24 +116,136 @@ html.sc-on .contact-section {
   html.sc-on #projects,
   html.sc-on .contact-section,
   html.sc-on #contact {
-    min-height: 100dvh !important;
-    min-height: 100vh !important;
-    padding-top: clamp(4rem, 9vh, 5.25rem) !important;
-    padding-bottom: clamp(2rem, 5vh, 3.5rem) !important;
+    padding-top: 2rem !important;
+    padding-bottom: 2.5rem !important;
   }
 
-  html.sc-on .about-section,
-  html.sc-on .skills-section,
-  html.sc-on .certifications-section,
-  html.sc-on .projects-section,
-  html.sc-on .contact-section {
-    padding-top: clamp(4rem, 8vh, 5.25rem) !important;
-    padding-bottom: clamp(2rem, 5vh, 3.5rem) !important;
+  html.sc-on .contact-section,
+  html.sc-on #contact {
+    padding-bottom: 5.5rem !important;
   }
 
-  /* Prevent rail from overlapping mobile bottom dock */
+  /* Prevent rail from overlapping mobile/tablet bottom dock */
   .sc-rail {
     display: none !important;
+  }
+}
+
+/* Mobile (< 640px): dedicated 100dvh Hero viewport, compact top-aligned content sections with no dead voids */
+@media (max-width: 639px) {
+  html.sc-on {
+    scroll-snap-type: y proximity !important;
+    scroll-padding-top: 56px !important;
+  }
+
+  html.sc-on [data-sc],
+  html.sc-on .about-section,
+  html.sc-on #about,
+  html.sc-on .skills-section,
+  html.sc-on #skills,
+  html.sc-on .certifications-section,
+  html.sc-on #certifications,
+  html.sc-on .projects-section,
+  html.sc-on #projects,
+  html.sc-on .contact-section,
+  html.sc-on #contact {
+    min-height: auto !important;
+    justify-content: flex-start !important;
+    scroll-margin-top: 0 !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: normal !important;
+    padding-top: 1.5rem !important;
+    padding-bottom: 2.25rem !important;
+  }
+
+  html.sc-on .contact-section,
+  html.sc-on #contact {
+    padding-bottom: 5.5rem !important;
+  }
+
+  html.sc-on .hero-section,
+  html.sc-on #home {
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    justify-content: center !important;
+    scroll-margin-top: 0 !important;
+    scroll-snap-align: start !important;
+    scroll-snap-stop: normal !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  html.sc-on .hero-section > div {
+    flex: 1 1 auto !important;
+    min-height: 100% !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    align-content: center !important;
+    justify-items: center !important;
+    text-align: center !important;
+    row-gap: 0.9rem !important;
+    padding-top: 4.25rem !important;
+    padding-bottom: 4.5rem !important;
+  }
+
+  html.sc-on .hero-visual {
+    order: 1 !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  html.sc-on .hero-mascot-wrapper {
+    align-items: center !important;
+    justify-content: center !important;
+    padding-right: 0 !important;
+  }
+
+  html.sc-on .hero-mascot-frame {
+    width: clamp(128px, 34vw, 164px) !important;
+  }
+
+  html.sc-on .hero-copy {
+    order: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding-right: 0 !important;
+  }
+
+  html.sc-on .hero-title {
+    font-size: clamp(1.45rem, 6vw, 1.95rem) !important;
+    line-height: 1.15 !important;
+  }
+
+  html.sc-on .hero-title-typing {
+    justify-content: center !important;
+  }
+
+  html.sc-on .hero-intro {
+    max-width: min(24rem, 100%) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  html.sc-on .hero-actions,
+  html.sc-on .hero-meta {
+    justify-content: center !important;
+  }
+
+  html.sc-on .hero-scroll-cue {
+    order: 3 !important;
+    grid-column: 1 !important;
+    justify-self: center !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.sc-on {
+    scroll-behavior: auto !important;
   }
 }
 

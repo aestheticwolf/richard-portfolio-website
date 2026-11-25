@@ -235,10 +235,161 @@ export function createSectionScroll(opts: SectionScrollOptions = {}): () => void
   window.addEventListener('load', rescan);
   timers.push(window.setTimeout(build, 900)); // catch lazy-loaded sections
 
+  // Intentional section-by-section gesture navigation across all viewports
+  let isTransitioning = false;
+  let lockTimer = 0;
+  let wheelAccum = 0;
+  let wheelResetTimer = 0;
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let touchStartAtTop = false;
+  let touchStartAtBottom = false;
+
+  const getCurrentSectionIndex = (): number => {
+    if (!sections.length) return -1;
+    const probeY = Math.min(window.innerHeight * 0.35, 220);
+    for (let i = 0; i < sections.length; i++) {
+      const r = sections[i].getBoundingClientRect();
+      if (r.top <= probeY && r.bottom > probeY) return i;
+    }
+    let best = 0;
+    let bestDist = Infinity;
+    for (let i = 0; i < sections.length; i++) {
+      const dist = Math.abs(sections[i].getBoundingClientRect().top);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    }
+    return best;
+  };
+
+  const getBoundaryState = (sec: HTMLElement) => {
+    const r = sec.getBoundingClientRect();
+    const vh = window.innerHeight;
+    return {
+      atTop: r.top >= -28,
+      atBottom: r.bottom <= vh + 28,
+    };
+  };
+
+  const navigateSection = (targetIdx: number) => {
+    if (targetIdx < 0 || targetIdx >= sections.length) return;
+    isTransitioning = true;
+    window.clearTimeout(lockTimer);
+    setActive(targetIdx);
+    const targetId = sections[targetIdx].id;
+    if (targetId) {
+      window.dispatchEvent(new CustomEvent('section-nav:active', { detail: targetId }));
+    }
+    sections[targetIdx].scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth',
+      block: 'start',
+    });
+    lockTimer = window.setTimeout(() => {
+      isTransitioning = false;
+    }, reduced ? 120 : 620);
+  };
+
+  const isScrollLocked = () =>
+    root.style.overflow === 'hidden' || document.body.style.overflow === 'hidden';
+
+  const hasScrollableAncestor = (target: EventTarget | null, deltaY: number): boolean => {
+    let el = target instanceof HTMLElement ? target : null;
+    while (el && el !== document.body && el !== root) {
+      if (el.scrollHeight > el.clientHeight + 2) {
+        const style = window.getComputedStyle(el);
+        if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+          if (deltaY > 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 2) return true;
+          if (deltaY < 0 && el.scrollTop > 2) return true;
+        }
+      }
+      el = el.parentElement;
+    }
+    return false;
+  };
+
+  const onSectionWheel = (e: WheelEvent) => {
+    if (sections.length < 2 || isScrollLocked()) return;
+    if (e.ctrlKey || Math.abs(e.deltaY) < 4 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    if (hasScrollableAncestor(e.target, e.deltaY)) return;
+
+    const idx = getCurrentSectionIndex();
+    if (idx < 0) return;
+
+    const dir = e.deltaY > 0 ? 1 : -1;
+    const { atTop, atBottom } = getBoundaryState(sections[idx]);
+    const canStep = dir > 0 ? atBottom && idx < sections.length - 1 : atTop && idx > 0;
+
+    if (!canStep) {
+      wheelAccum = 0;
+      return;
+    }
+
+    e.preventDefault();
+    if (isTransitioning) return;
+
+    wheelAccum += e.deltaY;
+    window.clearTimeout(wheelResetTimer);
+    wheelResetTimer = window.setTimeout(() => {
+      wheelAccum = 0;
+    }, 180);
+
+    if (Math.abs(wheelAccum) >= 24) {
+      wheelAccum = 0;
+      navigateSection(idx + dir);
+    }
+  };
+
+  const onSectionTouchStart = (e: TouchEvent) => {
+    if (!e.touches.length || isScrollLocked()) return;
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+    const idx = getCurrentSectionIndex();
+    if (idx >= 0) {
+      const state = getBoundaryState(sections[idx]);
+      touchStartAtTop = state.atTop;
+      touchStartAtBottom = state.atBottom;
+    } else {
+      touchStartAtTop = false;
+      touchStartAtBottom = false;
+    }
+  };
+
+  const onSectionTouchEnd = (e: TouchEvent) => {
+    if (isTransitioning || !e.changedTouches.length || isScrollLocked()) return;
+    const dy = touchStartY - e.changedTouches[0].clientY;
+    const dx = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(dy) < 36 || Math.abs(dy) <= Math.abs(dx) * 1.2) return;
+    if (hasScrollableAncestor(e.target, dy)) return;
+
+    const idx = getCurrentSectionIndex();
+    if (idx < 0) return;
+
+    const dir = dy > 0 ? 1 : -1;
+    const canStep =
+      dir > 0
+        ? touchStartAtBottom && idx < sections.length - 1
+        : touchStartAtTop && idx > 0;
+
+    if (canStep) {
+      navigateSection(idx + dir);
+    }
+  };
+
+  window.addEventListener('wheel', onSectionWheel, { passive: false });
+  window.addEventListener('touchstart', onSectionTouchStart, { passive: true });
+  window.addEventListener('touchend', onSectionTouchEnd, { passive: true });
+
   return () => {
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);
     window.removeEventListener('load', rescan);
+    window.removeEventListener('wheel', onSectionWheel);
+    window.removeEventListener('touchstart', onSectionTouchStart);
+    window.removeEventListener('touchend', onSectionTouchEnd);
+    window.clearTimeout(lockTimer);
+    window.clearTimeout(wheelResetTimer);
     if (raf) cancelAnimationFrame(raf);
     timers.forEach((t) => window.clearTimeout(t));
     timers = [];

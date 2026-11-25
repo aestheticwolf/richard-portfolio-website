@@ -64,15 +64,17 @@ export default function BackgroundAnimation() {
     let lastScrollY = window.scrollY
     let targetScrollY = window.scrollY
     let scrollVelocity = 0
+    let lastScrollEventTime = 0
 
     const handleScroll = () => {
       targetScrollY = window.scrollY
+      lastScrollEventTime = performance.now()
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
 
-    // Handle high DPI and window resize
+    // Handle high DPI and window resize (cap DPR at 1.5 to keep scroll compositing light)
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
       width = document.documentElement.clientWidth || window.innerWidth
       height = document.documentElement.clientHeight || window.innerHeight
       canvas.width = Math.round(width * dpr)
@@ -134,11 +136,19 @@ export default function BackgroundAnimation() {
     }
     document.addEventListener('visibilitychange', handleVisibility)
 
-    // Animation Loop
+    // Animation Loop (throttled to ~30fps idle, ~20fps during active scroll so scrolling stays fluid)
     let lastPulseSpawn = 0
+    let lastFrameTime = 0
 
     const render = (time: number) => {
       if (!isRunning || document.hidden) return
+      const isActivelyScrolling = time - lastScrollEventTime < 180
+      const minInterval = isActivelyScrolling ? 48 : 32
+      if (time - lastFrameTime < minInterval) {
+        animationFrameId = requestAnimationFrame(render)
+        return
+      }
+      lastFrameTime = time
       // Smooth cursor lerp
       if (mouse.active) {
         mouse.x += (mouse.targetX - mouse.x) * 0.08

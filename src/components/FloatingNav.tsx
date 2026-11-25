@@ -179,6 +179,7 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
     if (onSectionSelect) {
       onSectionSelect(id)
     }
+    window.dispatchEvent(new CustomEvent('section-nav:active', { detail: id }))
 
     if (id === 'home') {
       sessionStorage.removeItem('portfolio_restore_pending')
@@ -235,13 +236,13 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
               onClick={(e) => handleNavClick(e, item.id)}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
-              className={`floating-nav-item group relative flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090d] ${
+              className={`floating-nav-item group relative flex items-center justify-center w-11 h-11 rounded-full transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#08090d] ${
                 isActive
                   ? 'is-active text-violet-300'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              {/* Active Background Pill with Spring Animation */}
+              {/* Active Background Pill with Snappy Spring Animation */}
               {isActive && (
                 <motion.span
                   layoutId="floating-side-nav-active-pill"
@@ -249,26 +250,18 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
                   transition={
                     prefersReducedMotion
                       ? { duration: 0 }
-                      : { type: 'spring', stiffness: 420, damping: 32 }
+                      : { type: 'spring', stiffness: 700, damping: 42 }
                   }
                   aria-hidden="true"
-                />
-              )}
-
-              {/* Active Ambient Glow Halo */}
-              {isActive && (
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 rounded-full bg-violet-500/20 blur-sm pointer-events-none"
                 />
               )}
 
               {/* Navigation Icon */}
               <Icon
                 size={19}
-                className={`floating-nav-icon relative z-10 transition-transform duration-300 ${
+                className={`floating-nav-icon relative z-10 transition-transform duration-150 ${
                   isActive
-                    ? 'scale-110 drop-shadow-[0_0_8px_rgba(167,139,250,0.7)]'
+                    ? 'scale-110'
                     : 'group-hover:scale-110 group-hover:text-zinc-200'
                 }`}
                 strokeWidth={isActive ? 2.25 : 1.85}
@@ -339,13 +332,13 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
               onClick={(e) => handleNavClick(e, item.id)}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
-              className={`floating-bottom-nav-item group relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full transition-all duration-300 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${
+              className={`floating-bottom-nav-item group relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full transition-colors duration-150 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 ${
                 isActive
                   ? 'is-active text-violet-300'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              {/* Active Background Pill with Spring Animation */}
+              {/* Active Background Pill with Snappy Spring Animation */}
               {isActive && (
                 <motion.span
                   layoutId="floating-bottom-nav-active-pill"
@@ -353,26 +346,18 @@ export const FloatingNav: React.FC<FloatingNavProps> = ({
                   transition={
                     prefersReducedMotion
                       ? { duration: 0 }
-                      : { type: 'spring', stiffness: 420, damping: 32 }
+                      : { type: 'spring', stiffness: 700, damping: 42 }
                   }
                   aria-hidden="true"
-                />
-              )}
-
-              {/* Active Ambient Glow */}
-              {isActive && (
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 rounded-full bg-violet-500/20 blur-sm pointer-events-none"
                 />
               )}
 
               {/* Navigation Icon */}
               <Icon
                 size={18}
-                className={`floating-nav-icon relative z-10 transition-transform duration-300 ${
+                className={`floating-nav-icon relative z-10 transition-transform duration-150 ${
                   isActive
-                    ? 'scale-110 drop-shadow-[0_0_8px_rgba(167,139,250,0.7)]'
+                    ? 'scale-110'
                     : 'group-active:scale-95'
                 }`}
                 strokeWidth={isActive ? 2.25 : 1.85}

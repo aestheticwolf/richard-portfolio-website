@@ -819,10 +819,10 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                 transform: 'translateZ(44px)',
                 x: motionDisabled || isTouchDevice ? 0 : chipParallaxX1,
               }}
-              className={`hero-mascot-bubble absolute z-30 select-none cursor-pointer ${
+              className={`hero-mascot-bubble absolute select-none cursor-pointer ${
                 showSpeechBubble
-                  ? 'bottom-full mb-1.5 -right-2.5 xs:-right-3 sm:right-auto sm:bottom-auto sm:-top-11 md:-top-12 sm:left-1/2 sm:-translate-x-1/2'
-                  : 'bottom-full mb-1.5 left-1/2 -translate-x-1/2 sm:bottom-auto sm:-top-9 md:-top-10'
+                  ? 'z-40 top-full mt-2 left-1/2 -translate-x-1/2 sm:z-30 sm:mt-0 sm:-top-11 md:-top-12'
+                  : 'z-30 bottom-full mb-1.5 left-1/2 -translate-x-1/2 sm:bottom-auto sm:-top-9 md:-top-10'
               }`}
               onClick={handleMascotClick}
               role="button"
@@ -878,7 +878,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
               ) : (
                 /* Interactive Takes State: Rich Dialogue Card with Full Authentic Description & Zero Buzzwords */
                 <div
-                  className="hero-speech-bubble relative flex flex-col gap-1 p-2 xs:p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl backdrop-blur-2xl shadow-2xl w-51.5 xs:w-[220px] sm:w-77.5 md:w-82.5 max-w-[calc(100vw-2rem)] border transition-all duration-300"
+                  className="hero-speech-bubble relative flex flex-col gap-1 p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl backdrop-blur-2xl shadow-2xl w-[min(290px,calc(100vw-2rem))] sm:w-77.5 md:w-82.5 max-w-[calc(100vw-2rem)] border transition-all duration-300 text-left"
                   style={{
                     borderColor: `${activeTake.accentColor}40`,
                     boxShadow: `0 16px 36px -4px rgba(0,0,0,0.72), 0 0 24px ${activeTake.accentColor}20`,
@@ -962,8 +962,8 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                     </motion.div>
                   </AnimatePresence>
 
-                  {/* Pointer triangle pointing down directly to hair */}
-                  <div className="bubble-pointer absolute -bottom-1.5 right-16 xs:right-17 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-2.5 h-2.5 sm:w-3 sm:h-3 border-b border-r rotate-45" />
+                  {/* Pointer triangle pointing to mascot (up on mobile below-mascot, down on desktop above-mascot) */}
+                  <div className="bubble-pointer absolute -top-1.5 left-1/2 -translate-x-1/2 border-t border-l sm:top-auto sm:-bottom-1.5 sm:border-t-0 sm:border-l-0 sm:border-b sm:border-r w-2.5 h-2.5 sm:w-3 sm:h-3 rotate-45" />
                 </div>
               )}
             </motion.div>
