@@ -94,7 +94,6 @@ import {
 import { getColorDefinition } from './lib/colorPalette'
 import {
   validateContactSubmission,
-  recordContactSubmission,
   submitContactMessage,
 } from './lib/contactSecurity'
 import RequestResume from './pages/RequestResume'
@@ -940,7 +939,6 @@ function Home() {
     event.preventDefault()
     if (contactStatus === 'sending') return
 
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY
     const form = event.currentTarget
     const formData = new FormData(form)
 
@@ -972,16 +970,6 @@ function Home() {
       return
     }
 
-    if (!accessKey) {
-      // Fallback: If Web3Forms key is not yet configured, launch user's email client directly so the message is never lost
-      const subject = encodeURIComponent(`Portfolio message from ${name || 'Website Visitor'}`)
-      const body = encodeURIComponent(`From: ${name || 'Anonymous'}\nEmail: ${email || 'Not provided'}\n\nMessage:\n${message}`)
-      window.location.href = `mailto:rich.dsz1997@gmail.com?subject=${subject}&body=${body}`
-      recordContactSubmission(email, message)
-      setTimedContactStatus('sent', 'Opening your email client to send your message directly…', 6000)
-      return
-    }
-
     if (contactStatusTimerRef.current) {
       window.clearTimeout(contactStatusTimerRef.current)
     }
@@ -1006,40 +994,10 @@ function Home() {
         5500,
       )
     } catch (err) {
-      // Fallback: If Edge Function service is unavailable, fallback to direct Web3Forms if key is present
-      if (accessKey) {
-        try {
-          formData.set('access_key', accessKey)
-          formData.set('subject', `Portfolio message from ${name || 'a visitor'}`)
-          formData.set('from_name', "Richard D'souza Portfolio")
-          formData.set('replyto', email)
-          const fallbackRes = await fetch('https://api.web3forms.com/submit', {
-            method: 'POST',
-            body: formData,
-            headers: { Accept: 'application/json' },
-          })
-          const fallbackResult: { success?: boolean; message?: string } = await fallbackRes.json().catch(() => null)
-          if (fallbackRes.ok && fallbackResult?.success) {
-            recordContactSubmission(email, message)
-            form.reset()
-            contactFormInteractTimeRef.current = null
-            contactFormMountTimeRef.current = Date.now()
-            setTimedContactStatus(
-              'sent',
-              'Thank you for reaching out. Your message has been received, and I will get back to you shortly.',
-              5500,
-            )
-            return
-          }
-        } catch {
-          // ignore fallback error and report main error below
-        }
-      }
-
       const errorMsg =
         err instanceof Error
           ? err.message
-          : 'Your message could not be sent right now. Please try again or email me directly at rich.dsz1997@gmail.com.'
+          : 'Your message could not be sent right now. Please try again later.'
       setTimedContactStatus('error', errorMsg, 6000)
     }
   }
