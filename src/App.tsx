@@ -784,6 +784,11 @@ function Home() {
         return
       }
     }
+
+    // Default normal homepage visit (no hash, no pending restore): start at top (Hero)
+    sessionStorage.setItem('portfolio_home_scroll', '0')
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    window.dispatchEvent(new Event('scroll'))
   }, [projectsLoading, location.hash, location.state, prefersReducedMotion])
 
   const setTimedContactStatus = (status: 'sent' | 'error', message: string, durationMs = 5500) => {
@@ -2656,6 +2661,10 @@ function AnimatedRoutes() {
       </Routes>
     </>
   )
+}
+
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual'
 }
 
 export default function App() {
