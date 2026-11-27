@@ -821,13 +821,13 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
               }}
               className={`hero-mascot-bubble absolute select-none cursor-pointer ${
                 showSpeechBubble
-                  ? 'z-40 top-full mt-2 left-1/2 -translate-x-1/2 sm:z-30 sm:mt-0 sm:-top-11 md:-top-12'
-                  : 'z-30 bottom-full mb-1.5 left-1/2 -translate-x-1/2 sm:bottom-auto sm:-top-9 md:-top-10'
+                  ? 'z-40 top-full mt-2 left-1/2 -translate-x-1/2 sm:z-30 sm:mt-0 sm:-top-7 md:-top-8'
+                  : 'z-30 bottom-full mb-1.5 left-1/2 -translate-x-1/2 sm:bottom-auto sm:-top-5 md:-top-6'
               }`}
               onClick={handleMascotClick}
               role="button"
               tabIndex={0}
-              aria-label="Interactive chibi mascot message"
+              aria-label={showSpeechBubble ? activeTake.headline : 'Hey, Welcome! Interactive mascot message'}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
@@ -868,7 +868,7 @@ export const SpatialHeroConsole: React.FC<SpatialHeroConsoleProps> = ({
                       setGreetingDismissed(true)
                     }}
                     aria-label="Dismiss greeting"
-                    className="ml-0.5 p-0.5 rounded-full transition-colors text-slate-400 hover:text-white hover:bg-white/10 relative z-1"
+                    className="ml-0.5 -mr-1 min-w-6 min-h-6 inline-flex items-center justify-center rounded-full transition-colors text-slate-400 hover:text-white hover:bg-white/10 relative z-1 before:content-[''] before:absolute before:-inset-2"
                   >
                     <X size={11} />
                   </button>

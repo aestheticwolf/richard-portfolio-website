@@ -40,6 +40,10 @@ export default function ThemeToggle() {
     document.documentElement.style.colorScheme = nextTheme
     document.documentElement.classList.remove('light', 'dark')
     document.documentElement.classList.add(nextTheme)
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', nextTheme === 'light' ? '#f8fafc' : '#10121b')
+    }
     localStorage.setItem(storageKey, nextTheme)
     setTheme(nextTheme)
 

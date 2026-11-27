@@ -1,5 +1,6 @@
 
 @import "tailwindcss";
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* ===== Base styles ===== */
 
@@ -4812,8 +4813,17 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: var(--tech-brand-color, currentColor);
   transition: transform 220ms ease, filter 220ms ease;
   filter: drop-shadow(0 0 6px currentColor);
+}
+
+[data-theme='light'] .tech-pill-icon-box[data-tech-tone='vercel'],
+[data-theme='light'] .tech-pill-icon-box[data-tech-tone='nextjs'],
+[data-theme='light'] .tech-pill-icon-box[data-tech-tone='github'],
+[data-theme='light'] .tech-pill-icon-box[data-tech-tone='express'] {
+  color: #0f172a !important;
+  filter: none;
 }
 
 .tech-pill-name {
@@ -5460,13 +5470,24 @@ textarea:focus-visible {
 
 @media (max-width: 639px) {
   .skills-filter-wrap {
-    padding: 0.2rem 0.32rem !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    overflow-x: visible !important;
+    white-space: normal !important;
+    border-radius: 1rem !important;
+    padding: 0.3rem 0.35rem !important;
     margin: 0.75rem 0 1rem !important;
-    gap: 0.25rem !important;
+    gap: 0.28rem !important;
   }
   .skills-filter-btn {
-    padding: 0.24rem 0.55rem !important;
+    padding: 0.26rem 0.56rem !important;
     font-size: 0.67rem !important;
+    white-space: nowrap !important;
+  }
+  .about-deck-tab-btn {
+    white-space: nowrap !important;
+    padding: 0.35rem 0.58rem !important;
+    font-size: 0.7rem !important;
   }
   .skills-grid {
     grid-template-columns: 1fr !important;
@@ -10201,12 +10222,12 @@ html, body {
     margin-top: 0.65rem !important;
   }
 
-  /* Floating Back to Top Button: Compact & Non-Obtrusive */
+  /* Floating Back to Top Button: Positioned cleanly above FloatingNav on mobile */
   .back-to-top-button {
     width: 2.35rem !important;
     height: 2.35rem !important;
-    right: 0.85rem !important;
-    bottom: 0.85rem !important;
+    right: 0.75rem !important;
+    bottom: 5.25rem !important;
     z-index: 60 !important;
   }
   .back-to-top-button .back-to-top-icon {

@@ -243,6 +243,30 @@ html.sc-on #contact {
   }
 }
 
+/* Short mobile viewports (e.g. 320x568): prevent greeting clipping under header and scroll-cue overlap with FloatingNav */
+@media (max-width: 639px) and (max-height: 600px) {
+  html.sc-on .hero-section > div {
+    padding-top: 5.25rem !important;
+    padding-bottom: 4.25rem !important;
+    row-gap: 0.45rem !important;
+  }
+
+  html.sc-on .hero-mascot-frame {
+    width: 108px !important;
+  }
+
+  html.sc-on .hero-scroll-cue {
+    display: none !important;
+  }
+}
+
+/* Tablet & compact laptop (768px-1180px): keep Hero clear of right-side FloatingNav */
+@media (min-width: 768px) and (max-width: 1180px) {
+  html.sc-on .hero-section > div {
+    padding-right: 5.25rem !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.sc-on {
     scroll-behavior: auto !important;

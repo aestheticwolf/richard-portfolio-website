@@ -274,7 +274,11 @@ export const MusicPlayer: React.FC = () => {
               />
             ) : (
               <div
-                className="w-full rounded-xl bg-[#121212] border border-white/8 flex items-center justify-center text-zinc-500 text-xs"
+                className={`w-full rounded-xl border flex items-center justify-center text-xs ${
+                  isLight
+                    ? 'bg-slate-100 border-slate-200 text-slate-600'
+                    : 'bg-[#121212] border-white/8 text-zinc-500'
+                }`}
                 style={{ height: `${musicConfig.ui.defaultEmbedHeight}px` }}
               >
                 <span>Loading Spotify soundscape…</span>

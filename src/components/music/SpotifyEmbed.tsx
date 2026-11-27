@@ -94,7 +94,7 @@ export const SpotifyEmbed: React.FC<SpotifyEmbedProps> = ({
           className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 backdrop-blur-md transition-opacity duration-300"
           style={{ background: bgColor, minHeight: `${actualHeight}px`, height: `${actualHeight}px` }}
         >
-          <div className="flex items-center gap-2 text-xs font-medium text-zinc-300">
+          <div className="flex items-center gap-2 text-xs font-medium" style={{ color: '#f8fafc' }}>
             <Loader2 size={15} className="animate-spin text-emerald-400" />
             <span>Connecting to Spotify...</span>
           </div>
@@ -111,7 +111,7 @@ export const SpotifyEmbed: React.FC<SpotifyEmbedProps> = ({
           style={{ background: bgColor, minHeight: `${actualHeight}px`, height: `${actualHeight}px` }}
         >
           <AlertCircle size={18} className="text-amber-400" />
-          <p className="font-medium text-zinc-300 text-[11px]">Unable to load Spotify embed</p>
+          <p className="font-medium text-[11px]" style={{ color: '#f8fafc' }}>Unable to load Spotify embed</p>
           <a
             href={spotifyUrl}
             target="_blank"

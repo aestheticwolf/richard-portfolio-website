@@ -896,7 +896,7 @@ function Home() {
     const typeInDuration = tokenCount * 52 + 480
     const readPause = 3400
     const slideDuration = typeInDuration + readPause
-    const exitDuration = tokenCount * 16 + 260
+    const exitDuration = tokenCount * 16 + 180
 
     const exitTimer = window.setTimeout(() => {
       setHeroSlideExiting(true)
@@ -1246,7 +1246,7 @@ function Home() {
 
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-[#08090d] text-white">
+    <div className="min-h-screen overflow-x-clip bg-(--page-bg) text-(--text-primary)">
       <BackgroundAnimation />
       {/* Ambient Peripheral Flank Nebulae (Fills wide desktop side voids with subtle soft lavender & cosmic indigo glow on zoom-out / wide screens) */}
       <div className="fixed inset-y-0 left-0 w-[38vw] max-w-212.5 pointer-events-none z-0 overflow-hidden hidden lg:block" aria-hidden="true">
@@ -2088,7 +2088,11 @@ function Home() {
               onClick={() => setSelectedSkillCategory(selectedSkillCategory === tech.category ? 'all' : tech.category)}
               aria-label={`${tech.name} - ${tech.categoryTag}`}
             >
-              <span className="tech-pill-icon-box" style={{ color: activeColor }}>
+              <span
+                className="tech-pill-icon-box"
+                data-tech-tone={tech.tone}
+                style={{ '--tech-brand-color': activeColor } as React.CSSProperties}
+              >
                 <ToolIcon size={16} aria-hidden="true" />
               </span>
               <span className="tech-pill-name">{tech.name}</span>
