@@ -99,6 +99,11 @@
     document.documentElement.style.colorScheme = theme;
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
+    var themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute('content', theme === 'light' ? '#f8fafc' : '#10121b');
+    }
+    document.documentElement.classList.add(theme);
   } catch (error) {
     document.documentElement.dataset.theme = 'dark';
     document.documentElement.style.colorScheme = 'dark';

@@ -242,17 +242,33 @@ export const CertificationsSection: React.FC<CertificationsSectionProps> = ({
         {loading ? (
           /* Loading Skeleton */
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-pulse">
-            <div className="h-72 rounded-3xl bg-[#151126]/60 border border-white/10" />
-            <div className="h-72 rounded-3xl bg-[#0f172a]/60 border border-white/10" />
+            <div className={`h-72 rounded-3xl border ${isLight ? 'bg-slate-200/70 border-slate-300/70' : 'bg-[#151126]/60 border-white/10'}`} />
+            <div className={`h-72 rounded-3xl border ${isLight ? 'bg-slate-200/70 border-slate-300/70' : 'bg-[#0f172a]/60 border-white/10'}`} />
           </div>
         ) : certifications.length === 0 ? (
           /* Empty State */
-          <div className="rounded-3xl border border-white/10 bg-[#151126]/60 backdrop-blur-2xl p-10 text-center max-w-lg mx-auto shadow-2xl">
-            <div className="w-14 h-14 rounded-2xl bg-[#8B3DFF]/15 border border-[#8B3DFF]/30 text-[#B69AFF] mx-auto flex items-center justify-center mb-4">
+          <div
+            className={`rounded-3xl border backdrop-blur-2xl p-10 text-center max-w-lg mx-auto ${
+              isLight
+                ? 'border-slate-200/90 bg-white/90 shadow-[0_20px_50px_rgba(15,23,42,0.08)]'
+                : 'border-white/10 bg-[#151126]/60 shadow-2xl'
+            }`}
+          >
+            <div
+              className={`w-14 h-14 rounded-2xl border mx-auto flex items-center justify-center mb-4 ${
+                isLight
+                  ? 'bg-violet-50 border-violet-200 text-violet-600'
+                  : 'bg-[#8B3DFF]/15 border-[#8B3DFF]/30 text-[#B69AFF]'
+              }`}
+            >
               <Award size={28} />
             </div>
-            <h3 className="text-xl font-normal text-[#F5F3FF] mb-2">Credentials in Verification</h3>
-            <p className="text-sm text-[#AAA5BD]">Verified certifications will appear here once published.</p>
+            <h3 className={`text-xl font-normal mb-2 ${isLight ? 'text-slate-900' : 'text-[#F5F3FF]'}`}>
+              Credentials in Verification
+            </h3>
+            <p className={`text-sm ${isLight ? 'text-slate-600' : 'text-[#AAA5BD]'}`}>
+              Verified certifications will appear here once published.
+            </p>
           </div>
         ) : (
           <div className="relative">
